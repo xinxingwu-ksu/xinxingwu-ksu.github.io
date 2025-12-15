@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hand-Controlled Video</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- MediaPipe Hands + helpers -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+  <!-- Overlay to unlock audio (required by browsers to play with sound) -->
+  <div id="unmuteOverlay">
+    <button id="unmuteBtn" type="button">🔊 Enable Sound</button>
+  </div>
+
+  <!-- Hidden camera stream (webcam) -->
+  <video class="input_video" autoplay muted playsinline></video>
+
+  <!-- Hidden-but-present media element for your MP4 (audio will come from here) -->
+  <video id="mediaVideo" playsinline webkit-playsinline preload="auto"
+         style="position:fixed; width:1px; height:1px; opacity:0; pointer-events:none;"></video>
+
+  <!-- Canvas for compositing camera + landmarks + your MP4 -->
+  <canvas id="canvas"></canvas>
+  <script src="script.js"></script>
+</body>
+</html>

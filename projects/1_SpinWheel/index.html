@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Psychology Spin Wheel</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+  body{min-height:100vh;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:#333;color:#fff}
+
+  .container{position:relative;width:320px;height:320px;display:grid;place-items:center}
+  /* Keep the pointer exactly at 12 o’clock */
+  .pointer{
+    position:absolute;top:0;left:50%;transform:translate(-50%,-40%);
+    width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;
+    border-bottom:16px solid #fff;filter:drop-shadow(0 0 2px #000);z-index:2;
+  }
+
+  .wheel{
+    width:100%;height:100%;border-radius:50%;
+    transition:transform 4s ease-out; will-change: transform;
+    /* IMPORTANT: No "from -90deg". 0deg is already at the TOP (12 o’clock). */
+    background: conic-gradient(
+      red 0deg 45deg,
+      orange 45deg 90deg,
+      yellow 90deg 135deg,
+      green 135deg 180deg,
+      blue 180deg 225deg,
+      purple 225deg 270deg,
+      pink 270deg 315deg,
+      white 315deg 360deg
+    );
+    box-shadow: 0 0 0 6px #111, 0 0 0 12px #fff, 0 0 0 16px #111;
+  }
+
+  button{padding:10px 16px;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+  #result{
+    width:320px;background:#fafafa;color:#111;border-radius:10px;padding:12px 14px;
+    box-shadow:0 0 0 4px #333,0 0 0 10px #fff,0 0 0 14px #111
+  }
+</style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="pointer"></div>
+    <div id="wheel" class="wheel"></div>
+  </div>
+
+  <button id="spinBtn">SPIN</button>
+  <div id="result">Click “SPIN” to start.</div>
+
+<script>
+  /* Slice names in the SAME order as the gradient above */
+  var names = ["Red","Orange","Yellow","Green","Blue","Purple","Pink","White"];
+
+  var info = {
+    Red:"Passion, excitement, love",
+    Orange:"Optimism, friendly, warm",
+    Yellow:"Positivity, enthusiasm, happiness",
+    Green:"Harmony, nature, growth",
+    Blue:"Loyalty, professionalism, trust, sadness",
+    Purple:"Cool, spiritual, calm",
+    Pink:"Fresh, feminine, playful, young",
+    White:"Truth, indifference"
+  };
+
+  var wheel = document.getElementById("wheel");
+  var spinBtn = document.getElementById("spinBtn");
+  var result = document.getElementById("result");
+
+  var total = 0;                    // total rotation applied so far
+  var current = 0;                  // total % 360 -> current angle (0..359.999)
+  var slice = 360 / names.length;   // 45°
+  var picked = 0;                   // chosen index this spin
+
+  function mod360(x){ var r = x % 360; return r < 0 ? r + 360 : r; }
+  function centerAngle(i){ return i * slice + slice / 2; } // 0° is TOP
+
+  spinBtn.onclick = function () {
+    picked = Math.floor(Math.random() * names.length);   // choose winner FIRST
+    var target = centerAngle(picked);                    // where that slice's center is (from TOP)
+
+    // To bring target to TOP after rotating clockwise by Δ:
+    // (360 - (current + Δ)) % 360 == target  =>  Δ == (360 - target - current) % 360
+    var baseDelta = mod360(360 - target - current);
+    var spins = 5 * 360;                                // nice full turns
+    var delta = spins + baseDelta;
+
+    total += delta;
+    current = mod360(total);
+
+    spinBtn.disabled = true;
+    result.textContent = "Spinning...";
+    wheel.style.transform = "rotate(" + total + "deg)";
+  };
+
+  wheel.addEventListener("transitionend", function () {
+    var name = names[picked];
+    result.textContent = "Selected: " + name + " — " + info[name];
+    spinBtn.disabled = false;
+  });
+</script>
+</body>
+</html>

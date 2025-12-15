@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta name="description" content="Welcome to Xinxing Wu's Homepage">
+	<title>XXX's Homepage</title>
+	<link rel='stylesheet' href='./bootstrap/css/style.css' type='text/css'>
+	<link rel="stylesheet" href="./bootstrap/leaflet/leaflet.css"/>
+
+	<script src="./bootstrap/leaflet/leaflet.js"></script>
+	<script src="./bootstrap/js/jquery-3.3.1.min.js"></script>
+</head>
+
+<body>
+	<div id="top-banner" class="banner"></div>
+	<div id="main-body" class="wrapper">
+		<div id="site-title">
+			<div id="name">XXX
+				<div id="subname">Ph.D. in Computer Science</div>
+			</div>
+			<div id="access">
+				<ul id="nav">
+					<li><a id="link-about" href="#about" onclick="changeNavState(id)">ABOUT</a></li>
+					<li><a id="link-research" href="#research" onclick="changeNavState(id)">MY WORK</a></li>
+					<li><a id="link-contact" href="#contact" onclick="changeNavState(id)">CONTACT</a></li>
+				</ul>
+				<select id="sel" onchange="javascript:if(this.value){location.href=this.value}">
+					<option value="#about">ABOUT</option>
+					<option value="#research">MY WORK</option>
+					<option value="#contact">CONTACT</option>
+				</select>				
+			</div>
+		</div>
+		<div id="content">
+		</div>
+	</div>
+
+
+	<script id="research-content" type="text/x-content">
+		<div class="container-outside">
+			<div class="container-block">
+				<h1>Work I did</h1>
+				<div class="container-description">
+					<div class="container-text">
+						<ul>
+							<li>
+								Github - <a href="https://github.com/xinxingwu-uk" target="_blank"> https://github.com/xinxingwu-uk</a> 
+							</li>		
+						</ul>
+					</div>
+				</div>
+				<hr>
+				<h1>Work I am doing</h1>
+				<div class="container-description">
+					<div class="container-text">
+						<ul>
+							<li>
+								CyberSecurity - <a href="https://xinxingwu.github.io/Homepage400/" target="_blank"> https://xinxingwu.github.io/Homepage400/</a>
+		                                        </li>
+		                                        <li>
+								Mobile Computing - <a href="https://xinxingwu.github.io/Homepage410/" target="_blank"> https://xinxingwu.github.io/Homepage410/</a>
+							</li>
+		 					<li>
+								Static Image Speak - <a href="https://xinxingwu.github.io/Projects/imagespeak.html" target="_blank"> https://xinxingwu.github.io/Projects/imagespeak.html</a>
+							</li>
+		                                        <li>
+                                                                Clone Voice - <a href="https://xinxingwu.github.io/Projects/clonevoice.html" target="_blank"> https://xinxingwu.github.io/Projects/clonevoice.html</a>
+		                                        </li>
+		 					<li>
+								Swap Your Face - <a href="https://xinxingwu.github.io/Projects/swapface.html" target="_blank"> https://xinxingwu.github.io/Projects/swapface.html</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</script>
+
+
+	<script id="about-content" type="text/x-content">
+		<div class="container-outside">
+			<div class="container-block">
+				<h1>About Me</h1>
+				<div class="container-description">
+					<div id="about-me-text" class="container-text">
+						<div>
+							<p>
+								I work on 1) Machine Learning/Statistics, 
+								<br>
+								<br>
+								I have a  my GitHub <a href="https://github.com/xinxingwu-uk" target="_blank"> https://github.com/xinxingwu-uk</a> 
+								<br>
+								<br>
+								Also, I have extensive 
+ 
+								[ <a href="./bootstrap/doc/yourpdfresume.pdf" target="_blank">Download Resume</a> ]
+						    </p>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			
+		</div>
+	</script>
+
+	<script id="contact-content" type="text/x-content">
+		<div class="container-outside">
+			<div class="container-block">
+				<h1>Contact</h1>
+				<div class="container-description">
+					<div id="contact-photo" class="container-text">
+						Email: <a class="social-link" href="mailto:xinxingwu@gmail.com">xinxingwu@gmail.com</a>
+					</div>
+			</div>
+		</div>
+	</script>
+
+	<script async src="./bootstrap/js/application.js"></script>
+	<script src="./bootstrap/js/backtop.js"></script>
+	<script src="./bootstrap/js/extension.js"></script>
+</body>
+</html>
+</html>

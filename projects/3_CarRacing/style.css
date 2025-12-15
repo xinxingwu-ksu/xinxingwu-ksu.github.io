@@ -1,0 +1,23 @@
+canvas {
+    border: 1px solid #d3d3d3;
+    background: url('map1.png');
+    font-family: Impact, Charcoal, sans-serif;
+    animation: animatedBackground 5s linear infinite;
+}
+
+#spedo {
+    position: absolute;
+    top: 450px;
+    left: 0px;
+    width: 450px;
+}
+
+@keyframes animatedBackground {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0px 2000px;
+  }
+}

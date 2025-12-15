@@ -1,0 +1,39 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: black;
+}
+
+#video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 480px;
+  object-fit: cover;
+  transform: scaleX(-1); /* Flip video like a mirror */
+  z-index: 1;
+}
+
+#fogCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 640px;
+  height: 480px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#resetBtn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: rgba(255,255,255,0.8);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}

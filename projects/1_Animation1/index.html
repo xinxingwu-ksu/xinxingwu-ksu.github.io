@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Floating Person + Eyes Follow Cursor</title>
+<style>
+  :root{
+    --bg:#0d3a5a;
+    --skin:#ffc7b9;
+    --cloth:#ffffff;
+    --sleeve:#d5d7db;
+    --pants:#586a7c;
+    --shoe:#2f3b46;
+    --shadow:rgba(0,0,0,.25);
+
+    /* easy knobs */
+    --torso-top: 190px;
+    --torso-h:   170px;
+    --hip-gap:     6px;
+
+    /* floating */
+    --float-distance: 18px;   /* how high it rises */
+    --float-duration: 3.6s;   /* cycle time */
+  }
+
+  body{
+    margin:0; height:100vh; display:grid; place-items:center;
+    background:var(--bg); font-family:system-ui,sans-serif;
+  }
+
+  .person{
+    position:relative; width:260px; height:520px;
+    /* float animation */
+    animation: float var(--float-duration) ease-in-out infinite;
+  }
+
+  @keyframes float{
+    0%   { transform:translateY(0) }
+    50%  { transform:translateY(calc(-1 * var(--float-distance))); }
+    100% { transform:translateY(0) }
+  }
+
+  /* Head */
+  .head{
+    position:absolute; left:50%; top:10px; transform:translateX(-50%);
+    width:170px; height:170px; border-radius:50%;
+    background:var(--skin);
+    box-shadow:inset 0 16px 24px rgba(0,0,0,.15), 0 10px 24px var(--shadow);
+    display:flex; justify-content:center; align-items:center; gap:18px;
+  }
+
+  /* Eyes */
+  .eye{
+    width:60px; height:60px; background:#fff; border-radius:50%;
+    box-shadow:inset 0 0 0 3px #c7c9cc, 0 2px 8px #0003; position:relative; overflow:hidden;
+  }
+  .pupil{
+    width:22px; height:22px; background:#111; border-radius:50%;
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    transition:transform .06s linear;
+  }
+  .pupil:after{
+    content:""; position:absolute; width:6px; height:6px; border-radius:50%;
+    background:#fff8; left:4px; top:4px;
+  }
+
+  /* Torso */
+  .torso{
+    position:absolute; left:50%; top:var(--torso-top); transform:translateX(-50%);
+    width:180px; height:var(--torso-h); border-radius:22px; background:var(--cloth);
+    box-shadow:0 18px 28px var(--shadow);
+  }
+
+  /* Arms + hands */
+  .arm{
+    position:absolute; top:calc(var(--torso-top) + 15px); width:26px; height:110px;
+    background:var(--sleeve); border-radius:15px; transform-origin:top center;
+    box-shadow:0 4px 10px #0003;
+  }
+  .arm.left  { left:32px;  transform:rotate(12deg); }
+  .arm.right { right:32px; transform:rotate(-12deg); }
+  .hand{
+    position:absolute; bottom:-12px; left:50%; transform:translateX(-50%);
+    width:30px; height:30px; background:var(--skin); border-radius:50%;
+    box-shadow:0 2px 6px #0003;
+  }
+
+  /* Legs BELOW the body */
+  .leg{
+    position:absolute; top:calc(var(--torso-top) + var(--torso-h) + var(--hip-gap));
+    width:36px; height:110px; background:var(--pants); border-radius:18px;
+  }
+  .leg.left  { left:86px; }
+  .leg.right { right:86px; }
+
+  .foot{
+    position:absolute; top:calc(var(--torso-top) + var(--torso-h) + var(--hip-gap) + 100px);
+    width:66px; height:22px; background:var(--shoe);
+    border-radius:12px 12px 8px 8px; box-shadow:0 6px 10px #0005;
+  }
+  .foot.left  { left:63px; }
+  .foot.right { right:63px; }
+
+  /* Ground-like shadow under the character */
+  .ground{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    width:220px; height:18px; background:#00000025; filter:blur(6px); border-radius:50%;
+    /* sync with float: smaller/fainter when higher */
+    animation: squish var(--float-duration) ease-in-out infinite;
+  }
+  @keyframes squish{
+    0%,100% { transform:translateX(-50%) scaleX(1);   opacity:.35; }
+    50%     { transform:translateX(-50%) scaleX(.85); opacity:.18; }
+  }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    .person, .ground{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="person">
+  <div class="head" id="head">
+    <div class="eye"><div class="pupil"></div></div>
+    <div class="eye"><div class="pupil"></div></div>
+  </div>
+
+  <div class="arm left"><div class="hand"></div></div>
+  <div class="arm right"><div class="hand"></div></div>
+
+  <div class="torso"></div>
+
+  <div class="leg left"></div>
+  <div class="leg right"></div>
+  <div class="foot left"></div>
+  <div class="foot right"></div>
+
+  <div class="ground"></div>
+</div>
+
+<script>
+/* Pupils follow mouse/touch */
+(function () {
+  var eyes = Array.prototype.slice.call(document.querySelectorAll('.eye'));
+  var pupils = Array.prototype.slice.call(document.querySelectorAll('.pupil'));
+
+  function moveTo(x, y){
+    eyes.forEach(function(eye, i){
+      var r = eye.getBoundingClientRect();
+      var cx = r.left + r.width/2, cy = r.top + r.height/2;
+      var dx = x - cx, dy = y - cy, d = Math.hypot(dx, dy) || 1;
+      var max = Math.min(r.width, r.height) * 0.30;
+      pupils[i].style.transform =
+        'translate(calc(-50% + ' + (dx/d*max) + 'px), calc(-50% + ' + (dy/d*max) + 'px))';
+    });
+  }
+
+  document.addEventListener('mousemove', e => moveTo(e.clientX, e.clientY));
+  document.addEventListener('touchmove', e => {
+    if (e.touches && e.touches[0]) moveTo(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true});
+
+  moveTo(innerWidth/2, innerHeight/2);
+})();
+</script>
+</body>
+</html>

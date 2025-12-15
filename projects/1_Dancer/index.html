@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <base target="_blank">
+    <title>Dancer</title>
+
+    <style>		
+        body {
+            margin: 0;
+            display: flex;
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            height: 100vh; /* Full height */
+            background-color: black; /* Set background to black */
+            position: relative; /* Allow positioning of the logo */
+        }
+
+        /* Logo in the top left */
+        .logo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+
+        .dancer {
+            position: absolute; /* Make the dancer absolute to allow free movement */
+            width: 50px;
+            height: 100px;
+            background-color: #ffcc00;
+            border-radius: 10px;
+            animation: bodyMove 1.5s infinite, flyAround 5s 3s infinite alternate; /* Iterative flying after dancing */
+        }
+
+        .dancer::before, .dancer::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 40px;
+            background-color: #ff5733;
+            top: 20px;
+            border-radius: 10px;
+            animation: armMove 1.5s infinite;
+        }
+
+        .dancer::before {
+            left: -20px;
+            transform-origin: top right;
+        }
+
+        .dancer::after {
+            right: -20px;
+            transform-origin: top left;
+        }
+
+        .head {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background-color: #33ff57;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            animation: headMove 1.5s infinite;
+        }
+
+        .eye-left, .eye-right {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: black;
+            border-radius: 50%;
+            top: 5px;
+        }
+
+        .eye-left {
+            left: 4px;
+        }
+
+        .eye-right {
+            right: 4px;
+        }
+
+        .mouth {
+            position: absolute;
+            width: 10px;
+            height: 5px;
+            background-color: black;
+            border-radius: 0 0 10px 10px;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .leg-left, .leg-right {
+            position: absolute;
+            width: 15px;
+            height: 50px;
+            background-color: #3357ff;
+            top: 100px;
+            border-radius: 10px;
+            animation: legMove 1.5s infinite;
+        }
+
+        .leg-left {
+            left: 5px;
+            transform-origin: top center;
+        }
+
+        .leg-right {
+            right: 5px;
+            transform-origin: top center;
+        }
+
+        .foot-left, .foot-right {
+            position: absolute;
+            width: 20px;
+            height: 10px;
+            background-color: #f1c40f;
+            border-radius: 50%;
+            top: 150px;
+        }
+
+        .foot-left {
+            left: 5px;
+        }
+
+        .foot-right {
+            right: 5px;
+        }
+
+        @keyframes bodyMove {
+            0% {
+                transform: translateY(0) rotate(0deg);
+            }
+            20% {
+                transform: translateY(-50px) rotate(-30deg);
+            }
+            40% {
+                transform: translateY(50px) rotate(30deg);
+            }
+            60% {
+                transform: translateY(-40px) rotate(40deg);
+            }
+            80% {
+                transform: translateY(40px) rotate(-40deg);
+            }
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+        }
+
+        @keyframes armMove {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            20% {
+                transform: rotate(80deg);
+            }
+            40% {
+                transform: rotate(-80deg);
+            }
+        }
+
+        @keyframes legMove {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            20% {
+                transform: rotate(50deg);
+            }
+            40% {
+                transform: rotate(-50deg);
+            }
+        }
+
+        /* Circular motion animation for the dancer */
+        @keyframes flyAround {
+            0% {
+                transform: rotate(0deg) translateX(0) translateY(0);
+            }
+            100% {
+                transform: rotate(360deg) translateX(200px) translateY(200px);
+            }
+        }
+    </style>
+  </head>    
+
+  <body>
+    <!-- Logo positioned at the top-left -->
+    <div class="logo">
+        <img src="midwaylogo.png" alt="Logo" height="8%" width="10%" style="vertical-align:left;">
+    </div>
+
+    <div class="dancer">
+        <div class="head">
+            <div class="eye-left"></div>
+            <div class="eye-right"></div>
+            <div class="mouth"></div>
+        </div>
+        <div class="leg-left"></div>
+        <div class="leg-right"></div>
+        <div class="foot-left"></div>
+        <div class="foot-right"></div>
+    </div>
+  </body>
+</html>

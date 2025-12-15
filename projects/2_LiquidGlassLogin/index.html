@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Liquid‑Glass Login</title>
+
+  <!-- main styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="login-container animated-background">
+    <!-- SVG filter definition (hidden) -->
+    <svg style="display: none">
+      <!-- Glass distortion filter -->
+      <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+        <feTurbulence type="fractalNoise" baseFrequency="0.001 0.005" numOctaves="1" seed="17" result="turbulence" />
+        <feComponentTransfer in="turbulence" result="mapped">
+          <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+          <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+          <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+        </feComponentTransfer>
+        <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+        <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1"
+                            specularExponent="100" lighting-color="white" result="specLight">
+          <fePointLight x="-200" y="-200" z="300" />
+        </feSpecularLighting>
+        <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
+        <feDisplacementMap in="SourceGraphic" in2="softMap" scale="200"
+                           xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+
+    <!-- glass card -->
+    <div class="glass-component login-card" id="tiltCard">
+      <div class="glass-effect"></div>
+      <div class="glass-tint"></div>
+      <div class="glass-shine"></div>
+
+      <div class="glass-content">
+        <h2 class="login-title">Welcome</h2>
+
+        <form class="login-form" id="loginForm" autocomplete="off">
+          <div class="form-group">
+            <input type="text" placeholder="Username" class="glass-input" required />
+          </div>
+
+          <div class="form-group">
+            <input type="password" placeholder="Password" class="glass-input" required />
+          </div>
+
+          <button type="submit" class="glass-button">Log&nbsp;In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

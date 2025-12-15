@@ -1,0 +1,10 @@
+https://github.com/dominikgorczyca/Pac-Man?tab=readme-ov-file
+
+Berkeley's CS188 class
+
+https://github.com/shiro873/pacman-projects
+
+https://github.com/ML-Purdue/Pac-Man-AI
+
+
+https://ai.berkeley.edu/project_overview.html

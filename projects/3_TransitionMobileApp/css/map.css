@@ -1,0 +1,12 @@
+/* remove the login padding so the map fills the screen */
+.map-screen {
+  padding: 0;
+}
+
+/* Leaflet map canvas must fill its parent */
+#map {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+}

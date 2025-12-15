@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Maze Runner — Pure HTML/JS</title>
+<style>
+  :root{
+    --bg1:#0a1022; --bg2:#0e1a3a;
+    --maze:#cfe9ff; --maze-dim:#9bbfe6;
+    --player:#50fa7b; --goal:#ffcc66; --hint:#8be9fd;
+    --ui:#ffffffee; --ink:#0a1022;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;height:100vh;overflow:hidden;
+    background:radial-gradient(120% 140% at 50% 100%, var(--bg2), var(--bg1));
+    color:#eaf4ff; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;
+  }
+  .wrap{position:relative;width:100%;height:100%;}
+  header{
+    position:fixed;left:10px;right:10px;top:10px;z-index:10;
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    background:#00000044;backdrop-filter:blur(6px);
+    border-radius:14px;padding:8px 10px;
+  }
+  .title{font-weight:900;letter-spacing:0.4px}
+  .pill{
+    display:flex;align-items:center;gap:8px;border-radius:12px;padding:6px 10px;
+    background:#ffffff12;color:#e9f3ff
+  }
+  select,button{
+    border:0;border-radius:12px;padding:8px 12px;font-weight:700;cursor:pointer;
+    background:var(--ui); color:var(--ink); box-shadow:0 6px 20px #0003
+  }
+  button.secondary{background:#e5e7eb;color:#1f2937}
+  canvas{position:absolute;inset:0;display:block}
+  /* D-pad */
+  .pad{
+    position:fixed;right:12px;bottom:12px;z-index:11;display:grid;
+    grid-template-columns:56px 56px 56px;grid-template-rows:56px 56px 56px;gap:8px;
+    filter:drop-shadow(0 8px 12px #0008);
+  }
+  .pad button{
+    width:56px;height:56px;border-radius:12px;background:#ffffffd9;color:#0a1022;font-size:18px;
+  }
+  .pad .empty{background:transparent;box-shadow:none}
+  /* audio gate */
+  #audioGate{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9999;
+    background:linear-gradient(#0007,#0004);backdrop-filter:blur(3px)
+  }
+  #audioGate button{padding:14px 18px;border-radius:14px;border:0;cursor:pointer;font-size:16px;font-weight:800;background:#ffffffde;box-shadow:0 10px 30px #0006}
+  /* fireworks */
+  .fw{
+    position:absolute;width:6px;height:6px;border-radius:50%;pointer-events:none;z-index:50;
+    animation:burst .9s ease-out forwards;
+  }
+  @keyframes burst{
+    70%{transform:translate(var(--dx),var(--dy)) scale(1); opacity:1}
+    100%{transform:translate(calc(var(--dx)*1.2),calc(var(--dy)*1.2)) scale(.1); opacity:0}
+  }
+  #hint{position:fixed;left:12px;bottom:12px;font-size:12px;opacity:.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">🧩 Maze Runner</div>
+    <div class="pill">Size
+      <select id="size">
+        <option value="15x15">Easy 15×15</option>
+        <option value="21x21" selected>Medium 21×21</option>
+        <option value="31x31">Hard 31×31</option>
+        <option value="41x41">Extreme 41×41</option>
+      </select>
+    </div>
+    <button id="newBtn">New Maze</button>
+    <button id="hintBtn" class="secondary" title="Show shortest path for 3s (H)">Hint</button>
+    <button id="solveBtn" class="secondary" title="Animate solution (S)">Solve</button>
+    <div class="pill" id="stats">⏱️ <span id="time">00:00.0</span> · 🧭 <span id="moves">0</span> moves · 🏆 Best: <span id="best">—</span></div>
+    <div class="pill" style="margin-left:auto">Controls: ⬅️➡️⬆️⬇️ / WASD · tap D-pad · swipe</div>
+  </header>
+
+  <canvas id="maze"></canvas>
+
+  <!-- D-pad -->
+  <div class="pad" aria-hidden="false">
+    <button class="empty" disabled></button>
+    <button data-dir="up">⬆️</button>
+    <button class="empty" disabled></button>
+    <button data-dir="left">⬅️</button>
+    <button class="empty" disabled></button>
+    <button data-dir="right">➡️</button>
+    <button class="empty" disabled></button>
+    <button data-dir="down">⬇️</button>
+    <button class="empty" disabled></button>
+  </div>
+
+  <!-- tap-to-enable audio -->
+  <div id="audioGate" role="dialog" aria-modal="true">
+    <button id="audioStart">Tap to enable sounds 🎧</button>
+  </div>
+
+  <div id="hint">Goal: reach the golden square. Press “Hint” (H) or “Solve” (S). Timer starts on first move.</div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('maze');
+  const ctx = canvas.getContext('2d');
+  let W=innerWidth, H=innerHeight;
+  const uiH = 74; // space for header
+  function resize(){
+    W = innerWidth; H = innerHeight;
+    canvas.width = W; canvas.height = H;
+    draw();
+  }
+  addEventListener('resize', resize);
+
+  /* ===== WebAudio small SFX ===== */
+  let audioCtx=null, audioOn=false;
+  const gate = document.getElementById('audioGate');
+  document.getElementById('audioStart').addEventListener('click', ()=>{
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      audioCtx.resume && audioCtx.resume();
+      audioOn = true; gate.remove(); chime();
+    }catch(e){ gate.remove(); }
+  });
+  function beep(freq=600, dur=0.06, vol=0.15, type='sine'){
+    if(!audioOn||!audioCtx) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq; o.connect(g); g.connect(audioCtx.destination);
+    const t = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.start(t); o.stop(t+dur+0.02);
+  }
+  function thud(){ beep(120,0.09,0.25,'sawtooth'); }
+  function step(){ beep(660,0.04,0.12,'triangle'); }
+  function chime(){
+    if(!audioOn) return;
+    [784,988,1175].forEach((f,i)=>{ setTimeout(()=>beep(f,0.18,0.22,'sine'), i*70); });
+  }
+
+  /* ===== Maze generation (iterative backtracker) ===== */
+  let rows=21, cols=21;
+  let grid; // each cell: {t,r,b,l} true=wall
+  let start={r:0,c:0}, goal={r:rows-1,c:cols-1};
+  let cellSize=24, offX=0, offY=0;
+
+  function makeGrid(r,c){
+    rows=r; cols=c;
+    grid = Array.from({length:rows}, ()=>Array.from({length:cols}, ()=>({t:true,r:true,b:true,l:true,vis:false})));
+    // carve
+    const stack=[];
+    let cr=0, cc=0;
+    grid[cr][cc].vis=true; stack.push([cr,cc]);
+    while(stack.length){
+      const [r,c] = stack[stack.length-1];
+      const nbs=[];
+      if(r>0 && !grid[r-1][c].vis) nbs.push([r-1,c,'t','b']);
+      if(c<cols-1 && !grid[r][c+1].vis) nbs.push([r,c+1,'r','l']);
+      if(r<rows-1 && !grid[r+1][c].vis) nbs.push([r+1,c,'b','t']);
+      if(c>0 && !grid[r][c-1].vis) nbs.push([r,c-1,'l','r']);
+      if(nbs.length){
+        const pick = nbs[Math.floor(Math.random()*nbs.length)];
+        const [nr,nc,dir,opp] = pick;
+        grid[r][c][dir]=false;
+        grid[nr][nc][opp]=false;
+        grid[nr][nc].vis=true;
+        stack.push([nr,nc]);
+      }else{
+        stack.pop();
+      }
+    }
+    // reset vis flags
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) grid[r][c].vis=false;
+    start={r:0,c:0}; goal={r:rows-1,c:cols-1};
+    placePlayer(start.r,start.c,true);
+    resetStats();
+    layout();
+    draw();
+  }
+
+  /* ===== Layout & draw ===== */
+  function layout(){
+    const availW = W-20, availH = H-20; // padding edges a bit
+    cellSize = Math.floor(Math.min((availW)/(cols+2), (availH-uiH)/(rows+2)));
+    const mazeW = cols*cellSize, mazeH = rows*cellSize;
+    offX = Math.floor((W - mazeW)/2);
+    offY = Math.floor((H - mazeH)/2)+10;
+  }
+
+  function draw(){
+    // bg
+    ctx.clearRect(0,0,W,H);
+    // soft vignette
+    const g = ctx.createRadialGradient(W/2,H*0.55,10, W/2,H*0.55, Math.max(W,H)*0.65);
+    g.addColorStop(0,'#ffffff06'); g.addColorStop(1,'#00000055');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+    // grid walls
+    ctx.lineWidth = Math.max(2, Math.floor(cellSize*0.13));
+    ctx.lineCap='round';
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const x=offX+c*cellSize, y=offY+r*cellSize;
+        const w=grid[r][c];
+        ctx.strokeStyle = 'rgba(207,233,255,.88)';
+        if(w.t){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+cellSize,y); ctx.stroke(); }
+        if(w.r){ ctx.beginPath(); ctx.moveTo(x+cellSize,y); ctx.lineTo(x+cellSize,y+cellSize); ctx.stroke(); }
+        if(w.b){ ctx.beginPath(); ctx.moveTo(x,y+cellSize); ctx.lineTo(x+cellSize,y+cellSize); ctx.stroke(); }
+        if(w.l){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+cellSize); ctx.stroke(); }
+      }
+    }
+
+    // footprints
+    ctx.fillStyle = '#8fe4b988';
+    for(const step of trail){
+      const cx = offX + (step.c+0.5)*cellSize;
+      const cy = offY + (step.r+0.5)*cellSize;
+      ctx.beginPath(); ctx.arc(cx,cy, Math.max(2, cellSize*0.12), 0, Math.PI*2); ctx.fill();
+    }
+
+    // hint path
+    if(hintShownUntil > performance.now() && hintPath.length){
+      ctx.strokeStyle = 'rgba(139,233,253,.9)';
+      ctx.lineWidth = Math.max(3, cellSize*0.18);
+      ctx.beginPath();
+      for(let i=0;i<hintPath.length;i++){
+        const p = hintPath[i];
+        const cx = offX + (p.c+0.5)*cellSize;
+        const cy = offY + (p.r+0.5)*cellSize;
+        if(i===0) ctx.moveTo(cx,cy); else ctx.lineTo(cx,cy);
+      }
+      ctx.stroke();
+    }
+
+    // goal
+    const gx = offX + goal.c*cellSize, gy = offY + goal.r*cellSize;
+    ctx.fillStyle = '#ffcc66';
+    const pad = cellSize*0.18;
+    ctx.fillRect(gx+pad, gy+pad, cellSize-2*pad, cellSize-2*pad);
+    ctx.strokeStyle='#ffefc2'; ctx.lineWidth=2; ctx.strokeRect(gx+pad, gy+pad, cellSize-2*pad, cellSize-2*pad);
+
+    // player
+    const pCx = offX + (player.c+0.5)*cellSize + animOffset.x;
+    const pCy = offY + (player.r+0.5)*cellSize + animOffset.y;
+    const pr = Math.max(4, cellSize*0.3);
+    ctx.fillStyle='#50fa7b';
+    ctx.beginPath(); ctx.arc(pCx,pCy, pr, 0, Math.PI*2); ctx.fill();
+    // outline
+    ctx.lineWidth=2; ctx.strokeStyle='#e6ffefaa'; ctx.stroke();
+  }
+
+  /* ===== Player, movement, pathfinding ===== */
+  let player={r:0,c:0};
+  let moving=false; let animOffset={x:0,y:0};
+  let trail=[];
+  function placePlayer(r,c,resetTrail=false){
+    player.r=r; player.c=c; animOffset.x=0; animOffset.y=0;
+    if(resetTrail){ trail=[{r,c}]; }
+  }
+
+  function canMove(dir){
+    const {r,c} = player;
+    const w = grid[r][c];
+    if(dir==='up'   && !w.t) return true;
+    if(dir==='right'&& !w.r) return true;
+    if(dir==='down' && !w.b) return true;
+    if(dir==='left' && !w.l) return true;
+    return false;
+  }
+
+  function stepTo(dir){
+    if(moving||won) return;
+    if(!started){ started=true; startTime=performance.now(); }
+    if(!canMove(dir)){ thud(); return; }
+    const from = {r:player.r, c:player.c};
+    const to = {r:from.r, c:from.c};
+    if(dir==='up') to.r--; if(dir==='right') to.c++; if(dir==='down') to.r++; if(dir==='left') to.c--;
+    moving=true; moves++; updateStats();
+
+    // animate
+    const dx = (to.c-from.c)*cellSize, dy=(to.r-from.r)*cellSize;
+    const dur = Math.max(90, 140 - cellSize*2); // ms
+    const t0 = performance.now();
+    function tick(now){
+      const t = Math.min(1, (now-t0)/dur);
+      animOffset.x = dx*(t-1);
+      animOffset.y = dy*(t-1);
+      draw();
+      if(t<1){ requestAnimationFrame(tick); }
+      else{
+        placePlayer(to.r,to.c);
+        trail.push({r:player.r,c:player.c});
+        step();
+        moving=false;
+        draw();
+        checkWin();
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function neighbors(r,c){
+    const list=[];
+    const w = grid[r][c];
+    if(!w.t) list.push({r:r-1,c:c,dir:'up'});
+    if(!w.r) list.push({r:r,c:c+1,dir:'right'});
+    if(!w.b) list.push({r:r+1,c:c,dir:'down'});
+    if(!w.l) list.push({r:r,c:c-1,dir:'left'});
+    return list;
+  }
+
+  function shortestPath(from, to){
+    // BFS
+    const q=[from];
+    const key=(r,c)=>r+'_'+c;
+    const prev = new Map();
+    const seen = new Set([key(from.r,from.c)]);
+    while(q.length){
+      const cur = q.shift();
+      if(cur.r===to.r && cur.c===to.c) break;
+      for(const nb of neighbors(cur.r,cur.c)){
+        const k = key(nb.r,nb.c);
+        if(!seen.has(k)){
+          seen.add(k); prev.set(k, cur);
+          q.push({r:nb.r,c:nb.c});
+        }
+      }
+    }
+    // reconstruct
+    const out=[to];
+    let k=key(to.r,to.c);
+    while(prev.has(k)){
+      const p = prev.get(k); out.push(p); k=key(p.r,p.c);
+      if(p.r===from.r && p.c===from.c) break;
+    }
+    return out.reverse();
+  }
+
+  let hintPath=[], hintShownUntil=0;
+  function showHint(){
+    hintPath = shortestPath({r:player.r,c:player.c}, goal);
+    hintShownUntil = performance.now()+3000;
+    draw();
+  }
+
+  let solving=false;
+  function solve(){
+    if(solving||won) return;
+    const path = shortestPath({r:player.r,c:player.c}, goal);
+    solving=true;
+    (function stepAlong(i){
+      if(i>=path.length-1){ solving=false; return; }
+      const cur = path[i], nxt = path[i+1];
+      const dir = (nxt.r<cur.r?'up': nxt.r>cur.r?'down': nxt.c>cur.c?'right':'left');
+      const startMoves = moves;
+      stepTo(dir);
+      const wait = setInterval(()=>{
+        if(!moving && moves>startMoves){
+          clearInterval(wait);
+          stepAlong(i+1);
+        }
+      },10);
+    })(0);
+  }
+
+  /* ===== Stats & win ===== */
+  const timeEl = document.getElementById('time');
+  const movesEl = document.getElementById('moves');
+  const bestEl  = document.getElementById('best');
+  let started=false, startTime=0, timerId=null, moves=0, won=false;
+
+  function fmt(ms){
+    const s = ms/1000;
+    const m = Math.floor(s/60);
+    const rem = s - m*60;
+    return `${String(m).padStart(2,'0')}:${rem.toFixed(1).padStart(4,'0')}`;
+  }
+  function updateTime(){
+    if(!started || won){ timeEl.textContent = started?fmt(winTime-startTime):'00:00.0'; return; }
+    timeEl.textContent = fmt(performance.now()-startTime);
+  }
+  function updateStats(){
+    movesEl.textContent = moves;
+  }
+  function storageKey(){ return `maze-best-${cols}x${rows}`; }
+  function getBest(){
+    const v = localStorage.getItem(storageKey());
+    bestEl.textContent = v ? fmt(Number(v)) : '—';
+  }
+
+  let winTime=0;
+  function checkWin(){
+    if(player.r===goal.r && player.c===goal.c){
+      won=true; winTime=performance.now();
+      updateTime(); chime(); fireworks();
+      // best
+      const key=storageKey(); const cur = localStorage.getItem(key);
+      const elapsed = winTime-startTime;
+      if(!cur || elapsed < Number(cur)){ localStorage.setItem(key, String(elapsed)); }
+      getBest();
+    }
+  }
+
+  function resetStats(){
+    started=false; startTime=0; moves=0; won=false;
+    updateStats(); updateTime(); getBest();
+    if(timerId) clearInterval(timerId);
+    timerId=setInterval(updateTime, 100);
+  }
+
+  /* ===== UI controls ===== */
+  const sizeSel = document.getElementById('size');
+  const newBtn = document.getElementById('newBtn');
+  const hintBtn = document.getElementById('hintBtn');
+  const solveBtn = document.getElementById('solveBtn');
+
+  sizeSel.addEventListener('change', ()=>{
+    const [c,r] = sizeSel.value.split('x').map(Number);
+    makeGrid(r,c);
+  });
+  newBtn.addEventListener('click', ()=>{ makeGrid(rows,cols); });
+  hintBtn.addEventListener('click', ()=>showHint());
+  solveBtn.addEventListener('click', ()=>solve());
+
+  // Keyboard
+  const keyDir = {ArrowUp:'up', ArrowRight:'right', ArrowDown:'down', ArrowLeft:'left', w:'up', d:'right', s:'down', a:'left', W:'up', D:'right', S:'down', A:'left'};
+  addEventListener('keydown', (e)=>{
+    if(keyDir[e.key]){ e.preventDefault(); stepTo(keyDir[e.key]); }
+    else if(e.key==='h' || e.key==='H'){ showHint(); }
+    else if(e.key==='s' || e.key==='S'){ solve(); }
+    else if(e.key==='n' || e.key==='N'){ makeGrid(rows,cols); }
+  });
+
+  // D-pad
+  document.querySelectorAll('.pad [data-dir]').forEach(btn=>{
+    btn.addEventListener('click', ()=>stepTo(btn.dataset.dir));
+  });
+
+  // Swipe
+  let touchStart=null;
+  canvas.addEventListener('pointerdown', (e)=>{ touchStart={x:e.clientX,y:e.clientY,t:e.timeStamp}; });
+  canvas.addEventListener('pointerup', (e)=>{
+    if(!touchStart) return;
+    const dx = e.clientX - touchStart.x, dy = e.clientY - touchStart.y;
+    const adx=Math.abs(dx), ady=Math.abs(dy);
+    if(Math.max(adx,ady)>18){
+      const dir = adx>ady ? (dx>0?'right':'left') : (dy>0?'down':'up');
+      stepTo(dir);
+    }
+    touchStart=null;
+  });
+
+  /* ===== Fireworks on win ===== */
+  function fireworks(){
+    const center = {x: offX + (goal.c+0.5)*cellSize, y: offY + (goal.r+0.5)*cellSize};
+    for(let k=0;k<22;k++){
+      const p = document.createElement('div');
+      p.className='fw';
+      const ang = (Math.PI*2)*(k/22)+Math.random()*0.2;
+      const dist = 40+Math.random()*48;
+      const hue = Math.floor(Math.random()*360);
+      p.style.background = `hsl(${hue} 90% 70%)`;
+      p.style.boxShadow = `0 0 12px 4px hsla(${hue} 90% 70% / .8)`;
+      p.style.left = (center.x-3)+'px';
+      p.style.top  = (center.y-3)+'px';
+      p.style.setProperty('--dx', (Math.cos(ang)*dist)+'px');
+      p.style.setProperty('--dy', (Math.sin(ang)*dist)+'px');
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(), 1000);
+    }
+  }
+
+  /* ===== Init ===== */
+  resize();
+  makeGrid(rows,cols);
+})();
+</script>
+</body>
+</html>

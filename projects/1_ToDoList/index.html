@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple To-Do List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
+      margin: 40px auto;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #input-area {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    #new-task {
+      flex: 1;
+      padding: 6px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 6px 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    ul {
+      padding-left: 0;
+      list-style-type: none;
+    }
+
+    li {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li span {
+      cursor: pointer;
+    }
+
+    li.done span {
+      text-decoration: line-through;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+  <h1>My To-Do List</h1>
+
+  <div id="input-area">
+    <input id="new-task" type="text" placeholder="Type a new task..." />
+    <button onclick="addTask()">Add</button>
+  </div>
+
+  <ul id="todo-list"></ul>
+
+  <script>
+    // This function runs when we click "Add"
+    function addTask() {
+      var input = document.getElementById("new-task");
+      var text = input.value.trim(); // remove spaces at start/end
+
+      if (text === "") {
+        alert("Please type a task first.");
+        return;
+      }
+
+      // Create a new <li> element
+      var li = document.createElement("li");
+
+      // Create a <span> to hold the task text
+      var span = document.createElement("span");
+      span.textContent = text;
+
+      // When we click the text, mark as done / not done
+      span.onclick = function () {
+        li.classList.toggle("done");
+      };
+
+      // Create a delete button
+      var deleteButton = document.createElement("button");
+      deleteButton.textContent = "Delete";
+
+      // When we click "Delete", remove the task
+      deleteButton.onclick = function () {
+        li.remove();
+      };
+
+      // Put span and button inside li
+      li.appendChild(span);
+      li.appendChild(deleteButton);
+
+      // Add li to the <ul>
+      var list = document.getElementById("todo-list");
+      list.appendChild(li);
+
+      // Clear the input box
+      input.value = "";
+      input.focus();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!--
+camera-stream/
+├── public/
+│   ├── smartphone.html
+│   └── viewer.html
+├── server.js
+└── package.json
+
+Run the following commands to install the required packages:
+
+npm install express socket.io
+
+npm init -y
+npm install express
+
+Start the Server
+
+node server.js
+
+
+https://localhost:3000
+
+
+
+Then, do the further operations so that you can access on Internet
+
+npm install -g ngrok
+
+
+Sign Up for Ngrok:
+
+Go to Ngrok Sign Up.
+Create an account if you don't have one.
+Get Your Authtoken:
+
+Once logged in, go to the Get Started Page.
+Copy the authtoken provided.
+Install Your Authtoken:
+
+
+ngrok config add-authtoken <your_authtoken>
+
+ngrok http 3000
+
+https://your-ngrok-url.ngrok.io
+
+
+Keep local web service on: node server.js
+-->

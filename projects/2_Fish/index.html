@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><base target="_blank">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+	  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #001f3f, #004080);
+            position: relative;
+            height: 100vh;
+        }
+
+        .background {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            width: 200%;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            animation: animateWave 10s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            bottom: 20px;
+            animation-duration: 15s;
+            opacity: 0.7;
+        }
+
+        @keyframes animateWave {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .sea-grass {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 200px;
+            background: url('./images/asfalt-dark.png'), linear-gradient(to top, #004d00, transparent);
+        }
+
+        .creature {
+            position: absolute;
+            animation: float 10s infinite;
+        }
+
+        .creature svg {
+            width: 50px;
+            height: 50px;
+        }
+
+        .jellyfish {
+            animation-duration: 8s;
+        }
+
+        .lobster {
+            animation-duration: 12s;
+        }
+
+        .crab {
+            animation-duration: 14s;
+        }
+
+        .coral {
+            animation-duration: 16s;
+        }
+		
+		.swimming1 {
+            animation-duration: 18s;
+        }
+		
+		.swimming1 {
+            animation-duration: 20s;
+        }
+		
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .fish {
+            position: absolute;
+            animation: swim 12s linear infinite;
+        }
+		
+        .fisha {
+            position: absolute;
+            animation: swim 12s linear infinite;
+        }
+		
+        .fishb {
+            position: absolute;
+            animation: swim 12s linear infinite;
+        }
+		
+        .fishc {
+            position: absolute;
+            animation: swim 12s linear infinite;
+        }
+		
+        .fishd {
+            position: absolute;
+            animation: swim 12s linear infinite;
+        }
+
+        @keyframes swim {
+            0% {
+                transform: translateX(-100%) scaleX(1);
+            }
+            50% {
+                transform: translateX(100vw) scaleX(1);
+            }
+            50.1% {
+                transform: translateX(100vw) scaleX(-1);
+            }
+            100% {
+                transform: translateX(-100%) scaleX(-1);
+            }
+        }
+
+        .fish1 {
+            top: 20%;
+            animation-duration: 37s;
+        }
+
+        .fish2 {
+            top: 40%;
+            animation-duration: 29s;
+            animation-delay: 2s;
+        }
+
+        .fish3 {
+            top: 60%;
+            animation-duration: 31s;
+            animation-delay: 4s;
+        }
+
+        .fish4 {
+            top: 80%;
+            animation-duration: 33s;
+            animation-delay: 6s;
+        }
+
+        @keyframes tailMove {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+
+        .fish .tail {
+            animation: tailMove 0.5s infinite;
+        }
+		
+        .fisha .tail {
+            animation: tailMove 0.5s infinite;
+        }
+		
+        .fishb .tail {
+            animation: tailMove 0.5s infinite;
+        }
+		
+        .fishc .tail {
+            animation: tailMove 0.5s infinite;
+        }
+		
+        .fishd .tail {
+            animation: tailMove 0.5s infinite;
+        }
+
+        @keyframes mouthMove {
+            0%, 100% {
+                transform: scaleY(1);
+            }
+            50% {
+                transform: scaleY(0.5);
+            }
+        }
+
+        .fish .mouth {
+            transform-origin: center;
+            animation: mouthMove 1s infinite;
+        }
+		
+        .fisha .mouth {
+            transform-origin: center;
+            animation: mouthMove 1s infinite;
+        }
+		
+        .fishb .mouth {
+            transform-origin: center;
+            animation: mouthMove 1s infinite;
+        }
+		
+        .fishc .mouth {
+            transform-origin: center;
+            animation: mouthMove 1s infinite;
+        }
+		
+        .fishd .mouth {
+            transform-origin: center;
+            animation: mouthMove 1s infinite;
+        }
+
+        .bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            animation: rise linear infinite;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: 50px;
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            100% {
+                bottom: 100vh;
+                opacity: 0;
+                transform: translateX(20px) scale(0.5);
+            }
+        }
+
+        .iphone-window {
+            display: none;
+            position: absolute;
+            width: 300px;
+            height: 580px;
+            background: white;
+            border: 8px solid black;
+            border-radius: 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .iphone-header {
+            height: 40px;
+            background: #f8f8f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .iphone-content {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff6347;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        @keyframes dance {
+            0% {
+                transform: rotate(0deg) scale(1);
+                color: #ff6347;
+            }
+            10% {
+                transform: rotate(15deg) scale(1.1);
+                color: #ffa07a;
+            }
+            20% {
+                transform: rotate(-15deg) scale(1.2);
+                color: #ff6347;
+            }
+            30% {
+                transform: rotate(10deg) scale(1.1);
+                color: #ff4500;
+            }
+            40% {
+                transform: rotate(-10deg) scale(1.2);
+                color: #ff6347;
+            }
+            50% {
+                transform: rotate(5deg) scale(1.1);
+                color: #ff8c00;
+            }
+            60% {
+                transform: rotate(-5deg) scale(1.3);
+                color: #ff6347;
+            }
+            70% {
+                transform: rotate(10deg) scale(1.5);
+                color: #ff4500;
+            }
+            80% {
+                transform: rotate(-10deg) scale(1.3);
+                color: #ff6347;
+            }
+            90% {
+                transform: rotate(5deg) scale(1.1);
+                color: #ffa07a;
+            }
+            100% {
+                transform: rotate(0deg) scale(1);
+                color: #ff6347;
+            }
+        }
+
+        .label {
+			font-weight: bold;
+            transform-origin: center;
+            font-size: 1em;
+            color: #ff6347;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            animation: dance 8s infinite ease-in-out;
+        }
+
+        .realistic-jellyfish,
+        .realistic-lobster,
+		.realistic-coral,
+        .realistic-crab {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-size: cover;
+            animation: move linear infinite;
+        }
+
+
+		.realistic-swimming1,
+		.realistic-swimming2 {
+            position: absolute;
+            width: 80px;
+            height: 40px;
+            background-size: cover;
+        }
+		
+		
+        .realistic-jellyfish {
+            background-image: url('./images/jellyfish.gif');
+            animation-duration: 12s;
+        }
+
+        .realistic-lobster {
+            background-image: url('./images/crab.gif');
+            animation-duration: 14s;
+        }
+		
+		.realistic-coral {
+            background-image: url('./images/coral.gif');
+            animation-duration: 18s;
+        }
+
+        .realistic-crab {
+            background-image: url('./images/lobster.gif');
+            animation-duration: 16s;
+        }
+		
+		.realistic-swimming1 {
+            background-image: url('./images/swimming1.gif');
+            animation-duration: 18s;
+        }
+		
+		.realistic-swimming2 {
+            background-image: url('./images/swimming2.gif');
+            animation-duration: 18s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translateY(0) translateX(0);
+            }
+            50% {
+                transform: translateY(-20px) translateX(30px);
+            }
+            100% {
+                transform: translateY(0) translateX(0);
+            }
+        }
+
+        .realistic-creatures {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            height: 50px;
+            display: flex;
+            justify-content: space-around;
+        }
+		
+		
+        .flag {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            width: 400px;
+            height: 80px;
+            background: #1E90FF;
+            border: 0px solid #000;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            transform: translate(-50%, -50%);
+        }
+		
+        .flagMidway {
+            position: absolute;
+            bottom: 85%;
+            left: 90%;
+            transform: translateX(-50%);
+            width: 240px;
+            height: 120px;
+            background: url('./images/midwaylogo.PNG') no-repeat center/contain;
+            animation: wave 5s infinite ease-in-out;
+        }
+
+        @keyframes wave {
+            0%, 100% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+            25% {
+                transform: translateX(-50%) rotate(10deg);
+            }
+			50% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+			75% {
+                transform: translateX(-50%) rotate(-10deg);
+            }
+			100% {
+                transform: translateX(-50%) rotate(0deg);
+            }
+        }
+		
+		
+    /* Add your CSS styling here */
+    .hidden { display: none; }
+    #videoPlayer {
+      width: 90%;
+      height: auto;
+    }
+    .app {
+      width: 300px;
+      margin: auto;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #albumCoverContainer {
+      position: relative;
+      padding-top: 56.25%; /* 16:9 Aspect Ratio */
+    }
+    #videoPlayer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 90%;
+      height: 100%;
+	  margin: 20px 0;
+    }
+    .songControllerButtons {
+      cursor: pointer;
+      margin: 13px 13px;
+    }
+    .songLengthSlider, #volSlider {
+      width: 90%;
+    }
+    #songlengthIndicators, #volumeLength, #extraBtnsContainer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+	  margin: 13px 13px;
+    }
+	
+	
+	
+.logo-container img {
+    width: 90%;
+	align-items: center;
+	text-align: center;
+}
+
+
+.login-container {
+    text-align: left;
+    width: 100%;
+	align-items: center;
+}
+
+.screen {
+    width: 92%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 30px;
+    overflow: hidden;
+    padding: 10px 10px;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.login-container h2 {
+    margin-bottom: 40px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="flag" style="text-align:center">
+        Welcome! 
+    </div>
+	
+	<div class="flagMidway"></div>
+	
+    <div class="background">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="sea-grass"></div>
+
+        <!-- Realistic Creatures -->
+        <div class="realistic-jellyfish" style="left: 5%; top: 15%;"></div>
+        <div class="realistic-jellyfish" style="left: 30%; top: 20%;"></div>
+        <div class="realistic-jellyfish" style="left: 50%; top: 10%;"></div>
+        <div class="realistic-jellyfish" style="left: 70%; top: 25%;"></div>
+        <div class="realistic-jellyfish" style="left: 90%; top: 12%;"></div>
+        <div class="realistic-jellyfish" style="left: 90%; top: 75%;"></div>
+		<div class="realistic-jellyfish" style="left: 40%; top: 70%;"></div>
+		
+		<div class="realistic-lobster" style="left: 90%; top: 90%;"></div>
+        <div class="realistic-lobster" style="left: 40%; top: 8%;"></div>
+        <div class="realistic-lobster" style="left: 35%; top: 65%;"></div>
+		<div class="realistic-lobster" style="left: 65%; top: 90%;"></div>
+        <div class="realistic-lobster" style="left: 55%; top: 70%;"></div>
+        <div class="realistic-lobster" style="left: 75%; top: 75%;"></div>
+        <div class="realistic-lobster" style="left: 15%; top: 90%;"></div>
+		<div class="realistic-lobster" style="left: 15%; top: 10%;"></div>
+		<div class="realistic-lobster" style="left: 80%; top: 12%;"></div>
+		
+		
+		<div class="realistic-crab" style="left: 5%; top: 95%;"></div>
+		<div class="realistic-crab" style="left: 10%; top: 90%;"></div>
+        <div class="realistic-crab" style="left: 20%; top: 80%;"></div>
+		<div class="realistic-crab" style="left: 30%; top: 70%;"></div>
+        <div class="realistic-crab" style="left: 40%; top: 85%;"></div>
+		<div class="realistic-crab" style="left: 50%; top: 90%;"></div>
+        <div class="realistic-crab" style="left: 60%; top: 80%;"></div>
+		<div class="realistic-crab" style="left: 70%; top: 75%;"></div>
+        <div class="realistic-crab" style="left: 80%; top: 85%;"></div>
+		<div class="realistic-crab" style="left: 90%; top: 90%;"></div>
+		
+		<div class="realistic-coral" style="left: 5%; top: 75%;"></div>
+		<div class="realistic-coral" style="left: 95%; top: 85%;"></div>
+		<div class="realistic-coral" style="left: 50%; top: 70%;"></div>
+		
+		
+		<div class="realistic-swimming1" style="left: 10%; top: -2%;"></div>
+		<div class="realistic-swimming2" style="left: 32%; top: -3%;"></div>
+		<div class="realistic-swimming1" style="left: 70%; top: -2%;"></div>
+
+
+    </div>
+
+
+    <div class="fish fishb fish2" style="width: 180px;">
+        <svg viewBox="0 0 150 100">
+            <g class="fish-body">
+                <ellipse cx="75" cy="50" rx="60" ry="30" fill="yellow" />
+                <!--<polygon points="15,50 45,75 45,25" fill="#ff4500" />-->
+                <circle cx="105" cy="40" r="8" fill="white" />
+                <circle cx="105" cy="40" r="4" fill="black" />
+                <polygon class="tail" points="15,50 0,65 0,35" fill="orange" />
+                <ellipse cx="120" cy="50" rx="5" ry="3" fill="black" class="mouth"/> <!-- Mouth -->
+
+            </g>
+        </svg>
+    </div>
+
+	
+
+	
+	
+    <div class="iphone-window" id="iphoneWindowa">
+	
+
+
+    <script>
+let currentFish = null;
+let speechSynthesis = window.speechSynthesis; // Initialize speech synthesis
+
+// Function to create bubbles
+function createBubble(fish) {
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    const size = Math.random() * 20 + 10;
+    bubble.style.width = size + 'px';
+    bubble.style.height = size + 'px';
+    bubble.style.left = '120px';
+    bubble.style.bottom = '50px';
+    bubble.style.background = `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 0.7)`;
+    bubble.style.animationDuration = Math.random() * 3 + 5 + 's';
+    bubble.style.animationDelay = Math.random() * 5 + 's';
+    fish.appendChild(bubble);
+    setTimeout(() => {
+        fish.removeChild(bubble);
+    }, 10000);
+}
+
+// Event listeners for fish behavior
+document.querySelectorAll('.fish').forEach(fish => {
+    setInterval(() => {
+        createBubble(fish);
+    }, 2000);
+
+    fish.addEventListener('mouseover', () => {
+        // Pause fish movement when mouse is over the fish
+        fish.style.animationPlayState = 'paused';
+
+        // Speak when the mouse is over the fish
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel(); // Cancel any previous speech
+        }
+        let msg = new SpeechSynthesisUtterance("Welcome! Nice to meet you");
+        speechSynthesis.speak(msg);
+    });
+
+    fish.addEventListener('mouseout', () => {
+        // Resume fish movement when mouse is out
+        fish.style.animationPlayState = 'running';
+        
+        // Stop speaking when mouse leaves
+        if (speechSynthesis.speaking) {
+            speechSynthesis.cancel();
+        }
+    });
+
+    fish.addEventListener('click', (event) => {
+        const fishId = fish.classList.contains('fisha') ? 'iphoneWindowa' :
+                       fish.classList.contains('fishb') ? 'iphoneWindowb' :
+                       fish.classList.contains('fishc') ? 'iphoneWindowc' :
+                       fish.classList.contains('fishd') ? 'iphoneWindowd' : null;
+        
+        if (fishId) {
+            const iphoneWindow = document.getElementById(fishId);
+            iphoneWindow.style.display = 'block';
+
+            const windowWidth = iphoneWindow.offsetWidth;
+            const windowHeight = iphoneWindow.offsetHeight;
+
+            let left = event.pageX;
+            let top = event.pageY;
+
+            // Adjust window position based on click
+            iphoneWindow.style.left = `${left - windowWidth / 2}px`;
+            iphoneWindow.style.top = `${top - windowHeight / 2}px`;
+        }
+    });
+});
+
+
+function closeIphoneWindow(windowId) {
+    const iphoneWindow = document.getElementById(windowId);
+    iphoneWindow.style.display = 'none';
+    if (currentFish) {
+        currentFish.style.animationPlayState = 'running';
+        currentFish = null;
+    }
+}
+
+
+    const videoPlayer = document.getElementById('videoPlayer');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const seekSlider = document.getElementById('seekSlider');
+    const currentTimeEl = document.getElementById('currentTime');
+    const remainingTimeEl = document.getElementById('remainingTime');
+    const volSlider = document.getElementById('volSlider');
+
+    // Play or pause the video
+    playPauseBtn.addEventListener('click', () => {
+      if (videoPlayer.paused) {
+        videoPlayer.play();
+        playPauseBtn.classList.remove('fa-play');
+        playPauseBtn.classList.add('fa-pause');
+      } else {
+        videoPlayer.pause();
+        playPauseBtn.classList.remove('fa-pause');
+        playPauseBtn.classList.add('fa-play');
+      }
+    });
+
+    // Update seek slider and time indicators
+    videoPlayer.addEventListener('timeupdate', () => {
+      const currentTime = videoPlayer.currentTime;
+      const duration = videoPlayer.duration;
+      seekSlider.value = (currentTime / duration) * 100;
+
+      const currentMinutes = Math.floor(currentTime / 60);
+      const currentSeconds = Math.floor(currentTime % 60);
+      currentTimeEl.textContent = `${currentMinutes}:${currentSeconds < 10 ? '0' : ''}${currentSeconds}`;
+
+      const remainingTime = duration - currentTime;
+      const remainingMinutes = Math.floor(remainingTime / 60);
+      const remainingSeconds = Math.floor(remainingTime % 60);
+      remainingTimeEl.textContent = `-${remainingMinutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    });
+
+    // Seek functionality
+    seekSlider.addEventListener('input', () => {
+      const seekTime = (seekSlider.value / 100) * videoPlayer.duration;
+      videoPlayer.currentTime = seekTime;
+    });
+
+    // Volume control
+    volSlider.addEventListener('input', () => {
+      videoPlayer.volume = volSlider.value / 100;
+    });
+	
+	
+
+  </script>
+</body>
+</html>

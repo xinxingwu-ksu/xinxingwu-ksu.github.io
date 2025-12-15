@@ -1,0 +1,130 @@
+/* STYLES FOR SEARCH FORM */
+
+input {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: hsl(0, 0%, 0%);
+  padding: 0;
+  width: 100%;
+}
+
+.search-form {
+  margin: 0 auto;
+  max-width: 584px;
+  padding-bottom: 30px;
+  position: relative;
+}
+
+.search-form .search-icon {
+  color: #9aa0a6;
+  font-size: 1.3rem;
+  left: 15px;
+  position: absolute;
+  top: 19px;
+}
+
+.search-form .search-input {
+  border: 1px solid #dfe1e5;
+  border-radius: 24px;
+  font-size: 1.1rem;
+  height: 46px;
+  margin: 5px 0;
+  padding: 10px 45px;
+}
+
+.search-form .search-input:hover,
+.search-form .search-input:focus {
+  -webkit-box-shadow: 0 1px 6px rgba(32, 33, 36, 28%);
+  box-shadow: 0 1px 6px rgba(32, 33, 36, 28%);
+  outline: none;
+}
+
+.search-form .google-mic-button .tooltip,
+.search-form .google-camera-button .tooltip {
+  background: hsl(0, 0%, 0%);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: hsl(0, 0%, 100%);
+  padding: 6px 10px;
+}
+
+.search-form .google-mic-button:hover .tooltip,
+.search-form .google-camera-button:hover .tooltip {
+  bottom: -40px;
+  display: block;
+  right: -47px;
+}
+
+.search-form .google-mic-button:hover .tooltip:after,
+.search-form .google-camera-button:hover .tooltip:after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent hsl(0, 0%, 0%) transparent;
+}
+
+.search-form .google-mic-button,
+.search-form .google-mic-button:hover,
+.search-form .google-mic-button:active,
+.search-form .google-mic-button:focus {
+  display: inline;
+  position: absolute;
+  right: 62px;
+  top: 18px;
+}
+
+.search-form .google-mic {
+  max-width: 14px;
+}
+
+.search-form .google-camera-button,
+.search-form .google-camera-button:hover,
+.search-form .google-camera-button:active,
+.search-form .google-camera-button:focus {
+  display: inline;
+  position: absolute;
+  right: 19px;
+  top: 19px;
+}
+
+.search-form .google-camera {
+  max-width: 20px;
+}
+
+.search-form .button-group {
+  padding-top: 14px;
+}
+
+.search-form .search-button,
+.search-form .search-button:visited,
+.search-form .search-button:hover,
+.search-form .search-button:active,
+.search-form .search-button:focus {
+  background: #f8f9fa;
+  border: 1px solid #f8f9fa;
+  border-radius: 4px;
+  color: #3c4043;
+  font-size: 1.02rem;
+  margin: 11px 6px;
+  padding: 8px 16px;
+}
+
+.search-form .search-button:hover {
+  border: 1px solid #dadce0;
+}
+
+/* Media queries */
+@media all and (max-width: 600px) {
+  .search-form .google-camera-button:hover .tooltip {
+    right: -20px;
+  }
+
+  .search-form .google-camera-button:hover .tooltip:after {
+    left: 75%;
+  }
+}

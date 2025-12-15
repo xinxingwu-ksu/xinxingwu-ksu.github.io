@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Terms — Enable checkbox after 10s</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 24px; }
+  .box { max-width: 700px; margin: 0 auto; }
+  .terms {
+    height: 220px; overflow-y: auto; padding: 14px;
+    border: 1px solid #ccc; border-radius: 8px; background: #fafafa;
+  }
+  .muted { color: #777; }
+  .disabled-text { color: #aaa; }
+  .agree-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .progress { height: 6px; background: #e6e6e6; border-radius: 999px; margin: 10px 0 16px; }
+  .progress > div { height: 100%; width: 0%; background: #0a7cff; border-radius: 999px; transition: width 0.2s linear; }
+  button { padding: 10px 14px; border: 1px solid #bbb; border-radius: 8px; background: #f2f2f2; cursor: not-allowed; color: #777; }
+  button.enabled { background: #0a7cff; color: #fff; border-color: #0a7cff; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>Terms & Conditions</h2>
+  <p id="status" class="muted" aria-live="polite">Please read the terms. The checkbox will unlock after 10 seconds of reading.</p>
+
+  <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+
+  <div id="terms" class="terms" tabindex="0" aria-label="Terms and Conditions">
+    <p><strong>Welcome!</strong> Please read the following terms carefully. This text is here so you can test the 10-second requirement.</p>
+    <p>We are a private, liberal arts-based institution with career-focused majors. We offer traditional semester undergraduate programs as well as accelerated format evening and online undergraduate and graduate programs. Our students are from all across the United States and many international countries. Our story is a unique one born out of an idea to educate orphaned women.</p>
+    <p>Our beautiful campus is located on 200 acres in Midway, Kentucky in Woodford County and is a working horse farm. Just fifteen minutes from Lexington, our campus is in the center of Kentucky’s internationally renowned horse country and Is surround by some of the top Thoroughbred farms in the world.</p>
+	<p>Midway, Kentucky is a quaint, historic town which was founded by a railroad company in the 1830s. The trains still run through town, and our campus daily. Downtown Midway is known as a regional dining destination and its unique boutiques that draw visitors daily.</p>
+    <p>By continuing, you acknowledge that you have read and agree to these terms.</p>
+  </div>
+
+  <div class="agree-row">
+    <input id="agree" type="checkbox" disabled />
+    <label for="agree" id="agreeLabel" class="disabled-text">I have read and agree to the terms</label>
+  </div>
+
+  <div style="margin-top:12px;">
+    <button id="continueBtn" disabled>Continue</button>
+  </div>
+</div>
+
+<script>
+  // Plain JS (no arrow functions)
+  var TOTAL_SECONDS = 10;
+  var remaining = TOTAL_SECONDS;
+  var timerStarted = false;
+  var timerId = null;
+
+  function startTimer() {
+    if (timerStarted) { return; }
+    timerStarted = true;
+
+    var status = document.getElementById('status');
+    var bar = document.getElementById('bar');
+
+    function tick() {
+      var elapsed = TOTAL_SECONDS - remaining;
+      var ratio = elapsed / TOTAL_SECONDS;
+      bar.style.width = (Math.max(0, Math.min(1, ratio)) * 100) + '%';
+
+      if (remaining <= 0) {
+        clearInterval(timerId);
+        enableAgreement();
+        status.textContent = 'Thanks! You can agree now.';
+        return;
+      }
+      status.textContent = 'Please keep reading… ' + remaining + 's left.';
+      remaining -= 1;
+    }
+
+    // Run once immediately, then every second
+    tick();
+    timerId = setInterval(tick, 1000);
+  }
+
+  function enableAgreement() {
+    var checkbox = document.getElementById('agree');
+    var label = document.getElementById('agreeLabel');
+    checkbox.disabled = false;
+    label.classList.remove('disabled-text');
+  }
+
+  function onAgreeChanged() {
+    var checkbox = document.getElementById('agree');
+    var btn = document.getElementById('continueBtn');
+    if (checkbox.checked) {
+      btn.disabled = false;
+      btn.classList.add('enabled');
+    } else {
+      btn.disabled = true;
+      btn.classList.remove('enabled');
+    }
+  }
+
+  function init() {
+    var terms = document.getElementById('terms');
+    var checkbox = document.getElementById('agree');
+
+    // Start the 10s timer on first interaction with the terms
+    terms.addEventListener('scroll', startTimer);
+    terms.addEventListener('focus', startTimer);
+    terms.addEventListener('click', startTimer);
+    terms.addEventListener('keydown', startTimer);
+
+    checkbox.addEventListener('change', onAgreeChanged);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

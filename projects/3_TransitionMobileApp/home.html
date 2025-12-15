@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Home – Map</title>
+
+  <!-- common phone/login CSS -->
+  <link rel="stylesheet" href="./css/styles.css" />
+  <!-- Leaflet core CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"
+  />
+  <!-- map-only overrides -->
+  <link rel="stylesheet" href="./css/map.css" />
+</head>
+<body>
+  <div class="iphone">
+    <!-- override padding so map fills full screen -->
+    <div class="screen map-screen">
+      <div id="map"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet core JS -->
+  <script
+    src="https://unpkg.com/leaflet/dist/leaflet.js"
+  ></script>
+  <!-- your map logic with GPS + IP fallback -->
+  <script src="./js/map.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Windows XP – Boot Progress (HTML)</title>
+<style>
+  :root{
+    --bg:#000;
+    --text:#eaeaea;
+    --xp-orange:#ff7f00;
+    --bar-border:#5a5a5a;
+    --bar-track:#0b0b0b;
+    --bar-green:#7db11b;   /* XP-ish green */
+    --speed:3s;         /* marquee speed: lower = faster */
+  }
+
+  /* full black screen */
+  html,body{
+    height:100%;
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font:16px/1.35 Tahoma, Segoe UI, Arial, sans-serif;
+  }
+
+  .screen{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .wrap{
+    width:min(680px, 92vw);
+    text-align:center;
+  }
+
+  /* faux “Microsoft Windows xp” lockup */
+  .ms{
+    font-size:14px;
+    opacity:.85;
+    letter-spacing:.2px;
+    margin-bottom:4px;
+    text-align:left;
+    width:fit-content;
+    margin-inline:auto;
+  }
+  .title{
+    font-size:56px;
+    font-weight:600;
+    letter-spacing:.5px;
+    margin:0 0 34px 0;
+  }
+  .title .xp{
+    color:var(--xp-orange);
+    font-weight:700;
+  }
+
+  /* progress bar shell */
+  .progress{
+    width:260px;
+    height:12px;
+    margin:0 auto 22px auto;
+    background:var(--bar-track);
+    border:1px solid var(--bar-border);
+    border-radius:3px;
+    overflow:hidden;
+    box-shadow:
+      inset 0 1px 2px rgba(255,255,255,.06),
+      inset 0 -1px 2px rgba(0,0,0,.9);
+    position:relative;
+  }
+
+  /* the moving “blocks” */
+  .marquee{
+    position:absolute;
+    inset:0;
+    width:200%;               /* gives room to scroll */
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 22px,
+        var(--bar-green) 22px 34px
+      );
+    filter: drop-shadow(0 0 2px #6fa315); /* soft XP glow */
+    animation: slide var(--speed) linear infinite;
+  }
+
+  /* subtle shine on top edge */
+  .progress::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(#ffffff12, transparent 40%);
+    pointer-events:none;
+  }
+
+  @keyframes slide{
+    from{ transform: translateX(0); }
+    to  { transform: translateX(-50%); }
+  }
+
+  .legal{
+    opacity:.75;
+    font-size:12px;
+    margin-top:36px;
+  }
+  .msft{
+    opacity:.6;
+    font-size:13px;
+    position:fixed;
+    right:24px;
+    bottom:18px;
+    letter-spacing:.3px;
+  }
+</style>
+</head>
+<body>
+  <div class="screen">
+    <div class="wrap">
+      <div class="ms">Microsoft</div>
+      <h1 class="title">Windows <span class="xp">xp</span></h1>
+
+      <div class="progress" aria-label="Windows XP is starting">
+        <div class="marquee" aria-hidden="true"></div>
+      </div>
+
+      <div class="legal">Copyright © Microsoft Corporation</div>
+      <div class="msft">Microsoft</div>
+    </div>
+  </div>
+</body>
+</html>

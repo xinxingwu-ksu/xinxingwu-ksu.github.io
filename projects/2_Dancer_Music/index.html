@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jingle Bell Rock - Singing Simulation with Dancer</title>
+<style>
+    body {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: black;
+        position: relative;
+    }
+
+    .logo {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
+    .dancer {
+        position: absolute;
+        width: 50px;
+        height: 100px;
+        background-color: #ffcc00;
+        border-radius: 10px;
+        animation: bodyMove 1.5s infinite, flyAround 5s 3s infinite alternate;
+    }
+
+    .dancer::before, .dancer::after {
+        content: '';
+        position: absolute;
+        width: 15px;
+        height: 40px;
+        background-color: #ff5733;
+        top: 20px;
+        border-radius: 10px;
+        animation: armMove 1.5s infinite;
+    }
+
+    .dancer::before {
+        left: -20px;
+        transform-origin: top right;
+    }
+
+    .dancer::after {
+        right: -20px;
+        transform-origin: top left;
+    }
+
+    .head {
+        position: absolute;
+        top: -20px;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        background-color: #33ff57;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        animation: headMove 1.5s infinite;
+    }
+
+    .eye-left, .eye-right {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        background-color: black;
+        border-radius: 50%;
+        top: 5px;
+    }
+
+    .eye-left {
+        left: 4px;
+    }
+
+    .eye-right {
+        right: 4px;
+    }
+
+    .mouth {
+        position: absolute;
+        width: 10px;
+        height: 5px;
+        background-color: black;
+        border-radius: 0 0 10px 10px;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .leg-left, .leg-right {
+        position: absolute;
+        width: 15px;
+        height: 50px;
+        background-color: #3357ff;
+        top: 100px;
+        border-radius: 10px;
+        animation: legMove 1.5s infinite;
+    }
+
+    .leg-left {
+        left: 5px;
+        transform-origin: top center;
+    }
+
+    .leg-right {
+        right: 5px;
+        transform-origin: top center;
+    }
+
+    .foot-left, .foot-right {
+        position: absolute;
+        width: 20px;
+        height: 10px;
+        background-color: #f1c40f;
+        border-radius: 50%;
+        top: 150px;
+    }
+
+    .foot-left {
+        left: 5px;
+    }
+
+    .foot-right {
+        right: 5px;
+    }
+
+    @keyframes bodyMove {
+        0% {
+            transform: translateY(0) rotate(0deg);
+        }
+        20% {
+            transform: translateY(-50px) rotate(-30deg);
+        }
+        40% {
+            transform: translateY(50px) rotate(30deg);
+        }
+        60% {
+            transform: translateY(-40px) rotate(40deg);
+        }
+        80% {
+            transform: translateY(40px) rotate(-40deg);
+        }
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+    }
+
+    @keyframes armMove {
+        0%, 100% {
+            transform: rotate(0deg);
+        }
+        20% {
+            transform: rotate(80deg);
+        }
+        40% {
+            transform: rotate(-80deg);
+        }
+    }
+
+    @keyframes legMove {
+        0%, 100% {
+            transform: rotate(0deg);
+        }
+        20% {
+            transform: rotate(50deg);
+        }
+        40% {
+            transform: rotate(-50deg);
+        }
+    }
+
+    @keyframes flyAround {
+        0% {
+            transform: rotate(0deg) translateX(0) translateY(0);
+        }
+        100% {
+            transform: rotate(360deg) translateX(200px) translateY(200px);
+        }
+    }
+
+    /* Buttons for controlling the music */
+    button {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        background-color: #ff5733;
+        color: white;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #ff4500;
+    }
+</style>
+</head>
+<body>
+
+<!-- Logo positioned at the top-left -->
+<div class="logo">
+    <img src="midwaylogo.png" alt="Logo" height="8%" width="10%" style="vertical-align:left;">
+</div>
+
+<div class="dancer">
+    <div class="head">
+        <div class="eye-left"></div>
+        <div class="eye-right"></div>
+        <div class="mouth"></div>
+    </div>
+    <div class="leg-left"></div>
+    <div class="leg-right"></div>
+    <div class="foot-left"></div>
+    <div class="foot-right"></div>
+</div>
+
+<!-- Control buttons -->
+<button id="startButton" onclick="toggleMusic()">Turn On Music</button>
+
+<script>
+// Global Audio Context and State
+let audioCtx;
+let isPlaying = false;
+let musicInterval;
+let oscillator, vibrato, gainNode, vibratoGain; // To control the sound components
+
+// Start music (Jingle Bell Rock)
+function playSingingTone(freq, duration, vibratoFreq, vibratoDepth, startTime, audioCtx, volume = 0.3) {
+    oscillator = audioCtx.createOscillator();
+    vibrato = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = freq;
+
+    vibrato.type = 'sine';
+    vibrato.frequency.value = vibratoFreq;
+    vibratoGain = audioCtx.createGain();
+    vibratoGain.gain.value = vibratoDepth;
+    vibrato.connect(vibratoGain);
+    vibratoGain.connect(oscillator.frequency);
+
+    gainNode.gain.value = volume;
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.start(startTime);
+    vibrato.start(startTime);
+    oscillator.stop(startTime + duration);
+    vibrato.stop(startTime + duration);
+}
+
+function singJingleBellRock() {
+    let startTime = audioCtx.currentTime;
+
+    const notes = [
+        { freq: 784, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 784, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 784, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 659, duration: 0.5, vibratoFreq: 6, vibratoDepth: 12 },
+        { freq: 784, duration: 0.5, vibratoFreq: 6, vibratoDepth: 12 },
+        { freq: 880, duration: 1.0, vibratoFreq: 5, vibratoDepth: 15 },
+        { freq: 784, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 659, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 784, duration: 0.5, vibratoFreq: 6, vibratoDepth: 12 },
+        { freq: 784, duration: 0.5, vibratoFreq: 5, vibratoDepth: 10 },
+        { freq: 659, duration: 0.5, vibratoFreq: 6, vibratoDepth: 12 },
+        { freq: 659, duration: 1.0, vibratoFreq: 5, vibratoDepth: 15 },
+    ];
+
+    // Play each note in the song
+    notes.forEach(note => {
+        playSingingTone(note.freq, note.duration, note.vibratoFreq, note.vibratoDepth, startTime, audioCtx);
+        startTime += note.duration * 1.1; // Adding slight delay between notes
+    });
+}
+
+// Toggle the music on and off
+function toggleMusic() {
+    if (isPlaying) {
+        // Turn off the music
+        oscillator.stop();
+        vibrato.stop();
+        clearInterval(musicInterval);
+        audioCtx.close();
+        isPlaying = false;
+        document.getElementById('startButton').innerText = 'Turn On Music';
+    } else {
+        // Turn on the music
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        singJingleBellRock();
+        musicInterval = setInterval(singJingleBellRock, 8000); // Loop every 8 seconds
+        isPlaying = true;
+        document.getElementById('startButton').innerText = 'Turn Off Music';
+    }
+}
+</script>
+
+</body>
+</html>

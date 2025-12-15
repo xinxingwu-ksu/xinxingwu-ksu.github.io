@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="shortcut icon" type="image/x-icon" href="./breakout.ico">
+  <title>Breakout</title>
+  <style>
+    canvas {
+      border: 1px solid;
+      margin: 0 auto;
+      width: 800px;
+      display: block;
+      background-color: #EBF5E9;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" height="550px" width="800px"></canvas>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const ballColor = "#cccccc";
+    const pongColor = "#808080";
+    const brickColor = "#000000";
+    const ballR = 10, pongH = 15, pongW = 80;
+    const RIGHT_ARROW = 39, LEFT_ARROW = 37;
+      
+    let x = canvas.width / 2, y = canvas.height - 30, dx = 3, 
+      dy = -3, pongX = [canvas.width - pongW] / 2;
+
+    let rightKey = false, leftKey = false, brickRows = 3,
+      brickCol = 9, brickW = 75, brickH = 20, brickPadding = 10,
+      brickOffsetTop = 30, brickOffsetLeft = 30;
+
+    let bricks = [];
+
+    for (let c = 0; c < brickCol; c++) {
+      for (let r = 0; r < brickRows; r++) {
+        bricks.push({
+          x: (c * (brickW + brickPadding)) + brickOffsetLeft,
+          y: (r * (brickH + brickPadding)) + brickOffsetTop,
+          status: 1,
+        });
+      }
+    }
+
+    const drawBall = () => {
+      ctx.beginPath();
+      ctx.arc(x, y, ballR, 0, Math.PI * 2);
+      ctx.fillStyle = ballColor;
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    const drawPong = () => {
+      ctx.beginPath();
+      ctx.rect(pongX, canvas.height - pongH, pongW, pongH);
+      ctx.fillStyle = pongColor;
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    const drawBricks = () => {
+      bricks.forEach((bricks) => {
+        if (!bricks.status) return;
+
+        ctx.beginPath();
+        ctx.rect(bricks.x, bricks.y, brickW, brickH);
+        ctx.fillStyle = brickColor;
+        ctx.fill();
+        ctx.closePath();
+      });
+    }
+
+    const collisionDetection = () => {
+      bricks.forEach((b) => {
+        if (!b.status) return;
+        
+        let inBricksColumn = x > b.x && x < b.x + brickW, inBricksRow = y > b.y && y < b.y + brickH;
+
+        if (inBricksColumn && inBricksRow) {
+          dy = -dy;
+          b.status = 0;
+        }
+      });
+    }
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBricks();
+      drawBall();
+      drawPong();
+      collisionDetection();
+
+      const hitBottom = () => { return y + dy > canvas.height - ballR; }
+
+      const ballOverPong = () => { return x > pongX && x < pongX + pongW; }
+
+      const hitPong = () => { return hitBottom() && ballOverPong(); }
+
+      const gameOver = () => { return hitBottom() && !ballOverPong(); }
+
+      const hitSideWall = () => { return x + dx > canvas.width - ballR || x + dx < ballR; }
+
+      const hitTop = () => { return y + dy < ballR; }
+
+      const xOutOfBounds = () => { return x + dx > canvas.width - ballR || x + dx < ballR; }
+
+      const rightPressed = (e) => { return e.keyCode === RIGHT_ARROW; }
+
+      const leftPressed = (e) => { return e.keyCode === LEFT_ARROW; }
+      
+      if (hitSideWall()) dx = -dx;
+
+      if (hitTop() || hitPong()) dy = -dy;
+
+      if (gameOver()) document.location.reload(); // TODO: Something that won't reload the entire page }
+
+      document.addEventListener("keydown", (e) => {
+        rightKey = rightPressed(e);
+        leftKey = leftPressed(e);
+      });
+      document.addEventListener("keyup", (e) => {
+        rightKey = rightPressed(e) ? false : rightKey;
+        leftKey = leftPressed(e) ? false : leftKey;
+      });
+
+      let maxX = canvas.width - pongW, minX = 0, pongDelta = rightKey ? 7 : leftKey ? -7 : 0;
+
+      pongX = pongX + pongDelta;
+      pongX = Math.min(pongX, maxX);
+      pongX = Math.max(pongX, minX);
+
+      x += dx;
+      y += dy;
+    }
+
+    setInterval(draw, 10);
+
+  </script>
+</body>
+
+</html>
