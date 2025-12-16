@@ -1,0 +1,239 @@
+/* =========================================================
+   Tic-Tac-Toe (Kids Edition) — UI only
+   Keep game logic in script.js unchanged.
+   ========================================================= */
+
+:root{
+  --bg1: #fff3c4;
+  --bg2: #c9f7ff;
+  --card: rgba(255, 255, 255, 0.86);
+  --shadow: 0 16px 40px rgba(0,0,0,0.12);
+  --ink: #2a2a2a;
+  --muted: rgba(42,42,42,0.75);
+  --board: rgba(255,255,255,0.75);
+  --line: rgba(42,42,42,0.22);
+  --cell: rgba(255,255,255,0.95);
+  --cellHover: rgba(255,255,255,1);
+  --btn1: #ff6b6b;
+  --btn2: #ffb84d;
+}
+
+/* Layout */
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
+
+body{
+  margin: 0;
+  font-family: "Comic Sans MS", "Trebuchet MS", system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 20% 20%, var(--bg2), transparent 45%),
+              radial-gradient(circle at 80% 30%, var(--bg1), transparent 55%),
+              linear-gradient(135deg, #f7fffd 0%, #fff7fb 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.container{
+  width: min(92vw, 560px);
+  padding: 18px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.card{
+  background: var(--card);
+  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+  padding: 18px 16px 16px;
+  backdrop-filter: blur(10px);
+}
+
+/* Header */
+.header{
+  margin-bottom: 10px;
+}
+.title-row{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.mascot{
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.title{
+  margin: 0;
+  font-size: clamp(1.4rem, 3.6vw, 2rem);
+  letter-spacing: 0.4px;
+}
+.subtitle{
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: clamp(0.95rem, 2.8vw, 1.05rem);
+}
+
+/* Status */
+.status-wrap{
+  margin: 10px auto 14px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px dashed rgba(0,0,0,0.12);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+}
+#status{
+  font-size: clamp(1.05rem, 3vw, 1.35rem);
+  font-weight: 800;
+}
+
+/* Board */
+.board-wrap{
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 2px;
+}
+
+.board{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: min(86vw, 360px);
+  padding: 14px;
+  border-radius: 26px;
+  background: var(--board);
+  border: 2px solid rgba(255,255,255,0.7);
+  box-shadow: 0 16px 34px rgba(0,0,0,0.10);
+}
+
+/* Cells */
+.cell{
+  width: clamp(82px, 22vw, 110px);
+  height: clamp(82px, 22vw, 110px);
+  background: var(--cell);
+  border-radius: 22px;
+  border: 2px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: clamp(2.3rem, 8vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: 1px;
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.cell:hover{
+  background: var(--cellHover);
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 16px 26px rgba(0,0,0,0.10);
+}
+
+.cell:active{
+  transform: translateY(1px) scale(0.99);
+}
+
+/* Animate newly filled cells (works without changing JS) */
+.cell:not(:empty){
+  animation: pop 160ms ease-out;
+}
+
+@keyframes pop{
+  0%{ transform: scale(0.85); }
+  100%{ transform: scale(1); }
+}
+
+/* Controls */
+.controls{
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+
+.btn, button{
+  appearance: none;
+  border: none;
+  border-radius: 18px;
+  padding: 12px 18px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1f1f1f;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--btn1), var(--btn2));
+  box-shadow: 0 14px 26px rgba(0,0,0,0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.btn:hover, button:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(0,0,0,0.14);
+  filter: brightness(1.03);
+}
+
+.btn:active, button:active{
+  transform: translateY(1px);
+}
+
+.hint{
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+/* Footer */
+.footer{
+  margin-top: 14px;
+  color: rgba(42,42,42,0.70);
+  font-size: 0.95rem;
+}
+
+/* Background floating shapes */
+.bg-shapes{
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shape{
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0.2px);
+  opacity: 0.7;
+  animation: floaty 8s ease-in-out infinite;
+}
+
+.shape.s1{ width: 120px; height: 120px; left: 6%; top: 14%; background: rgba(255, 182, 193, 0.65); }
+.shape.s2{ width: 160px; height: 160px; right: 8%; top: 10%; background: rgba(173, 216, 230, 0.65); animation-duration: 10s; }
+.shape.s3{ width: 110px; height: 110px; left: 10%; bottom: 10%; background: rgba(255, 236, 179, 0.75); animation-duration: 9s; }
+.shape.s4{ width: 140px; height: 140px; right: 12%; bottom: 16%; background: rgba(204, 255, 204, 0.65); animation-duration: 11s; }
+.shape.s5{ width: 90px; height: 90px; left: 46%; top: 4%; background: rgba(221, 204, 255, 0.65); animation-duration: 12s; }
+
+@keyframes floaty{
+  0%, 100%{ transform: translateY(0px) translateX(0px); }
+  50%{ transform: translateY(-14px) translateX(10px); }
+}
+
+/* Small screens: keep everything comfy */
+@media (max-width: 420px){
+  .card{ padding: 16px 14px 14px; border-radius: 24px; }
+  .board{ gap: 10px; padding: 12px; border-radius: 22px; }
+  .cell{ border-radius: 18px; }
+}
