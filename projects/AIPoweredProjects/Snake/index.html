@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Snake</title>
+  <style>
+    :root { --bg:#0f1220; --panel:#171a2b; --text:#f3f6ff; --muted:#aab1d6; --accent:#67e8f9; }
+    * { box-sizing: border-box; }
+    body{
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(103,232,249,.25), transparent 60%),
+                  radial-gradient(900px 500px at 80% 0%, rgba(167,139,250,.20), transparent 60%),
+                  var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+    .wrap{
+      width:min(620px, 96vw);
+      background: rgba(23,26,43,.78);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+    h1{ margin: 0 0 10px; font-size: 22px; letter-spacing:.3px; }
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom: 12px;
+    }
+    .stats{
+      display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .pill{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+    .controls{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    button{
+      appearance:none; border:0;
+      background: linear-gradient(180deg, rgba(103,232,249,.95), rgba(103,232,249,.70));
+      color: #031017;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 10px 28px rgba(103,232,249,.25);
+    }
+    button:active{ transform: translateY(1px); }
+    .radio{
+      display:flex; gap:8px; align-items:center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 8px 10px;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .radio label{ cursor:pointer; }
+    .radio input{ transform: translateY(1px); }
+    .board{
+      display:flex; justify-content:center;
+      padding: 10px 0 4px;
+    }
+    canvas{
+      width: min(460px, 90vw);
+      height: auto;
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+    .hint{
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .hint b{ color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>Snake</h1>
+        <div class="stats">
+          <span class="pill"><span id="status">Score</span>: <b id="score">0</b></span>
+          <span class="pill">Best: <b id="best">0</b></span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="radio" aria-label="Difficulty">
+          <span>Speed:</span>
+          <label><input type="radio" name="difficulty" value="easy" checked> Easy</label>
+          <label><input type="radio" name="difficulty" value="medium"> Med</label>
+          <label><input type="radio" name="difficulty" value="hard"> Hard</label>
+        </div>
+        <button id="btn">Start</button>
+      </div>
+    </div>
+
+    <div class="board">
+      <canvas id="canvas" width="400" height="400"></canvas>
+    </div>
+
+    <div class="hint">
+      Controls: <b>Arrow keys</b> (or <b>WASD</b>). Eat the blue food, avoid walls and yourself.
+    </div>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  const scoreEl = document.getElementById("score");
+  const bestEl = document.getElementById("best");
+  const statusEl = document.getElementById("status");
+  const btn = document.getElementById("btn");
+
+  const GRID = 20;
+  const CELL = canvas.width / GRID; // 20px if canvas is 400
+  const BEST_KEY = "snake_best_v1";
+
+  let timer = null;
+  let running = false;
+
+  let snake = [];
+  let dir = "R";
+  let nextDir = "R";
+  let food = {x: 0, y: 0};
+  let score = 0;
+
+  const speedByDifficulty = {
+    easy: 160,
+    medium: 110,
+    hard: 80
+  };
+
+  function getSpeed(){
+    const selected = document.querySelector('input[name="difficulty"]:checked');
+    const key = selected ? selected.value : "easy";
+    return speedByDifficulty[key] ?? 160;
+  }
+
+  function loadBest(){
+    const raw = localStorage.getItem(BEST_KEY);
+    const val = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(val) ? val : 0;
+  }
+
+  function saveBest(best){
+    localStorage.setItem(BEST_KEY, String(best));
+  }
+
+  function setBestUI(val){
+    bestEl.textContent = String(val);
+  }
+
+  function resetGame(){
+    // Start with a 3-length snake centered
+    snake = [
+      {x: 8, y: 10},
+      {x: 9, y: 10},
+      {x: 10, y: 10}
+    ];
+    dir = "R";
+    nextDir = "R";
+    score = 0;
+    statusEl.textContent = "Score";
+    scoreEl.textContent = "0";
+    placeFood();
+    draw();
+  }
+
+  function placeFood(){
+    while(true){
+      const x = Math.floor(Math.random() * GRID);
+      const y = Math.floor(Math.random() * GRID);
+      const onSnake = snake.some(s => s.x === x && s.y === y);
+      if(!onSnake){
+        food = {x, y};
+        return;
+      }
+    }
+  }
+
+  function draw(){
+    // Clear
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background grid (subtle)
+    ctx.fillStyle = "rgba(255,255,255,0.02)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Food
+    ctx.fillStyle = "#2b7fff";
+    ctx.fillRect(food.x * CELL, food.y * CELL, CELL, CELL);
+
+    // Snake
+    for(let i=0;i<snake.length;i++){
+      const s = snake[i];
+      ctx.fillStyle = i === snake.length - 1 ? "#ff5a5a" : "#ff8a8a";
+      ctx.fillRect(s.x * CELL, s.y * CELL, CELL, CELL);
+    }
+
+    // Border
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+  }
+
+  function step(){
+    dir = nextDir;
+
+    const head = snake[snake.length - 1];
+    const newHead = {x: head.x, y: head.y};
+
+    if(dir === "U") newHead.y -= 1;
+    else if(dir === "D") newHead.y += 1;
+    else if(dir === "L") newHead.x -= 1;
+    else if(dir === "R") newHead.x += 1;
+
+    // Wall collision
+    if(newHead.x < 0 || newHead.y < 0 || newHead.x >= GRID || newHead.y >= GRID){
+      return gameOver();
+    }
+
+    // Self collision (check against all segments)
+    if(snake.some(s => s.x === newHead.x && s.y === newHead.y)){
+      return gameOver();
+    }
+
+    snake.push(newHead);
+
+    // Eat?
+    if(newHead.x === food.x && newHead.y === food.y){
+      score += 1;
+      scoreEl.textContent = String(score);
+      const best = Math.max(loadBest(), score);
+      saveBest(best);
+      setBestUI(best);
+      placeFood();
+    }else{
+      snake.shift();
+    }
+
+    draw();
+  }
+
+  function gameOver(){
+    stop();
+    statusEl.textContent = "Game over — score";
+    btn.textContent = "Restart";
+  }
+
+  function start(){
+    stop(); // restart cleanly with new speed
+    running = true;
+    btn.textContent = "Restart";
+    timer = window.setInterval(step, getSpeed());
+  }
+
+  function stop(){
+    if(timer){
+      window.clearInterval(timer);
+      timer = null;
+    }
+    running = false;
+  }
+
+  function setDirection(d){
+    // prevent 180-degree turn
+    const opposite = (a,b) =>
+      (a==="U" && b==="D") || (a==="D" && b==="U") || (a==="L" && b==="R") || (a==="R" && b==="L");
+
+    if(!opposite(dir, d)){
+      nextDir = d;
+    }
+  }
+
+  // Keyboard controls
+  window.addEventListener("keydown", function(e){
+    const k = e.key.toLowerCase();
+    if(k === "arrowup" || k === "w") setDirection("U");
+    else if(k === "arrowdown" || k === "s") setDirection("D");
+    else if(k === "arrowleft" || k === "a") setDirection("L");
+    else if(k === "arrowright" || k === "d") setDirection("R");
+    else if(k === " "){
+      // space to start/pause
+      e.preventDefault();
+      if(!running) start();
+      else stop();
+    }
+  });
+
+  // Button
+  btn.addEventListener("click", function(){
+    resetGame();
+    start();
+  });
+
+  // Update speed on difficulty change (if running)
+  document.querySelectorAll('input[name="difficulty"]').forEach(function(r){
+    r.addEventListener("change", function(){
+      if(running){
+        start(); // restarts interval with new speed, keeps current state
+      }
+    });
+  });
+
+  // Init
+  setBestUI(loadBest());
+  resetGame();
+})();
+</script>
+</body>
+</html>
