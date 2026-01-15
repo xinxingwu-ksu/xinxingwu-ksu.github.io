@@ -66,6 +66,7 @@
       border: 1px solid var(--line);
       border-radius: 16px;
       overflow:hidden;
+      position: relative; /* for mobile overlays */
     }
 
     /* Optional: make <hr> match your black-line style */
@@ -147,6 +148,12 @@
       color: var(--muted);
     }
 
+    /* Mobile swipe coach + edge fade (hidden by default; shown only on mobile) */
+    .swipe-coach,
+    .scroll-fade{
+      display: none;
+    }
+
     @media (max-width: 720px){
       body{ padding: 12px; }
 
@@ -195,6 +202,85 @@
       tbody th{
         background: var(--rowbg);
       }
+
+      /* Right edge fade to hint there is more content */
+      .scroll-fade{
+        display: block;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 28px;
+        pointer-events: none;
+        z-index: 4;
+        background: linear-gradient(270deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%);
+        animation: fadePulse 1.8s ease-in-out infinite;
+      }
+
+      /* Swipe hint pill */
+      .swipe-coach{
+        display: block;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 10px;
+        z-index: 5;
+        pointer-events: none;
+        padding: 0 10px;
+      }
+
+      .swipe-pill{
+        margin: 0 auto;
+        width: max-content;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: red; /* red text */
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .2px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 8px 22px rgba(0,0,0,0.16);
+        animation: pillSlide 1.6s ease-in-out infinite;
+      }
+
+      .swipe-pill .hand{
+        font-size: 14px;
+      }
+
+      .swipe-pill .arrows{
+        font-weight: 900;
+        letter-spacing: 1px;
+      }
+
+      /* When hidden (JS adds .is-hidden) */
+      .swipe-coach.is-hidden,
+      .scroll-fade.is-hidden{
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity .35s ease, transform .35s ease;
+      }
+
+      @keyframes pillSlide{
+        0%   { transform: translateX(0); }
+        25%  { transform: translateX(16px); }
+        50%  { transform: translateX(-16px); }
+        75%  { transform: translateX(16px); }
+        100% { transform: translateX(0); }
+      }
+
+      @keyframes fadePulse{
+        0%, 100% { opacity: .85; }
+        50%      { opacity: .35; }
+      }
+
+      /* Respect reduced motion */
+      @media (prefers-reduced-motion: reduce){
+        .swipe-pill, .scroll-fade{ animation: none !important; }
+      }
     }
 
     /* Print: fit nicely on one page */
@@ -211,6 +297,9 @@
         display: none !important;
       }
       .mobile-hint{
+        display: none !important;
+      }
+      .swipe-coach, .scroll-fade{
         display: none !important;
       }
       .topbar{
@@ -256,6 +345,16 @@
     </div>
 
     <div class="card">
+      <!-- Mobile swipe coach + edge fade -->
+      <div class="scroll-fade" aria-hidden="true"></div>
+      <div class="swipe-coach" aria-hidden="true">
+        <div class="swipe-pill">
+          <span class="hand">☝️</span>
+          <span>SWIPE</span>
+          <span class="arrows">⇠ ⇢</span>
+        </div>
+      </div>
+
       <div class="table-scroll">
         <table aria-label="Weekly schedule table">
           <thead>
@@ -296,9 +395,38 @@
           </tbody>
         </table>
       </div>
-
-      <div class="mobile-hint"><div style="color:red;"><b>Tip (mobile)</b></div> swipe left/right to view all days. The “Time” column will stay in place.</div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const mq = window.matchMedia("(max-width: 720px)");
+      if (!mq.matches) return;
+
+      const scroller = document.querySelector(".table-scroll");
+      const coach = document.querySelector(".swipe-coach");
+      const fade = document.querySelector(".scroll-fade");
+      if (!scroller || !coach) return;
+
+      let hidden = false;
+      function hide() {
+        if (hidden) return;
+        hidden = true;
+        coach.classList.add("is-hidden");
+        if (fade) fade.classList.add("is-hidden");
+      }
+
+      scroller.addEventListener(
+        "scroll",
+        function () {
+          if (scroller.scrollLeft > 10) hide();
+        },
+        { passive: true }
+      );
+
+      // Auto-hide even if they don't swipe
+      setTimeout(hide, 9000);
+    })();
+  </script>
 </body>
 </html>
