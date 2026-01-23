@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Fruit & Farm AI Confidence Lab</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --panel:#f6f7fb;
+      --line:#d9dde8;
+      --text:#111827;
+      --muted:#4b5563;
+      --accent:#16a34a;
+      --soft:#eef2ff;
+    }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:#ffffff;
+    }
+    header h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:0.2px;
+    }
+    header p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .wrap{
+      display:grid;
+      grid-template-columns: 680px 1fr;
+      gap:14px;
+      padding:14px;
+    }
+    .camBox{
+      position:relative;
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:#ffffff;
+    }
+    #webcam{
+      position:absolute;
+      width:1px;
+      height:1px;
+      opacity:0;
+      left:-9999px;
+      top:-9999px;
+    }
+    canvas{
+      width:100%;
+      height:auto;
+      display:block;
+      background:#ffffff;
+    }
+    .overlayBar{
+      position:absolute;
+      left:12px;
+      right:12px;
+      bottom:12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      padding:10px 12px;
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      background:#ffffff;
+      white-space:nowrap;
+    }
+    .pill strong{ color:var(--text); font-weight:650; }
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.25;
+    }
+    .panel{
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#ffffff;
+      overflow:hidden;
+    }
+    .panelTop{
+      padding:12px 12px 10px;
+      border-bottom:1px solid var(--line);
+      background:var(--panel);
+    }
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .modeTag{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(22,163,74,0.10);
+      color:var(--text);
+      font-size:12px;
+    }
+    .btnRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    button{
+      cursor:pointer;
+      border:1px solid var(--line);
+      color:var(--text);
+      background:#ffffff;
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:12px;
+    }
+    button:hover{ background:var(--soft); }
+    button:active{ transform: translateY(1px); }
+    .panelBody{
+      padding:12px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:12px;
+      background:#ffffff;
+      margin-bottom:12px;
+    }
+    .fruitHeader{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .emoji{
+      font-size:44px;
+      width:58px;
+      height:58px;
+      display:grid;
+      place-items:center;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:var(--panel);
+    }
+    .fruitHeader h2{
+      margin:0;
+      font-size:18px;
+    }
+    .fruitHeader p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .mini{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:var(--panel);
+    }
+    .mini h3{
+      margin:0 0 6px;
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:0.2px;
+      text-transform: uppercase;
+    }
+    .mini p{
+      margin:0;
+      font-size:13px;
+      line-height:1.35;
+    }
+    .bigNote{
+      border-left:4px solid rgba(22,163,74,0.70);
+      padding:10px 10px 10px 12px;
+      background:rgba(22,163,74,0.06);
+      border-radius:12px;
+      border:1px solid var(--line);
+      margin-top:10px;
+      color:var(--text);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .warnNote{
+      border-left-color: rgba(234,179,8,0.85);
+      background: rgba(234,179,8,0.10);
+    }
+    .badNote{
+      border-left-color: rgba(239,68,68,0.85);
+      background: rgba(239,68,68,0.08);
+    }
+    .choiceGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .choice{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px;
+      background:var(--panel);
+      min-height:60px;
+    }
+    .choice strong{ display:block; margin-bottom:4px; }
+    .choice small{ color:var(--muted); }
+    .footerLine{
+      margin-top:12px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+    .kbd{
+      display:inline-block;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid var(--line);
+      background:#ffffff;
+      font-size:11px;
+      color:var(--text);
+      margin:0 2px;
+    }
+    @media (max-width: 1080px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Fruit & Farm AI Confidence Lab</h1>
+    <p>Use your hands to explore fruit facts and learn how AI supports safe agriculture. Privacy: this demo does not upload your webcam video.</p>
+  </header>
+
+  <div class="wrap">
+    <div class="camBox">
+      <video id="webcam" autoplay muted playsinline></video>
+      <canvas id="canvas"></canvas>
+      <div class="overlayBar">
+        <div class="pill">Left: <strong id="leftCount">0</strong></div>
+        <div class="pill">Right: <strong id="rightCount">0</strong></div>
+        <div class="pill">Total: <strong id="totalCount">0</strong></div>
+        <div class="hint" id="gestureHint">
+          Hold steady: <span class="kbd">1–8</span> fruit, <span class="kbd">9</span> mode, <span class="kbd">10</span> landmarks
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelTop">
+        <div class="row">
+          <div class="modeTag" id="modeTag">Mode: Learn</div>
+          <div class="pill">Stable: <strong id="stableInfo">—</strong></div>
+        </div>
+        <div class="btnRow">
+          <button id="btnLearn" type="button">Learn Mode</button>
+          <button id="btnQuiz" type="button">Quiz Mode</button>
+          <button id="btnSurvey" type="button">Survey</button>
+          <button id="btnExport" type="button">Export Survey JSON</button>
+          <button id="btnReset" type="button">Reset Session</button>
+        </div>
+      </div>
+      <div class="panelBody" id="panelBody"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+  <script>
+    var FRUITS = [
+      { name:"Apple", emoji:"🍎", group:"Pome fruit", season:"Fall (many regions), some varieties year-round", taste:"Sweet/tart crunch", nutrition:"Fiber + vitamin C (varies)", storage:"Cool, dry place or fridge; keep away from bananas to slow ripening.", funFact:"Apple browning happens when cut surfaces react with oxygen (enzymes at work!).", aiInAg:"AI camera systems can help sort apples by size/quality, reducing food waste.", trustTip:"Good AI should be tested across different apple colors and lighting conditions." },
+      { name:"Banana", emoji:"🍌", group:"Tropical fruit", season:"Year-round in many stores", taste:"Sweet, soft", nutrition:"Potassium + carbs for quick energy", storage:"Room temp to ripen; fridge to slow ripening (peel darkens but inside stays okay).", funFact:"Bananas release ethylene gas, which helps other fruits ripen faster.", aiInAg:"AI can predict ripeness during shipping to reduce bruising and spoilage.", trustTip:"Transparency matters: systems should explain what data they use (temperature, time, etc.)." },
+      { name:"Orange", emoji:"🍊", group:"Citrus", season:"Winter peak (many varieties)", taste:"Juicy, sweet/tangy", nutrition:"Vitamin C + water", storage:"Counter for a few days; fridge for longer freshness.", funFact:"Citrus peels contain aromatic oils—why they smell so strong!", aiInAg:"AI + sensors can help farmers manage irrigation efficiently during dry seasons.", trustTip:"AI recommendations should be checked by experts, not blindly followed." },
+      { name:"Strawberry", emoji:"🍓", group:"Berry", season:"Spring–early summer (often year-round via greenhouses)", taste:"Sweet, fragrant", nutrition:"Vitamin C + antioxidants", storage:"Fridge, unwashed until eating; remove moldy berries quickly.", funFact:"Strawberries have seeds on the outside—each seed is an ‘achene’.", aiInAg:"AI robots can help pick strawberries gently to reduce damage.", trustTip:"Safety first: robots should be tested for reliability and hygiene." },
+      { name:"Grapes", emoji:"🍇", group:"Berry (botanically)", season:"Late summer–fall peak", taste:"Sweet, juicy", nutrition:"Hydration + antioxidants", storage:"Fridge; keep dry and wash right before eating.", funFact:"Some grapes are bred for seedlessness—plant breeding is biotechnology.", aiInAg:"AI can spot disease early using leaf images, helping reduce pesticide use.", trustTip:"Models must work across different grape colors and growth stages." },
+      { name:"Pineapple", emoji:"🍍", group:"Tropical fruit", season:"Year-round in many stores", taste:"Sweet/tart, juicy", nutrition:"Vitamin C + enzymes (bromelain)", storage:"Counter short-term; fridge once cut (sealed container).", funFact:"Pineapple can feel ‘tingly’ because enzymes interact with proteins.", aiInAg:"AI can help detect pests earlier, reducing crop loss.", trustTip:"AI should not replace safety rules—sanitation still matters most." },
+      { name:"Mango", emoji:"🥭", group:"Tropical stone fruit", season:"Spring–summer peak (varies by origin)", taste:"Very sweet, fragrant", nutrition:"Vitamins A and C (varies)", storage:"Room temp to ripen; fridge after ripe.", funFact:"Mango varieties differ a lot—some are buttery, some fibrous.", aiInAg:"AI helps plan harvest timing using weather + growth models.", trustTip:"Farmers should see uncertainty ranges, not just one prediction." },
+      { name:"Watermelon", emoji:"🍉", group:"Melon", season:"Summer peak", taste:"Sweet, super juicy", nutrition:"Hydration + antioxidants", storage:"Whole: cool spot; cut: fridge in sealed container.", funFact:"Watermelon is mostly water—great for hot days.", aiInAg:"AI can help monitor soil moisture to save water.", trustTip:"Farm sensor data should be protected and shared responsibly." }
+    ];
+
+    var videoElement = document.getElementById("webcam");
+    var canvasElement = document.getElementById("canvas");
+    var canvasCtx = canvasElement.getContext("2d");
+    var leftCountEl = document.getElementById("leftCount");
+    var rightCountEl = document.getElementById("rightCount");
+    var totalCountEl = document.getElementById("totalCount");
+    var modeTagEl = document.getElementById("modeTag");
+    var stableInfoEl = document.getElementById("stableInfo");
+    var panelBodyEl = document.getElementById("panelBody");
+    var gestureHintEl = document.getElementById("gestureHint");
+    var btnLearn = document.getElementById("btnLearn");
+    var btnQuiz = document.getElementById("btnQuiz");
+    var btnSurvey = document.getElementById("btnSurvey");
+    var btnExport = document.getElementById("btnExport");
+    var btnReset = document.getElementById("btnReset");
+
+    function countFingers(landmarks, handLabel) {
+      var count = 0;
+      var tips = [8, 12, 16, 20];
+      var base = [6, 10, 14, 18];
+      if (handLabel === "Right") { if (landmarks[4].x < landmarks[3].x) count++; }
+      else { if (landmarks[4].x > landmarks[3].x) count++; }
+      for (var i = 0; i < tips.length; i++) if (landmarks[tips[i]].y < landmarks[base[i]].y) count++;
+      return count;
+    }
+
+    function modeOfCounts(arr) {
+      var freq = {};
+      var best = 0;
+      var bestCount = 0;
+      for (var i = 0; i < arr.length; i++) {
+        var v = arr[i];
+        freq[v] = (freq[v] || 0) + 1;
+        if (freq[v] > bestCount) { bestCount = freq[v]; best = v; }
+      }
+      return best;
+    }
+
+    function nowMs() { return (new Date()).getTime(); }
+    function clamp(x, a, b) { if (x < a) return a; if (x > b) return b; return x; }
+    function escapeHtml(s) { return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+
+    var app = {
+      showLandmarks:false,
+      mode:"learn",
+      selectedFruit:0,
+      history:[],
+      stableValue:null,
+      stableSince:0,
+      cooldownUntil:0,
+      quizIndex:0,
+      quizScore:0,
+      quizQuestions:[],
+      surveyStep:0,
+      surveyAnswers:[]
+    };
+
+    function updateHeader() {
+      var label = "Mode: Learn";
+      if (app.mode === "quiz") label = "Mode: Quiz";
+      if (app.mode === "survey") label = "Mode: Survey";
+      modeTagEl.innerText = label;
+      if (app.mode === "learn") gestureHintEl.innerHTML = 'Hold steady: <span class="kbd">1–8</span> fruit, <span class="kbd">9</span> mode, <span class="kbd">10</span> landmarks';
+      else if (app.mode === "quiz") gestureHintEl.innerHTML = 'Quiz: hold <span class="kbd">1–4</span> answer, <span class="kbd">9</span> learn, <span class="kbd">10</span> landmarks';
+      else gestureHintEl.innerHTML = 'Survey: hold <span class="kbd">1–5</span> rate, <span class="kbd">9</span> restart';
+    }
+
+    function updateStableUI(val, heldMs) {
+      if (val === null) { stableInfoEl.innerText = "—"; return; }
+      stableInfoEl.innerText = String(val) + " (" + String(Math.floor(heldMs)) + "ms)";
+    }
+
+    function setMode(newMode) {
+      app.mode = newMode;
+      if (newMode === "learn") { app.selectedFruit = clamp(app.selectedFruit, 0, FRUITS.length - 1); renderLearn(); }
+      else if (newMode === "quiz") { startQuiz(); }
+      else { startSurvey(); }
+      updateHeader();
+    }
+
+    function considerGesture(rawTotal) {
+      var t = nowMs();
+      app.history.push(rawTotal);
+      if (app.history.length > 9) app.history.shift();
+      var smooth = modeOfCounts(app.history);
+      totalCountEl.innerText = String(smooth);
+      if (t < app.cooldownUntil) { updateStableUI(app.stableValue, (app.stableValue === null ? 0 : (t - app.stableSince))); return; }
+      if (smooth === 0) { app.stableValue = null; updateStableUI(null, 0); return; }
+      if (app.stableValue === smooth) {
+        var held = t - app.stableSince;
+        updateStableUI(smooth, held);
+        if (held >= 900) {
+          triggerAction(smooth);
+          app.cooldownUntil = t + 1100;
+          app.stableValue = null;
+          app.history = [];
+          updateStableUI(null, 0);
+        }
+      } else {
+        app.stableValue = smooth;
+        app.stableSince = t;
+        updateStableUI(smooth, 0);
+      }
+    }
+
+    function triggerAction(value) {
+      if (app.mode === "learn") {
+        if (value >= 1 && value <= FRUITS.length) { app.selectedFruit = value - 1; renderLearn(); return; }
+        if (value === 9) { setMode("quiz"); return; }
+        if (value === 10) { app.showLandmarks = !app.showLandmarks; return; }
+      }
+      if (app.mode === "quiz") {
+        if (value === 9) { setMode("learn"); return; }
+        if (value === 10) { app.showLandmarks = !app.showLandmarks; return; }
+        if (value >= 1 && value <= 4) { answerQuiz(value); return; }
+      }
+      if (app.mode === "survey") {
+        if (value === 9) { setMode("learn"); return; }
+        if (value >= 1 && value <= 5) { answerSurvey(value); return; }
+      }
+    }
+
+    function renderLearn() {
+      var f = FRUITS[app.selectedFruit];
+      var html = "";
+      html += '<div class="card">';
+      html += '  <div class="fruitHeader">';
+      html += '    <div class="emoji">' + escapeHtml(f.emoji) + '</div>';
+      html += '    <div>';
+      html += '      <h2>' + escapeHtml(f.name) + '</h2>';
+      html += '      <p><strong>Group:</strong> ' + escapeHtml(f.group) + ' &nbsp; • &nbsp; <strong>Peak season:</strong> ' + escapeHtml(f.season) + '</p>';
+      html += '      <p><strong>Taste:</strong> ' + escapeHtml(f.taste) + '</p>';
+      html += '    </div>';
+      html += '  </div>';
+      html += '  <div class="grid2">';
+      html += '    <div class="mini"><h3>Nutrition</h3><p>' + escapeHtml(f.nutrition) + '</p></div>';
+      html += '    <div class="mini"><h3>Storage & safety</h3><p>' + escapeHtml(f.storage) + '</p></div>';
+      html += '    <div class="mini"><h3>Fun science fact</h3><p>' + escapeHtml(f.funFact) + '</p></div>';
+      html += '    <div class="mini"><h3>AI in agriculture</h3><p>' + escapeHtml(f.aiInAg) + '</p></div>';
+      html += '  </div>';
+      html += '  <div class="bigNote"><strong>Trust tip:</strong> ' + escapeHtml(f.trustTip) + '</div>';
+      html += '  <div class="bigNote warnNote"><strong>AI used here:</strong> This demo uses AI to track hands. It does not identify fruits from the camera. Fruit facts are curated by students.</div>';
+      html += '  <div class="footerLine"><strong>Gestures:</strong> Hold <span class="kbd">1–8</span> fruit. Hold <span class="kbd">9</span> quiz. Hold <span class="kbd">10</span> landmarks.</div>';
+      html += '</div>';
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 8px; font-size:16px;">Fruit List (1–8)</h2>';
+      html += '  <div class="choiceGrid">';
+      for (var i = 0; i < FRUITS.length; i++) {
+        html += '    <div class="choice"><strong>' + String(i + 1) + '. ' + escapeHtml(FRUITS[i].emoji) + ' ' + escapeHtml(FRUITS[i].name) + '</strong><small>' + escapeHtml(FRUITS[i].group) + '</small></div>';
+      }
+      html += '  </div>';
+      html += '</div>';
+      panelBodyEl.innerHTML = html;
+    }
+
+    function shuffleCopy(arr) {
+      var out = arr.slice();
+      for (var i = out.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+      }
+      return out;
+    }
+
+    function makeQuizQuestions() {
+      var qs = [];
+      qs.push({ q:"Which fruit is a citrus fruit (often high in vitamin C)?", a:1, choices:["Orange 🍊","Apple 🍎","Banana 🍌","Grapes 🍇"] });
+      qs.push({ q:"Which fruit releases ethylene gas and can ripen other fruits faster?", a:2, choices:["Strawberry 🍓","Banana 🍌","Watermelon 🍉","Pineapple 🍍"] });
+      qs.push({ q:"Which one is mostly water and is popular in summer?", a:3, choices:["Mango 🥭","Grapes 🍇","Watermelon 🍉","Apple 🍎"] });
+      qs.push({ q:"What is one safe way AI can help agriculture?", a:4, choices:["Guessing food safety without testing","Replacing all farmers","Sharing private farm data publicly","Detecting crop disease earlier to reduce waste"] });
+      qs.push({ q:"In this demo, does the AI identify fruits from your camera?", a:1, choices:["No—AI tracks hands; fruit facts are curated","Yes—AI recognizes fruit types from video","Yes—AI uploads video to the cloud","Not sure"] });
+      return shuffleCopy(qs);
+    }
+
+    function startQuiz() {
+      app.quizIndex = 0;
+      app.quizScore = 0;
+      app.quizQuestions = makeQuizQuestions();
+      renderQuiz();
+    }
+
+    function renderQuiz(feedbackHtml) {
+      var q = app.quizQuestions[app.quizIndex];
+      var html = "";
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 8px; font-size:16px;">Quiz (' + String(app.quizIndex + 1) + '/' + String(app.quizQuestions.length) + ')</h2>';
+      html += '  <p style="margin:0; color:var(--muted);">Hold <span class="kbd">1–4</span> to answer. Hold <span class="kbd">9</span> to return to Learn.</p>';
+      html += '</div>';
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 10px; font-size:18px;">' + escapeHtml(q.q) + '</h2>';
+      html += '  <div class="choiceGrid">';
+      for (var i = 0; i < 4; i++) html += '    <div class="choice"><strong>' + String(i + 1) + '.</strong> ' + escapeHtml(q.choices[i]) + '</div>';
+      html += '  </div>';
+      if (feedbackHtml) html += feedbackHtml;
+      html += '  <div class="footerLine"><strong>Score:</strong> ' + String(app.quizScore) + ' / ' + String(app.quizQuestions.length) + '</div>';
+      html += '</div>';
+      panelBodyEl.innerHTML = html;
+    }
+
+    function renderQuizDone() {
+      var html = "";
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 8px; font-size:18px;">Quiz Complete</h2>';
+      html += '  <p style="margin:0; color:var(--muted);">Your score: <strong>' + String(app.quizScore) + ' / ' + String(app.quizQuestions.length) + '</strong></p>';
+      html += '  <div class="bigNote warnNote" style="margin-top:10px;"><strong>Next step:</strong> Write 2–3 sentences for families: one benefit of AI on farms + one safety/trust tip.</div>';
+      html += '  <div class="footerLine">Hold <span class="kbd">9</span> to go back to Learn or click Survey.</div>';
+      html += '</div>';
+      panelBodyEl.innerHTML = html;
+    }
+
+    function answerQuiz(choiceNumber) {
+      var q = app.quizQuestions[app.quizIndex];
+      var correct = (choiceNumber === q.a);
+      var feedback = "";
+      if (correct) { feedback = '<div class="bigNote">✅ Correct.</div>'; app.quizScore++; }
+      else { feedback = '<div class="bigNote badNote">❌ Correct answer was <strong>' + String(q.a) + '</strong>.</div>'; }
+      renderQuiz(feedback);
+      setTimeout(function() {
+        app.quizIndex++;
+        if (app.quizIndex >= app.quizQuestions.length) renderQuizDone();
+        else renderQuiz();
+      }, 900);
+    }
+
+    function getSurveyQuestions() {
+      return [
+        "I can explain one way AI helps agriculture or the food system.",
+        "I understand that AI systems can make mistakes and should be checked by people.",
+        "I feel more confident about safe AI use when privacy and transparency are explained."
+      ];
+    }
+
+    function startSurvey() {
+      app.surveyStep = 0;
+      app.surveyAnswers = [];
+      renderSurvey();
+    }
+
+    function saveSurveyToLocalStorage(entry) {
+      var key = "fruit_ai_lab_survey";
+      var existing = [];
+      try { existing = JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { existing = []; }
+      existing.push(entry);
+      localStorage.setItem(key, JSON.stringify(existing));
+    }
+
+    function renderSurvey(noteHtml) {
+      var qs = getSurveyQuestions();
+      if (app.surveyStep >= qs.length) { renderSurveyDone(); return; }
+      var html = "";
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 8px; font-size:18px;">Confidence Survey</h2>';
+      html += '  <p style="margin:0; color:var(--muted);">Hold <span class="kbd">1–5</span> to rate: 1=Strongly Disagree … 5=Strongly Agree.</p>';
+      html += '  <p style="margin:8px 0 0; color:var(--muted);">Hold <span class="kbd">9</span> to restart.</p>';
+      html += '</div>';
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 10px; font-size:16px;">Question ' + String(app.surveyStep + 1) + ' / ' + String(qs.length) + '</h2>';
+      html += '  <div class="bigNote">' + escapeHtml(qs[app.surveyStep]) + '</div>';
+      html += '  <div class="choiceGrid">';
+      html += '    <div class="choice"><strong>1</strong><small>Strongly Disagree</small></div>';
+      html += '    <div class="choice"><strong>2</strong><small>Disagree</small></div>';
+      html += '    <div class="choice"><strong>3</strong><small>Neutral</small></div>';
+      html += '    <div class="choice"><strong>4</strong><small>Agree</small></div>';
+      html += '    <div class="choice"><strong>5</strong><small>Strongly Agree</small></div>';
+      html += '  </div>';
+      if (noteHtml) html += noteHtml;
+      html += '</div>';
+      panelBodyEl.innerHTML = html;
+    }
+
+    function renderSurveyDone() {
+      var html = "";
+      html += '<div class="card">';
+      html += '  <h2 style="margin:0 0 8px; font-size:18px;">Survey Complete</h2>';
+      html += '  <p style="margin:0; color:var(--muted);">You can export results as JSON for evaluation.</p>';
+      html += '  <div class="bigNote warnNote" style="margin-top:10px;"><strong>Evidence:</strong> Export JSON, compute averages, and include student-written trust messages in your report.</div>';
+      html += '  <div class="footerLine">Click Export Survey JSON or hold <span class="kbd">9</span> to restart.</div>';
+      html += '</div>';
+      panelBodyEl.innerHTML = html;
+    }
+
+    function answerSurvey(value1to5) {
+      var qs = getSurveyQuestions();
+      var entry = { timestamp:(new Date()).toISOString(), questionIndex:app.surveyStep, question:qs[app.surveyStep], rating:value1to5 };
+      app.surveyAnswers.push(entry);
+      saveSurveyToLocalStorage(entry);
+      app.surveyStep++;
+      renderSurvey('<div class="bigNote">✅ Saved rating: <strong>' + String(value1to5) + '</strong></div>');
+    }
+
+    function exportSurveyJSON() {
+      var key = "fruit_ai_lab_survey";
+      var data = localStorage.getItem(key) || "[]";
+      var blob = new Blob([data], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = "fruit_ai_lab_survey.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 800);
+    }
+
+    function resetSession() {
+      app.showLandmarks = false;
+      app.history = [];
+      app.stableValue = null;
+      app.cooldownUntil = 0;
+      app.selectedFruit = 0;
+      setMode("learn");
+    }
+
+    btnLearn.addEventListener("click", function(){ setMode("learn"); });
+    btnQuiz.addEventListener("click", function(){ setMode("quiz"); });
+    btnSurvey.addEventListener("click", function(){ setMode("survey"); });
+    btnExport.addEventListener("click", function(){ exportSurveyJSON(); });
+    btnReset.addEventListener("click", function(){ resetSession(); });
+
+    var hands = new Hands({ locateFile: function(file){ return "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file; } });
+    hands.setOptions({ maxNumHands:2, modelComplexity:1, minDetectionConfidence:0.7, minTrackingConfidence:0.7 });
+
+    hands.onResults(function(results){
+      if (canvasElement.width !== results.image.width || canvasElement.height !== results.image.height) {
+        canvasElement.width = results.image.width;
+        canvasElement.height = results.image.height;
+      }
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+      var leftCount = 0;
+      var rightCount = 0;
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        for (var i = 0; i < results.multiHandLandmarks.length; i++) {
+          var landmarks = results.multiHandLandmarks[i];
+          var handedness = results.multiHandedness[i].label;
+          if (app.showLandmarks) {
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color:"#16a34a", lineWidth:3 });
+            drawLandmarks(canvasCtx, landmarks, { color:"#ef4444", lineWidth:1 });
+          }
+          var fingerCount = countFingers(landmarks, handedness);
+          if (handedness === "Left") leftCount = fingerCount;
+          if (handedness === "Right") rightCount = fingerCount;
+        }
+      }
+
+      leftCountEl.innerText = String(leftCount);
+      rightCountEl.innerText = String(rightCount);
+      considerGesture(leftCount + rightCount);
+
+      canvasCtx.restore();
+    });
+
+    function startCamera() {
+      var camera = new Camera(videoElement, {
+        onFrame: async function(){ await hands.send({ image: videoElement }); },
+        width: 640,
+        height: 480
+      });
+      camera.start();
+    }
+
+    updateHeader();
+    renderLearn();
+    startCamera();
+  </script>
+</body>
+</html>
