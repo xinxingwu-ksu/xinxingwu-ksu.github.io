@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Spin Wheel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <!-- LEFT: roster -->
+    <section class="card">
+      <header class="card-header">
+        <h2>Roster</h2>
+        <span class="pill" id="countPill">0 students</span>
+      </header>
+
+      <div class="card-body">
+        <textarea id="namesInput" placeholder="One name per line
+Alice
+Bob
+Charlie"></textarea>
+
+        <div class="row">
+          <button class="primary" id="updateBtn">Update Wheel</button>
+          <button id="shuffleBtn">Shuffle</button>
+          <button class="danger" id="clearBtn">Clear</button>
+        </div>
+
+        <p class="hint">
+          Tip: After editing names, click <b>Update Wheel</b>.
+        </p>
+      </div>
+    </section>
+
+    <!-- RIGHT: wheel -->
+    <section class="card">
+      <header class="card-header">
+        <h2>Spin Wheel</h2>
+        <div class="row row-tight">
+          <button class="primary" id="spinBtn">Spin</button>
+          <button id="speakBtn">Read Name</button>
+          <button class="danger" id="removeWinnerBtn">Remove Winner</button>
+          <button id="resetHistoryBtn">Reset History</button>
+        </div>
+      </header>
+
+      <div class="wheel-layout">
+        <div class="stage">
+          <div class="canvas-wrap">
+            <div class="pointer" aria-hidden="true"></div>
+            <canvas id="wheel" width="900" height="900"></canvas>
+          </div>
+
+          <!-- Control Panel -->
+          <div class="panel">
+            <div class="panel-title">Controls</div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="spinTime">Spin time (seconds)</label>
+                <input id="spinTime" type="range" min="2" max="10" step="1" value="5" />
+              </div>
+
+              <div class="field">
+                <label for="spinTurns">Extra turns</label>
+                <input id="spinTurns" type="range" min="2" max="12" step="1" value="7" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="field">
+                <label for="fontSize">Name size on wheel</label>
+                <input id="fontSize" type="range" min="12" max="46" step="1" value="24" />
+                <div class="mini" id="fontSizeLabel">24 px</div>
+              </div>
+
+              <div class="field">
+                <label for="soundToggle">Spin sound</label>
+                <div class="toggle-row">
+                  <input id="soundToggle" type="checkbox" checked />
+                  <span class="mini">Sound</span>
+                </div>
+              </div>
+            </div>
+
+            <p class="hint">
+              If your browser blocks audio/speech, click <b>Spin</b> or <b>Read Name</b> once to allow it.
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <div class="winner">
+            <div class="label">Selected Student</div>
+            <div class="name" id="winnerName">—</div>
+            <div class="sub" id="winnerSub">Add names → Update Wheel → Spin.</div>
+          </div>
+
+          <div class="history">
+            <h3>History</h3>
+            <ol id="historyList"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
