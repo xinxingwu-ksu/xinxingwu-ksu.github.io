@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>3D Hand Controller</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="js/app.js" defer></script>
+  </head>
+
+  <body>
+    <!-- Detection Status -->
+    <div id="status">Detection Not Ready</div>
+
+    <!-- A-frame scene -->
+    <a-scene>
+      <a-camera position="0 1.6 3"></a-camera>
+
+      <!-- Hand-controlled sphere -->
+      <a-sphere
+        id="hand-controlled"
+        position="0 1.5 -3"
+        radius="0.1"
+        color="red"
+      ></a-sphere>
+
+      <a-plane
+        position="0 0 -4"
+        rotation="-90 0 0"
+        width="4"
+        height="4"
+        color="#7B7B7B"
+      ></a-plane>
+    </a-scene>
+
+    <!-- Video Feed for Hand Tracking -->
+    <div class="video-container">
+      <video id="input-video" autoplay></video>
+      <canvas id="output-canvas"></canvas>
+    </div>
+  </body>
+</html>

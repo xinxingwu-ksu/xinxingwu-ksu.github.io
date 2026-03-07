@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz with Circular Progress</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+
+    .progress-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: conic-gradient(green 0% 0%, lightgray 0% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin: 20px auto;
+    }
+
+    .question { margin: 20px; }
+    button { margin: 10px; padding: 5px 15px; }
+  </style>
+</head>
+<body>
+
+<h2>Simple Quiz</h2>
+
+<div class="progress-circle" id="progress">0%</div>
+
+<div id="quiz"></div>
+
+<div>
+  <button onclick="prev()">← Prev</button>
+  <button onclick="next()">Next →</button>
+</div>
+
+<p id="result"></p>
+
+<script>
+const questions = [
+  { q: "2 + 2 = ?", options: ["3","4","5"], answer: 1 },
+  { q: "Capital of France?", options: ["Paris","London","Berlin"], answer: 0 },
+  { q: "Sun rises in the?", options: ["East","West"], answer: 0 },
+  { q: "5 * 3 = ?", options: ["15","20","10"], answer: 0 },
+  { q: "Color of the sky?", options: ["Blue","Green"], answer: 0 }
+];
+
+let current = 0;
+let userAnswers = Array(questions.length).fill(null);
+
+function updateProgress() {
+  let percent = Math.round(((current+1) / questions.length) * 100);
+  document.getElementById("progress").style.background = 
+    `conic-gradient(green 0% ${percent}%, lightgray ${percent}% 100%)`;
+  document.getElementById("progress").innerText = percent + "%";
+}
+
+function showQuestion() {
+  const q = questions[current];
+  let html = `<div class="question"><h3>Q${current+1}: ${q.q}</h3>`;
+  q.options.forEach((opt,i)=>{
+    const checked = userAnswers[current]===i ? "checked" : "";
+    html += `<label><input type="radio" name="q${current}" value="${i}" ${checked}
+             onchange="userAnswers[${current}]=${i}"> ${opt}</label><br>`;
+  });
+  html += "</div>";
+  document.getElementById("quiz").innerHTML = html;
+  updateProgress();
+}
+
+function next() {
+  if (current < questions.length-1) {
+    current++;
+    showQuestion();
+  } else {
+    gradeQuiz();
+  }
+}
+
+function prev() {
+  if (current > 0) {
+    current--;
+    showQuestion();
+  }
+}
+
+function gradeQuiz() {
+  let score = 0;
+  for (let i=0; i<questions.length; i++) {
+    if (userAnswers[i] === questions[i].answer) score++;
+  }
+  document.getElementById("quiz").innerHTML = "";
+  document.getElementById("progress").innerText = "";
+  document.getElementById("progress").style.background = "conic-gradient(green 0% 100%, green 0% 100%)";
+  document.getElementById("result").innerText = 
+    `You got ${score} out of ${questions.length} correct!`;
+}
+
+showQuestion();
+</script>
+
+</body>
+</html>

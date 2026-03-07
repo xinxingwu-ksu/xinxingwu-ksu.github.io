@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>QR code clock</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+    #qrcode {
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    p.tip {
+      margin-top: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QR code clock</h1>
+  <br>
+  <div id="qrcode"></div>
+  
+  <p class="tip">
+Please scan the QR code with your mobile phone to get the current time. The QR code updates every second.</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    function getCurrentTimeString() {
+      var now = new Date();
+      function pad(num) {
+        return num < 10 ? "0" + num : num;
+      }
+      var hours = pad(now.getHours());
+      var minutes = pad(now.getMinutes());
+      var seconds = pad(now.getSeconds());
+      return hours + ":" + minutes + ":" + seconds;
+    }
+
+    var qr;
+
+    function updateQRCode() {
+      var timeStr = getCurrentTimeString();
+      if (qr) {
+        var container = document.getElementById("qrcode");
+        container.innerHTML = "";
+      }
+      qr = new QRCode(document.getElementById("qrcode"), {
+        text: timeStr,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    updateQRCode();
+    setInterval(updateQRCode, 1000);
+  </script>
+</body>
+</html>

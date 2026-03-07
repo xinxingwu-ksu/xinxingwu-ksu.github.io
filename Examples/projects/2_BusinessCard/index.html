@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Card Builder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Business Card Builder</h1>
+  <form>
+    <input id="InputName" type="text" name="name" placeholder="Name">
+    <input id="InputJob" type="text" name="job-title" placeholder="Occupation">
+    <input id="InputPhone" type="text" name="phone" placeholder="Phone number">
+    <input id="InputMail" type="email" name="email" placeholder="E-mail">
+    <button id="submitCreate" type="submit">Create</button>
+    <div class="colours">
+      <button class="blue" type="button">Blue</button>
+      <button class="yellow" type="button">Yellow</button>
+    </div>
+  </form>
+
+  <div class="biz-card">
+    <div class="heading">
+      <p id="name">Xinxing Wu</p>
+      <p id="job-title">Algorithm Developer</p>
+    </div>
+    <div class="contact">
+      <ul>
+        <li id="phone">123 456 7891</li>
+        <li id="email" class="right-align"><a id="email-link" href="mailto:xinxing.wu@midway.edu">xinxing.wu@midway.edu</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="mine.js" type="text/javascript"></script>
+</body>
+</html>

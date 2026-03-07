@@ -1,0 +1,67 @@
+body {
+  font-family: Helvetica, sans-serif;
+}
+
+input {
+  height: 20px;
+  padding: 5px;
+  font-size: 16px;
+}
+
+button {
+  height: 32px;
+  font-size: 16px;
+}
+
+.colours {
+  margin: 20px 0;
+}
+
+.biz-card {
+  margin: 30px 5px;
+  height: 300px;
+  width: 500px;
+  border: 1px solid gray;
+  position: absolute;
+}
+
+.contact ul {
+  list-style: none;
+  position: absolute;
+  bottom: 5px;
+  width: 440px;
+  padding: 0 30px;
+}
+
+.contact li {
+  font-size: 14px;
+  display: inline;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+}
+
+.right-align {
+  float: right;
+}
+
+.heading p {
+  text-align: center;
+}
+
+#name {
+  font-size: 34px;
+}
+
+#job-title {
+  font-size: 20px;
+}
+
+.blue {
+  background-color: #21325D;
+  color: #fff;
+}
+
+.yellow {
+  background-color: #F5FF8D;
+}

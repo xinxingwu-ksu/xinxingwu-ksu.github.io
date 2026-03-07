@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!--Import Google Icon Font-->
+    <!--link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"-->
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection" />
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+	
+        canvas {
+            /*width: 100%;*/
+            background-color: antiquewhite;
+			width: 78%;
+        }
+
+    </style>
+		
+</head>
+
+
+
+<body style="background-color: aliceblue">
+    <nav class="light-blue lighten-1" role="navigation">
+        <div class="nav-wrapper container">
+            <a id="logo-container" href="#" class="brand-logo center"><img src="images/midwaylogo.png" alt="Midway Logo" align="center" height="30" /> Snake</a>
+            <div class="right">Best:
+                <span id="best">0</span>
+            </div>
+            <div class="left">Score:
+                <span id="score">0</span>
+            </div>
+		</div>
+    </nav>
+    <div class="row center">
+        <canvas class="card" id="canvas" width="1000" height="600"></canvas>
+    </div>
+
+    <!-- Dialog Box -->
+    <div id="dialog" style="display: none; position: fixed; top: 50%; left: 50%; width: 250px; height: 300px; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid gray; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.25); z-index: 1000;">
+        <h4>Excellent Job!</h4>
+        <p>You've got all the course information! Keep going, you can only get more game scores, but not more course information!</p>
+        <button id="close-dialog" style="padding: 10px 20px; background-color: lightblue; border: none; border-radius: 3px; cursor: pointer;">Continue</button>
+    </div>
+	
+    <div id="dialog1" style="display: none; position: fixed; top: 50%; left: 50%; width: 280px; height: 370px; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid gray; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.25); z-index: 1000;">
+        <h4>Introduction</h4>
+			<p>This course is an integrative project where students are exposed to a challenging problem. The students will model the problem, propose possible solutions then build a solution. Students will work on aspects of this course individually and other parts will be team project based.</p>
+			<br>
+        <button id="close-dialog1" style="padding: 10px 20px; background-color: lightblue; border: none; border-radius: 3px; cursor: pointer;">Continue</button>
+    </div>
+
+    <div id="dialog2" style="display: none; position: fixed; top: 50%; left: 50%; width: 280px; height: 510px; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid gray; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.25); z-index: 1000;">
+        <h4>Outline</h4>
+			<p>Solve Problems: Labs (Basic/Beginner-Level) +Projects (Intermediate-Level) + *Challenges (Advanced-Level, not required, but bonus points):</p>
+				<li>6 Labs (Individual work. AI tools are not allowed) </li>
+				<li>4 Projects (Team work. AI tools are allowed, but need to explain where/what/why/how they are used)</li>
+				<li>4 Challenges (Optional, individual/team work. AI tools are allowed, but need to explain where/what/why/how they are used)</li>
+				<br>
+        <button id="close-dialog2" style="padding: 10px 20px; background-color: lightblue; border: none; border-radius: 3px; cursor: pointer;">Continue</button>
+    </div>
+
+    <div id="dialog3" style="display: none; position: fixed; top: 50%; left: 50%; width: 280px; height: 610px; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid gray; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.25); z-index: 1000;">
+        <h4>Points</h4>
+        <p>The possibility of earning up to: 125 points.</p>
+		<p align="left"><strong>Labs (15 points total):</strong> 2.5 points per lab, totaling 15 points.
+		<p align="left"><strong>Projects (40 points total):</strong> 10 points per project, for a total of 4 projects. Of the 10 points for each project, 4 points are allocated for weekly reports.</p>
+		<p align="left"><strong>Final Project (15 points total).</strong></p>
+		<p align="left"><strong>Attendance (10 points total).</strong></p>
+		<p align="left"><strong>Team Points (30 points total)</strong>.</p>
+		<p align="left"><strong>Others (0–15 points):</strong> Challenge 1 - 2 points; Challenge 2 - 3 points; Challenge 3 - 5 points; Challenge 4 - 5 points.</p>
+		<br>
+        <button id="close-dialog3" style="padding: 10px 20px; background-color: lightblue; border: none; border-radius: 3px; cursor: pointer;">Continue</button>
+    </div>
+
+    <div id="dialog4" style="display: none; position: fixed; top: 50%; left: 50%; width: 280px; height: 500px; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid gray; border-radius: 5px; box-shadow: 0px 4px 10px rgba(0,0,0,0.25); z-index: 1000;">
+        <h4>Instructor</h4>
+        <p align="left">Office hours (Q & A time): M/W/F 11:50 AM – 12:50 PM, 1:50 PM – 2:50 PM; T/TH 12:00 PM – 2:50 PM </p>
+		<p align="left">More schedules, please</p>
+		<img src="./images/qr.png" alt="Midway Logo" align="center" height="150" />
+		<br>
+		<br>
+        <button id="close-dialog4" style="padding: 10px 20px; background-color: lightblue; border: none; border-radius: 3px; cursor: pointer;">Continue</button>
+    </div>	
+    <div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 999;"></div>
+
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="js/materialize.min.js"></script>
+    <script>
+        let canvas = document.getElementById("canvas");
+        let ctx = canvas.getContext("2d");
+        canvas.style.backgroundColor = "antiquewhite";
+        let cellSize = 20;
+        let tickLenght = 200;
+        let tickNow = performance.now();
+        let tickPrev = performance.now();
+        let score = document.getElementById("score");
+        let best = document.getElementById("best");
+
+        // Dialog elements
+        let dialog = document.getElementById("dialog");
+		let dialog1 = document.getElementById("dialog1");
+		let dialog2 = document.getElementById("dialog2");
+		let dialog3 = document.getElementById("dialog3");
+		let dialog4 = document.getElementById("dialog4");
+        let overlay = document.getElementById("overlay");
+        let closeDialog = document.getElementById("close-dialog");
+		let closeDialog1 = document.getElementById("close-dialog1");
+		let closeDialog2 = document.getElementById("close-dialog2");
+		let closeDialog3 = document.getElementById("close-dialog3");
+		let closeDialog4 = document.getElementById("close-dialog4");
+		
+        let isPaused = false;
+
+        closeDialog.addEventListener("click", () => {
+			
+			dialog.style.display = "none";	
+			overlay.style.display = "none";				
+			
+            isPaused = false; // Resume the game
+        });
+		
+        closeDialog1.addEventListener("click", () => {
+			dialog1.style.display = "none";	
+			overlay.style.display = "none";				
+			
+            isPaused = false; // Resume the game
+        });
+	
+        closeDialog2.addEventListener("click", () => {
+			dialog2.style.display = "none";	
+			overlay.style.display = "none";				
+			
+            isPaused = false; // Resume the game
+        });
+		
+        closeDialog3.addEventListener("click", () => {
+			dialog3.style.display = "none";	
+			overlay.style.display = "none";				
+			
+            isPaused = false; // Resume the game
+        });
+		
+        closeDialog4.addEventListener("click", () => {
+			dialog4.style.display = "none";	
+			overlay.style.display = "none";				
+			
+            isPaused = false; // Resume the game
+        });
+
+        class Pos {
+            constructor(x, y) {
+                if (x < 0) x = canvas.width / cellSize - 1;
+                if (x > canvas.width / cellSize) x = 0;
+                if (y < 0) y = canvas.height / cellSize - 1;
+                if (y > canvas.height / cellSize) y = canvas.width / cellSize;
+
+                this.x = x % (canvas.width / cellSize);
+                this.y = y % (canvas.height / cellSize);
+            }
+            add(dx, dy) {
+                return new Pos(this.x + dx, this.y + dy);
+
+            }
+            get realx() {
+                return this.x * cellSize;;
+            }
+            get realy() {
+                return this.y * cellSize;;
+            }
+            get hash() {
+                return this.x + "," + this.y;
+            }
+
+        }
+        class Cell {
+            constructor(pos) {
+                this.pos = pos;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.pos.realx + cellSize / 2, this.pos.realy + cellSize / 2, cellSize / 2, 0, 2 * Math.PI, false);
+                ctx.fillStyle = 'green';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#003300';
+                ctx.stroke();
+
+            }
+            drawEye() {
+                let size = cellSize / 8;
+                let x0 = this.pos.realx + cellSize / 2;
+                let y0 = this.pos.realy + cellSize / 2;
+                let eps = cellSize / 4;
+                let righteye = {
+                    "1,0": [x0 + eps, y0 + eps],
+                    "-1,0": [x0 - eps, y0 - eps],
+                    "0,1": [x0 - eps, y0 + eps],
+                    "0,-1": [x0 + eps, y0 - eps],
+                };
+                let lefteye = {
+                    "1,0": [x0 + eps, y0 - eps],
+                    "-1,0": [x0 - eps, y0 + eps],
+                    "0,1": [x0 + eps, y0 + eps],
+                    "0,-1": [x0 - eps, y0 - eps],
+                };
+
+                let dirhash = snake.dir[0] + ',' + snake.dir[1];
+
+                ctx.beginPath();
+                ctx.arc(...righteye[dirhash], size, 0, 2 * Math.PI, false);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#003300';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(...lefteye[dirhash], size, 0, 2 * Math.PI, false);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#003300';
+                ctx.stroke();
+            }
+            move(depl) {
+                ctx.clearRect(this.pos.realx, this.pos.realy, cellSize, cellSize);
+                this.pos.x += depl.x;
+                this.pos.y += depl.y;
+            }
+            get hash() {
+                return this.pos.hash;
+            }
+        }
+
+        class Snake {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.pos = new Pos(20, 10);
+                this.len = Math.floor(canvas.width / cellSize / 2);
+                this.body = [];
+                this.map = new Map();
+                this.dir = [1, 0];
+                for (var i = 0; i < this.len; i++) {
+                    this.body.push(new Cell(this.pos.add(-i, 0)));
+                    this.map.set(this.body[i].hash, this.body[i]);
+                }
+
+                // we update the score (reset means game over)
+                let s = parseInt(score.innerText);
+                let b = parseInt(best.innerText);
+
+                score.innerText = 0;
+                if (s > b) {
+                    best.innerText = s;
+                }
+
+            }
+            draw() {
+                this.body.forEach(function (c, i) {
+                    c.draw();
+                    if (i == 0) {
+                        c.drawEye();
+                    }
+                });
+            }
+
+            delTail() {
+                var tail = this.body.pop();
+                this.map.delete(tail.hash)
+                //tail.clear();
+            }
+
+            move() {
+                let head = new Cell(this.body[0].pos.add(...this.dir));
+                if (this.map.has(head.hash)) {
+					speakAddress("Oh, no!");
+					this.reset();
+                    return;
+                }
+                this.map.set(head.hash, head);
+                this.body.unshift(head);
+
+                if (head.hash == apple.hash) {
+                    apple.eat();
+                } else {
+                    this.delTail();
+                }
+
+
+            }
+        }
+
+        class Apple {
+            constructor() {
+                this.grow();
+            }
+            grow() {
+                var rnum = Math.random();
+                this.pos = new Pos(Math.floor(rnum * (canvas.width / cellSize)),
+                    Math.floor(rnum * (canvas.height / cellSize)));
+
+            }
+            draw() {
+                let c = cellSize,
+                    x0 = this.pos.realx + c / 2,
+                    y0 = this.pos.realy + c / 2,
+                    dx = 4,
+                    r = c / 2 - dx / 2 - 2;
+
+                ctx.beginPath();
+                ctx.arc(x0 + c - 1, y0, c, -4 * Math.PI / 5, Math.PI, true);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'green';
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(x0 + dx, y0, r, 0, 2 * Math.PI, false);
+                ctx.arc(x0 - dx, y0, r, 0, 2 * Math.PI, false);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#003300';
+                ctx.stroke();
+                ctx.fillStyle = 'red';
+                ctx.fill();
+
+            }
+
+            eat() {
+                let s = parseInt(score.innerText);
+                let b = parseInt(best.innerText);
+
+                s++;
+                score.innerText = s;
+
+                this.grow();
+
+                // Show the dialog
+                isPaused = true;
+				
+				if (s>4){
+					dialog.style.display = "block";
+					overlay.style.display = "block";
+					speakAddress("You've got all the course information! Keep going, you can only get more game scores, but not more course information!");				
+				} else if (s==1){
+					dialog1.style.display = "block";
+					overlay.style.display = "block";
+					speakAddress("You've got Introduction Information");					
+				}else if (s==2){
+					dialog2.style.display = "block";
+					overlay.style.display = "block";
+					speakAddress("You've got Outline Information");					
+				}else if (s==3){
+					dialog3.style.display = "block";
+					overlay.style.display = "block";
+					speakAddress("You've got Points Information");					
+				}else if (s==4){
+					dialog4.style.display = "block";
+					overlay.style.display = "block";
+					speakAddress("You've got Instructor Information");					
+				}
+				
+
+            }
+
+            get hash() {
+                return this.pos.hash;
+            }
+        }
+
+
+        // ---------  event listeners ----------
+
+        document.onkeydown = function (event) {
+            if (isPaused) return;
+
+            let newdir;
+            switch (event.keyCode) {
+                case 37: newdir = [-1, 0]; break;
+                case 38: newdir = [0, -1]; break;
+                case 39: newdir = [1, 0]; break;
+                case 40: newdir = [0, 1]; break;
+
+            }
+            // to prevent u-turn
+            if (snake.dir[0] + newdir[0] != 0 || snake.dir[1] + newdir[1] != 0) {
+                snake.dir = newdir;
+            }
+        }
+
+        function redraw() {
+            if (!isPaused && (performance.now() - tickPrev) >= tickLenght) {
+                tickPrev = performance.now();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                apple.draw();
+                snake.draw();
+                snake.move();
+
+
+            }
+            window.requestAnimationFrame(redraw);
+        }
+
+
+        function resizeCanvasToDisplaySize() {
+            // look up the size the canvas is being displayed
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+
+            // If it's resolution does not match change it
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+                return true;
+            }
+
+            return false;
+        }
+		
+			// Function to speak the address (text)
+			function speakAddress(address) {
+				if ('speechSynthesis' in window) {
+					var speech = new SpeechSynthesisUtterance(address);
+					speech.lang = 'en-US'; // Set the language to English
+					window.speechSynthesis.speak(speech);
+					} else {
+					console.log("Speech synthesis not supported in this browser.");
+			    }
+			}
+
+        window.onresize = function (event) {
+            resizeCanvasToDisplaySize();
+        };
+
+        let snake = new Snake();
+        let apple = new Apple();
+
+        resizeCanvasToDisplaySize();
+        window.requestAnimationFrame(redraw);
+    </script>
+</body>
+
+</html>

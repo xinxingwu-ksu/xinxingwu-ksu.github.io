@@ -1,0 +1,125 @@
+*{
+     box-sizing: border-box;
+ }
+
+@font-face {
+    font-family: 'Pixel';
+    src: url('../fonts/Pixel.ttf');
+}
+ 
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    background-color: darkblue;
+    color: #fff;
+    height: 100%;
+}
+
+        /* Fix for the logo positioning */
+        .logo-container {
+            position: absolute;
+            top: 10px;  /* Adjust to position the logo properly */
+            left: 10%;
+            transform: translateX(-50%);
+            z-index: 1000;  /* Make sure it's above other elements */
+        }
+
+        .logo-container img {
+            width: 250px; /* Adjust the size as needed */
+            height: auto;
+        }
+
+.conteudo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+}
+
+ h1{
+     font-family: Pixel;
+     font-size: 60px;
+ }
+
+[wm-flappy] {
+    position: relative;
+    border: 5px solid white;
+    height: 700px;
+    width: 1200px;
+    margin: 15px;
+    background-color: darkblue;
+    overflow: hidden;
+}
+
+.passaro {
+    position: absolute;
+    width: 60px;
+    left: calc(50% - 30px);
+}
+
+.par-de-barreiras{
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.barreira {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.barreira .borda {
+    height: 30px;
+    width: 130px;
+    background: linear-gradient(90deg, yellow, yellow);
+    border: 2px solid #000;
+}
+
+.barreira .corpo {
+    height: 150px;
+    width: 110px;
+    background: linear-gradient(90deg, yellow, yellow);
+    border-left: 2px solid #000;
+    border-right: 2px solid #000;
+}
+
+.progresso {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: Pixel;
+    font-size: 70px;
+    z-index: 100;
+}
+
+.modal {
+    position: fixed; 
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: rgba(0,0,0,0.8);
+    z-index: 99999;
+    -webkit-transition: opacity 400ms ease-in;
+    -moz-transition: opacity 400ms ease-in;
+    transition: opacity 400ms ease-in;
+    pointer-events: none;
+}
+
+.texto{
+    position:fixed;
+    bottom: 40%;
+    left: 40%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}

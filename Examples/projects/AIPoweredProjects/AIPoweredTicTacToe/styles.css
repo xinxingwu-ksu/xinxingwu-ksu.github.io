@@ -1,0 +1,72 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.container{
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Full-screen camera (mirror like selfie view) */
+#video{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  transform: scaleX(-1);
+}
+
+/* Canvas overlay (NOT mirrored; we mirror coordinates in JS for accuracy) */
+#canvas{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Centered square board */
+#game-board{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(80vmin, 520px);
+  height: min(80vmin, 520px);
+  transform: translate(-50%, -50%);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  z-index: 3;
+}
+
+.cell{
+  border: 2px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: min(16vmin, 120px);
+  line-height: 1;
+  color: black;
+  background: rgba(255,255,255,0.15);
+}
+
+/* Restart button centered under board */
+#restart{
+  position: absolute;
+  left: 50%;
+  top: calc(50% + (min(80vmin, 520px) / 2) + 18px);
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  font-size: 16px;
+  z-index: 4;
+  background-color: #fff;
+  border: 2px solid black;
+  cursor: pointer;
+}

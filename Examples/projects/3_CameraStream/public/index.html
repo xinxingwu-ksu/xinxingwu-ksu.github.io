@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera Stream with Real-Time Translation</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  video {
+    width: 100%;
+    max-width: 600px;
+    border: 2px solid #000;
+    margin-bottom: 10px;
+  }
+/* Logo in the top left */
+.logo {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  button, select {
+    padding: 10px 20px;
+    font-size: 16px;
+  }
+  .captions {
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 60px;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+  }
+  .translated-captions {
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    height: 60px;
+    overflow-y: auto;
+    background-color: #e9f9e9;
+  }
+</style>
+</head>
+<body>
+
+    <div class="logo">
+        <img src="midwaylogo.png" alt="Logo" height="8%" width="10%" style="vertical-align:left;">
+    </div>
+	
+<h2>Camera Stream with Real-Time Translation</h2>
+<div class="controls">
+  <button id="startCamera">Start Camera</button>
+  <button id="stopCamera" disabled>Stop Camera</button>
+  <button id="muteButton" disabled>Mute</button>
+  <select id="languageSelect">
+    <option value="zh">Chinese</option>
+    <option value="ja">Japanese</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="de">German</option>
+    <option value="ne">Nepali</option>
+    <option value="hi">Hindi</option>
+  </select>
+  <button id="readTranslatedButton" disabled>Read Translated</button>
+  <button id="stopReadingButton" disabled>Stop Reading & Restart Camera</button>
+</div>
+<video id="video" autoplay playsinline></video>
+<div class="captions" id="captions">English Captions</div>
+<div class="translated-captions" id="translatedCaptions">Translated Captions</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  const startCameraButton = document.getElementById('startCamera');
+  const stopCameraButton = document.getElementById('stopCamera');
+  const muteButton = document.getElementById('muteButton');
+  const languageSelect = document.getElementById('languageSelect');
+  const videoElement = document.getElementById('video');
+  const captionsElement = document.getElementById('captions');
+  const translatedCaptionsElement = document.getElementById('translatedCaptions');
+  const readTranslatedButton = document.getElementById('readTranslatedButton');
+  const stopReadingButton = document.getElementById('stopReadingButton');
+
+  let mediaStream = null;
+  let mediaRecorder = null;
+  let recognition = null;
+  let isMuted = false;
+  let isReading = false;
+
+  // Start camera and speech recognition
+  startCameraButton.addEventListener('click', async () => {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      videoElement.srcObject = mediaStream;
+
+      stopCameraButton.disabled = false;
+      muteButton.disabled = false;
+      startCameraButton.disabled = true;
+
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm; codecs=vp8' });
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          socket.emit('videoStream', event.data);
+        }
+      };
+      mediaRecorder.start(100);
+
+      socket.on('viewStream', (data) => {
+        const videoBlob = new Blob([data], { type: 'video/webm' });
+        videoElement.src = URL.createObjectURL(videoBlob);
+      });
+
+      initSpeechRecognition();
+    } catch (error) {
+      alert('Please enable camera and microphone permissions.');
+    }
+  });
+
+  // Stop camera
+  stopCameraButton.addEventListener('click', () => {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      videoElement.srcObject = null;
+      stopCameraButton.disabled = true;
+      startCameraButton.disabled = false;
+      muteButton.disabled = true;
+      if (recognition) recognition.stop();
+    }
+  });
+
+  // Mute/Unmute microphone
+  muteButton.addEventListener('click', () => {
+    if (mediaStream) {
+      const audioTracks = mediaStream.getAudioTracks();
+      isMuted = !isMuted;
+      audioTracks[0].enabled = !isMuted;
+      muteButton.textContent = isMuted ? 'Unmute' : 'Mute';
+    }
+  });
+
+  // Initialize speech recognition
+  function initSpeechRecognition() {
+    if (recognition) recognition.stop();
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async (event) => {
+      const transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join('');
+      captionsElement.innerText = transcript;
+
+      const selectedLanguage = languageSelect.value;
+      const translatedText = await translateText(transcript, selectedLanguage);
+      translatedCaptionsElement.innerText = translatedText;
+
+      // Enable the "Read Translated" button once the translated text is updated
+      readTranslatedButton.disabled = false;
+    };
+
+    recognition.onend = () => {
+      if (!isMuted) recognition.start();
+    };
+
+    recognition.start();
+  }
+
+  // Translate text using an API
+  async function translateText(text, targetLang) {
+    if (!text.trim()) return "";
+
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (data && data.responseData && data.responseData.translatedText) {
+        return data.responseData.translatedText;
+      } else {
+        return "Translation error: Invalid response format";
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      return "Translation error: Unable to fetch translation";
+    }
+  }
+
+  // Speech synthesis function (text-to-speech)
+  function speakText(text, lang) {
+    if (!text.trim()) return; // Don't speak if the text is empty
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+
+    // Adjust the pitch and rate if needed
+    utterance.pitch = 1; // Default pitch
+    utterance.rate = 1;  // Default rate
+
+    speechSynthesis.speak(utterance);
+  }
+
+  // Add functionality to the "Read Translated" button
+  readTranslatedButton.addEventListener('click', () => {
+    // Temporarily hide the original caption content
+    captionsElement.style.visibility = 'hidden';
+
+    // Get the translated text and speak it aloud
+    const translatedText = translatedCaptionsElement.innerText;
+    const selectedLanguage = languageSelect.value;
+    speakText(translatedText, selectedLanguage);
+
+    isReading = true;
+    stopReadingButton.disabled = false;  // Enable "Stop Reading & Restart Camera" button
+
+    // Re-enable speech recognition after reading
+    setTimeout(() => {
+      if (!isMuted) recognition.start();
+      // Make the original captions visible again
+      captionsElement.style.visibility = 'visible';
+    }, 1000); // Wait for 1 second before restarting recognition
+  });
+
+  // Stop reading and restart camera
+  stopReadingButton.addEventListener('click', () => {
+    // Cancel speech synthesis if reading is active
+    if (isReading) {
+      speechSynthesis.cancel();
+      isReading = false;
+    }
+    // Refresh the page
+    location.reload();
+    // Restart the camera and speech recognition
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      videoElement.srcObject = null;
+    }
+
+    startCameraButton.disabled = false;
+    stopCameraButton.disabled = true;
+    muteButton.disabled = true;
+    readTranslatedButton.disabled = true;
+    stopReadingButton.disabled = true;
+
+    // Reset captions
+    captionsElement.innerText = 'English Captions';
+    translatedCaptionsElement.innerText = 'Translated Captions';
+    initSpeechRecognition();
+  });
+</script>
+</body>
+</html>

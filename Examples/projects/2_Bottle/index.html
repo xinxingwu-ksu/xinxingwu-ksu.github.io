@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Message in a Bottle · Full Version</title>
+<style>
+  :root{
+    --sky-top:#7bd5ff;
+    --sky-bottom:#e3f6ff;
+    --sea-1:#39a0ff;
+    --sea-2:#1e87ff;
+    --foam:#c7ecff;
+    --ink:#083248;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;height:100vh;overflow:hidden;
+    font-family: system-ui, ui-sans-serif, Segoe UI, Roboto, Helvetica, Arial, Apple Color Emoji, Noto Color Emoji;
+    color:var(--ink);
+    background:linear-gradient(var(--sky-top),var(--sky-bottom));
+  }
+  .scene{position:relative;width:100%;height:100%}
+  /* Ocean */
+  .ocean{
+    position:absolute;inset:42% 0 0 0;
+    background:linear-gradient(var(--sea-1),var(--sea-2));
+    overflow:hidden;
+  }
+  .foam{
+    position:absolute;left:-20vw;right:-20vw;bottom:26%;
+    height:7%;
+    background:
+      radial-gradient(10px 6px at 10% 60%, var(--foam) 0 40%, #0000 41%),
+      radial-gradient(12px 7px at 30% 40%, var(--foam) 0 35%, #0000 36%),
+      radial-gradient(8px 5px at 50% 70%, var(--foam) 0 40%, #0000 41%),
+      radial-gradient(10px 6px at 70% 50%, var(--foam) 0 40%, #0000 41%),
+      radial-gradient(14px 8px at 90% 60%, var(--foam) 0 35%, #0000 36%);
+    opacity:.9;filter:blur(.4px);
+    animation:foam-bob 6s ease-in-out infinite, foam-drift 22s linear infinite;
+  }
+  @keyframes foam-bob{50%{transform:translateY(2px)}}
+  @keyframes foam-drift{from{transform:translateX(0)}to{transform:translateX(40vw)}}
+
+  /* Bottle */
+  .bottle{
+    position:absolute;bottom:30vh;width:min(86px,18vw);aspect-ratio:3/5;
+    transform-origin:50% 100%;
+    z-index:3;cursor:pointer;user-select:none;
+    --floatDur:4s; --driftDur:60s; --amp:10; --tilt:6deg; --depth:1;
+    animation:
+      float var(--floatDur) ease-in-out infinite alternate,
+      moveX var(--driftDur) linear infinite;
+  }
+  .bottle:hover{filter:brightness(1.06) drop-shadow(0 6px 10px #0002)}
+  @keyframes float{
+    0%{ transform: translateY(0) rotate(calc(-1 * var(--tilt))); }
+    100%{ transform: translateY(calc(-1px * var(--amp))) rotate(calc(var(--tilt) / 2)); }
+  }
+  @keyframes moveX{from{left:110vw}to{left:-30vw}}
+  .bottle .shadow{
+    position:absolute;left:8%;right:8%;bottom:-4%;
+    height:12%;border-radius:50%;
+    background:#0000002b;filter:blur(8px);
+    transform:scale(calc(.8 + .1 * var(--depth)));
+  }
+
+  /* Seagull (container + inline SVG) */
+  .seagull{
+    position:absolute; top:10vh; left:-100px; width:70px; height:auto;
+    animation:fly var(--gullDur,15s) linear forwards;
+    filter:drop-shadow(0 1px 2px #0003);
+  }
+  @keyframes fly{from{left:-100px}to{left:110vw}}
+
+  /* Dialog */
+  dialog{border:0;border-radius:16px;padding:18px;box-shadow:0 20px 60px #00000033;
+    background:#fff;color:#222;width:min(520px,92vw)}
+  dialog::backdrop{background:#0006}
+  textarea{
+    width:100%;height:140px;resize:vertical;border:1px solid #0002;
+    border-radius:12px;padding:10px;font-size:14px;line-height:1.4;
+  }
+  .row{display:flex;gap:10px;margin-top:10px;justify-content:flex-end}
+  .row button{padding:8px 14px;border:0;border-radius:10px;cursor:pointer;background:#0ea5e9;color:#fff}
+  .row button:first-child{background:#e5e7eb;color:#333}
+
+  /* Audio gate overlay */
+  #audioGate{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(#0006,#0004);backdrop-filter:blur(3px);
+    z-index:9999;
+  }
+  #audioGate button{
+    padding:14px 18px;border-radius:14px;border:0;cursor:pointer;
+    font-size:16px;font-weight:600;
+    background:#ffffffde; box-shadow:0 10px 30px #0003;
+  }
+  #hint{
+    position:fixed;left:10px;bottom:10px;font-size:12px;opacity:.7
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="ocean">
+      <div class="foam"></div>
+    </div>
+    <div class="seagulls" aria-hidden="true"></div>
+  </div>
+
+  <!-- Dialog for notes -->
+  <dialog id="editor">
+    <form method="dialog" id="editorForm">
+      <div style="font-weight:700;margin-bottom:8px">Your note (140 chars)</div>
+      <textarea id="msg" maxlength="140" placeholder="Type a short message..."></textarea>
+      <div class="row">
+        <button value="cancel" type="button" id="cancelBtn">Cancel</button>
+        <button id="saveBtn" value="default" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Sounds (provide waves.mp3, seagull.mp3, bottle.mp3 next to this file) -->
+  <audio id="wavesSound" src="waves.mp3" loop></audio>
+  <audio id="seagullSound" src="seagull.mp3"></audio>
+  <audio id="bottleClickSound" src="bottle.mp3"></audio>
+
+  <!-- One-tap audio unlock -->
+  <div id="audioGate" role="dialog" aria-modal="true">
+    <button id="audioStart">Tap to start audio 🌊🕊️</button>
+  </div>
+
+  <div id="hint">Tip: click a bottle to read/edit its message · each bottle saves independently</div>
+
+<script>
+(function(){
+  /* ===== Utilities ===== */
+  const $ = s=>document.querySelector(s);
+  const ocean = $('.ocean');
+  const gullLayer = $('.seagulls');
+  const dlg = $('#editor');
+  const form = $('#editorForm');
+  const msg = $('#msg');
+  const cancelBtn = $('#cancelBtn');
+  const saveBtn = $('#saveBtn');
+
+  const wavesSound = $('#wavesSound');
+  const seagullSound = $('#seagullSound');
+  const bottleClickSound = $('#bottleClickSound');
+
+  let audioUnlocked = false;
+  let audioCtx = null;
+
+  function rand(min,max){ return Math.random()*(max-min)+min; }
+  function choice(a){ return a[Math.floor(Math.random()*a.length)] }
+
+  // Allow overlapping SFX by cloning the element
+  function playSound(el, volume=1){
+    if(!audioUnlocked){ return; }
+    try{
+      const clone = el.cloneNode(true);
+      clone.volume = volume;
+      clone.play().catch(()=>{ beeper(); });
+    }catch(e){ beeper(); }
+  }
+  // Tiny fallback beep if audio files missing
+  function beeper(freq=880, duration=0.08){
+    if(!audioUnlocked) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type='sine'; o.frequency.value=freq;
+      o.connect(g); g.connect(audioCtx.destination);
+      const t = audioCtx.currentTime;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.18,t+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+duration);
+      o.start(t); o.stop(t+duration+0.02);
+    }catch(e){}
+  }
+
+  /* ===== Audio unlock ===== */
+  const gate = $('#audioGate');
+  $('#audioStart').addEventListener('click', async ()=>{
+    try{
+      if(!audioCtx){ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+      wavesSound.volume = 0.28;
+      seagullSound.volume = 0.75;
+      bottleClickSound.volume = 0.65;
+      await wavesSound.play();
+      audioUnlocked = true;
+      gate.remove();
+    }catch(e){
+      // If autoplay still blocked, at least remove gate and allow SFX after first interaction
+      audioUnlocked = true;
+      gate.remove();
+    }
+  });
+
+  /* ===== Bottles ===== */
+  const BOTTLE_COUNT = 7;                   // 多个瓶子
+  const BOTTOM_MIN_VH = 26;                 // depth range (parallax)
+  const BOTTOM_MAX_VH = 34;
+
+  let currentBottle = null;
+
+  // Load note from storage
+  function loadNote(id, fallback){
+    return localStorage.getItem('bottle-note-'+id) ?? fallback;
+  }
+  // Save note to storage
+  function saveNote(id, text){
+    localStorage.setItem('bottle-note-'+id, text);
+  }
+
+  function createBottle(i){
+    const bottle = document.createElement('div');
+    bottle.className = 'bottle';
+    bottle.dataset.id = 'b'+i;
+
+    // Randomized parameters per bottle: speed, amplitude, tilt, depth
+    const driftDur = rand(40, 85);          // 随机漂移速度
+    const floatDur = rand(3.2, 6.2);        // 随机上下浮动速度
+    const amp      = rand(6, 14);           // 随机浪速/幅度（像素）
+    const tiltDeg  = rand(4, 9);            // 随机倾斜
+    const depth    = rand(.8, 1.25);        // 视觉深度（影子大小、起始底部）
+    const bottomVh = rand(BOTTOM_MIN_VH, BOTTOM_MAX_VH);
+
+    bottle.style.setProperty('--driftDur', driftDur+'s');
+    bottle.style.setProperty('--floatDur', floatDur+'s');
+    bottle.style.setProperty('--amp', amp);
+    bottle.style.setProperty('--tilt', tiltDeg+'deg');
+    bottle.style.setProperty('--depth', depth);
+
+    // Start at random horizontal offsets (negative delay desynchronizes)
+    const delayFloat = -rand(0, floatDur);
+    const delayDrift = -rand(0, driftDur);
+    bottle.style.animationDelay = `${delayFloat}s, ${delayDrift}s`;
+
+    // Depth affects size a bit (simulate distance)
+    bottle.style.transform = `scale(${depth})`;
+    bottle.style.bottom = bottomVh + 'vh';
+
+    // Bottle SVG (self-contained)
+    bottle.innerHTML = `
+      <svg viewBox="0 0 200 320" width="100%" height="100%" aria-hidden="true">
+        <!-- glass -->
+        <path d="M80 70 q-12 0 -20 12 q-10 15 -20 36 q-8 18 -8 32 v78 q0 20 20 28 q30 12 68 12 q38 0 68 -12 q20 -8 20 -28 v-78 q0 -14 -8 -32 q-10 -21 -20 -36 q-8 -12 -20 -12 h-20 v-22 h-32 v22 z"
+              fill="rgba(255,255,255,0.35)" stroke="#ffffff" stroke-opacity=".55" stroke-width="2"/>
+        <!-- cork -->
+        <rect x="84" y="36" width="32" height="14" rx="4" fill="#b38b59" />
+        <!-- letter/paper -->
+        <rect x="94" y="120" width="56" height="90" rx="6" fill="#fff8" stroke="#fff9"/>
+        <path d="M98 132 h48 M98 146 h48 M98 160 h44 M98 174 h40" stroke="#ffffffaa" stroke-width="2"/>
+      </svg>
+      <div class="shadow"></div>
+    `;
+
+    // Note content per bottle (独立内容)
+    const defaultText = `Hello from bottle #${i+1}`;
+    const note = loadNote(bottle.dataset.id, defaultText);
+    bottle.dataset.note = note;
+    bottle.title = note; // quick preview on hover
+
+    // Interaction
+    bottle.addEventListener('click', ()=>{
+      currentBottle = bottle;
+      msg.value = bottle.dataset.note || '';
+      playSound(bottleClickSound, 0.7);
+      openDialog();
+    });
+
+    ocean.appendChild(bottle);
+    return bottle;
+  }
+
+  function openDialog(){
+    try{ dlg.showModal(); }catch(e){ dlg.setAttribute('open',''); }
+  }
+  function closeDialog(){
+    try{ dlg.close(); }catch(e){ dlg.removeAttribute('open'); }
+  }
+
+  // Create bottles
+  const bottles = [];
+  for(let i=0;i<BOTTLE_COUNT;i++){ bottles.push(createBottle(i)); }
+
+  // Save note (per bottle)
+  form.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    if(currentBottle){
+      const txt = (msg.value||'').trim() || 'Empty note';
+      currentBottle.dataset.note = txt;
+      currentBottle.title = txt;
+      saveNote(currentBottle.dataset.id, txt);
+    }
+    closeDialog();
+  });
+  cancelBtn.addEventListener('click', ()=>closeDialog());
+
+  /* ===== Seagulls: random schedule + call ===== */
+  function makeGull(){
+    const g = document.createElement('div');
+    g.className = 'seagull';
+    const y = rand(5, 26);       // vh
+    const dur = rand(11, 22);    // s
+    const scale = rand(.9, 1.35) * (Math.random() < 0.25 ? -1 : 1); // some mirrored
+
+    g.style.top = y+'vh';
+    g.style.setProperty('--gullDur', dur+'s');
+    g.style.transform = `scale(${scale})`;
+
+    // Inline SVG gull (two wings)
+    g.innerHTML = `
+      <svg viewBox="0 0 80 40" width="100%" height="100%" aria-hidden="true">
+        <path d="M5 28 Q 25 6 45 20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <path d="M35 20 Q 55 6 75 28" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="42" cy="21" r="1.3" fill="#fff"/>
+      </svg>
+    `;
+    gullLayer.appendChild(g);
+
+    // Play call as it crosses mid-screen
+    if(audioUnlocked){
+      setTimeout(()=> playSound(seagullSound, 0.75), (dur*500)); // roughly mid-flight
+    }
+    g.addEventListener('animationend', ()=> g.remove());
+  }
+
+  function scheduleGulls(){
+    // Random next flight between 6–16s, occasionally spawn a small flock
+    const wait = rand(6,16)*1000;
+    setTimeout(()=>{
+      makeGull();
+      if(Math.random() < 0.32){ // flock of 2–3
+        setTimeout(makeGull, rand(400,900));
+        if(Math.random() < 0.45) setTimeout(makeGull, rand(800,1400));
+      }
+      scheduleGulls();
+    }, wait);
+  }
+  scheduleGulls();
+
+  /* Reduce waves volume a bit when dialog is open (nice touch) */
+  dlg.addEventListener('close', ()=>{ if(audioUnlocked) wavesSound.volume = 0.28; });
+  dlg.addEventListener('cancel', (e)=>{ e.preventDefault(); closeDialog(); });
+  dlg.addEventListener('mousedown', ()=>{ if(audioUnlocked) wavesSound.volume = 0.22; });
+
+  /* UX: lower hint after a few seconds */
+  setTimeout(()=>{ const h = document.getElementById('hint'); if(h) h.style.opacity=.4; }, 5000);
+
+})();
+</script>
+</body>
+</html>

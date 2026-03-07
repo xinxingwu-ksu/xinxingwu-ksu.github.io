@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Quiz</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    .stepper { display: flex; justify-content: center; margin: 20px 0; }
+    .step { 
+      width: 30px; height: 30px; border-radius: 50%; 
+      border: 2px solid #ccc; display: flex; align-items: center; justify-content: center;
+      margin: 0 5px; 
+    }
+    .active { background: #4285f4; color: white; border-color: #4285f4; }
+    .question { margin: 20px; }
+    button { margin: 10px; padding: 5px 15px; }
+  </style>
+</head>
+<body>
+
+<h2>Simple Quiz</h2>
+
+<div class="stepper" id="stepper"></div>
+
+<div id="quiz"></div>
+
+<div>
+  <button onclick="prev()">← Prev</button>
+  <button onclick="next()">Next →</button>
+</div>
+
+<p id="result"></p>
+
+<script>
+const questions = [
+  { q: "2 + 2 = ?", options: ["3","4","5"], answer: 1 },
+  { q: "Capital of France?", options: ["Paris","London","Berlin"], answer: 0 },
+  { q: "Sun rises in the?", options: ["East","West"], answer: 0 },
+  { q: "5 * 3 = ?", options: ["15","20","10"], answer: 0 },
+  { q: "Color of the sky?", options: ["Blue","Green"], answer: 0 }
+];
+
+let current = 0;
+let userAnswers = Array(questions.length).fill(null);
+
+function showStepper() {
+  let html = "";
+  for (let i=0; i<questions.length; i++) {
+    html += `<div class="step ${i===current ? 'active':''}">${i+1}</div>`;
+  }
+  document.getElementById("stepper").innerHTML = html;
+}
+
+function showQuestion() {
+  const q = questions[current];
+  let html = `<div class="question"><h3>Q${current+1}: ${q.q}</h3>`;
+  q.options.forEach((opt,i)=>{
+    const checked = userAnswers[current]===i ? "checked" : "";
+    html += `<label><input type="radio" name="q${current}" value="${i}" ${checked}
+             onchange="userAnswers[${current}]=${i}"> ${opt}</label><br>`;
+  });
+  html += "</div>";
+  document.getElementById("quiz").innerHTML = html;
+  showStepper();
+}
+
+function next() {
+  if (current < questions.length-1) {
+    current++;
+    showQuestion();
+  } else {
+    gradeQuiz();
+  }
+}
+
+function prev() {
+  if (current > 0) {
+    current--;
+    showQuestion();
+  }
+}
+
+function gradeQuiz() {
+  let score = 0;
+  for (let i=0; i<questions.length; i++) {
+    if (userAnswers[i] === questions[i].answer) score++;
+  }
+  document.getElementById("quiz").innerHTML = "";
+  document.getElementById("stepper").innerHTML = "";
+  document.getElementById("result").innerText = 
+    `You got ${score} out of ${questions.length} correct!`;
+}
+
+showQuestion();
+</script>
+
+</body>
+</html>

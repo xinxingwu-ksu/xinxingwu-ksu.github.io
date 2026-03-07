@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Basketball Touch Rotate (Left Hand)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        #videoElement, #canvasElement {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #basketball {
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            top: 50%;
+            left: 50%;
+            margin-left: -125px;
+            margin-top: -125px;
+            transform-origin: center;
+            pointer-events: none;
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <video id="videoElement" autoplay playsinline muted></video>
+    <canvas id="canvasElement"></canvas>
+    <img id="basketball" src="basketball.gif" />
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const canvasElement = document.getElementById('canvasElement');
+        const canvasCtx = canvasElement.getContext('2d');
+        const basketball = document.getElementById('basketball');
+
+        let rotationAngle = 0;
+        let lastAngle = null;
+
+        function distance(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
+        }
+
+        function angleBetweenPoints(cx, cy, ex, ey) {
+            return Math.atan2(ey - cy, ex - cx) * (180 / Math.PI);
+        }
+
+        function onResults(results) {
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.multiHandLandmarks && results.multiHandedness) {
+                for (let i = 0; i < results.multiHandedness.length; i++) {
+                    if (results.multiHandedness[i].label === "Left") {
+                        const landmarks = results.multiHandLandmarks[i];
+                        const indexTip = landmarks[8];
+
+                        const x = indexTip.x * canvasElement.width;
+                        const y = indexTip.y * canvasElement.height;
+
+                        // Basketball position (centered)
+                        const ballRect = basketball.getBoundingClientRect();
+                        const ballCenterX = ballRect.left + ballRect.width / 2;
+                        const ballCenterY = ballRect.top + ballRect.height / 2;
+
+                        const dist = distance(x, y, ballCenterX, ballCenterY);
+
+                        // Check if finger touches the ball
+                        if (dist < ballRect.width / 2) {
+                            const currentAngle = angleBetweenPoints(ballCenterX, ballCenterY, x, y);
+                            if (lastAngle !== null) {
+                                const deltaAngle = currentAngle - lastAngle;
+                                rotationAngle += deltaAngle;
+                                basketball.style.transform = `rotate(${rotationAngle}deg)`;
+                            }
+                            lastAngle = currentAngle;
+                        } else {
+                            lastAngle = null;
+                        }
+
+                        // Draw fingertip for debugging
+                        canvasCtx.fillStyle = 'red';
+                        canvasCtx.beginPath();
+                        canvasCtx.arc(x, y, 8, 0, 2 * Math.PI);
+                        canvasCtx.fill();
+                    }
+                }
+            } else {
+                lastAngle = null;
+            }
+        }
+
+        const hands = new Hands({
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => await hands.send({ image: videoElement }),
+            width: 1280,
+            height: 720
+        });
+        camera.start();
+    </script>
+</body>
+</html>

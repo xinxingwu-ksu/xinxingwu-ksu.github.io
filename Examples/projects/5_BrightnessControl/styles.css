@@ -1,0 +1,30 @@
+/* Style for canvas and video */
+canvas, video {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* Style for title */
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    color: #333;
+}
+
+/* Style for result text */
+#result {
+    margin-top: 520px;
+    text-align: center;
+    font-size: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 10px;
+    border-radius: 5px;
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid #ccc;
+}

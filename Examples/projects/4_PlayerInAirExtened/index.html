@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gesture-Controlled Video</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+  <div class="top-menu">
+    <button id="toggleBtn">🖐 Show Landmarks</button>
+    <button id="resetBtn">🔄 Reset</button>
+    <button id="scheduleBtn">🗓 Show Schedule</button>
+    <button id="videoToggleBtn">🎥 Hide Video</button>
+    <div id="volumeBarContainer"><div id="volumeBar"></div></div>
+  </div>
+
+  <video class="input_video" autoplay muted playsinline></video>
+  <canvas id="canvas"></canvas>
+  <div id="volumeTrigger"></div>
+
+  <!-- ✅ Schedule Overlay -->
+  <div id="termScheduleContainer">
+    <div class="col-md-12" id="mainContent">
+      <p><span style="font-size: 24pt;"><strong>Fall 2025</strong></span></p>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>ACTIVITY</th>
+            <th>TRD<br/>Term Courses</th>
+            <th>EON<br/>Term Courses</th>
+            <th>MODULE 1</th>
+            <th>MODULE 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Priority Registration for Fall begins</td><td>February 24</td><td>February 24</td><td>February 24</td><td>February 24</td></tr>
+          <tr><td>$100 Late Registration Fee for Returning Students</td><td>April 9</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Classes begin</td><td>August 18</td><td>August 18</td><td>August 18</td><td>October 13</td></tr>
+          <tr><td>Attendance due</td><td>August 25 by noon</td><td>August 25 by noon</td><td>August 25 by noon</td><td>October 20 by noon</td></tr>
+          <tr><td>Last day to add a class</td><td>August 27</td><td>August 27</td><td>August 20</td><td>October 15</td></tr>
+          <tr><td>Last day for 100% refund</td><td>August 27</td><td>August 27</td><td>August 27</td><td>October 22</td></tr>
+          <tr><td>Labor Day holiday</td><td>September 1*</td><td>September 1*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day for 50% refund</td><td>September 3</td><td>September 3</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day for 25% refund</td><td>September 10</td><td>September 10</td><td>August 31</td><td>October 26</td></tr>
+          <tr><td>No refund begins</td><td>September 11</td><td>September 11</td><td>September 1</td><td>October 27</td></tr>
+          <tr><td>Application Due Date for December 2025 Graduates</td><td>September 29</td><td>September 29</td><td>September 29</td><td>September 29</td></tr>
+          <tr><td>Fall Break</td><td colspan="2">October 9–10*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Mid-Term</td><td>October 12</td><td>October 12</td><td>September 14</td><td>November 9</td></tr>
+          <tr><td>Mid-Term Grades due</td><td>October 13 by noon</td><td>October 13 by noon</td><td>September 15 by noon</td><td>November 10 by noon</td></tr>
+          <tr><td>Last day to withdraw from a course</td><td>October 22</td><td>October 22</td><td>September 17</td><td>November 12</td></tr>
+          <tr><td>Thanksgiving holiday</td><td colspan="2">November 26–28*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day of classes</td><td>December 2</td><td>December 2</td><td>October 12</td><td>December 7</td></tr>
+          <tr><td>Final Exams</td><td colspan="2">December 4,5,8,9</td><td>Due by October 12</td><td>Due by December 7</td></tr>
+          <tr><td>Final Grades due</td><td>December 12 by noon</td><td>December 12 by noon</td><td>October 14 by noon</td><td>December 12 by noon</td></tr>
+        </tbody>
+      </table>
+
+      <p><em>*Not applicable for Online courses</em></p>
+      <p><em>NOTE: Some Nursing and Teacher Education summer courses have different start and end dates.</em></p>
+
+      <p><span style="font-size: 24pt;"><strong>Spring 2026</strong></span></p>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>ACTIVITY</th>
+            <th>TRD<br/>Term Courses</th>
+            <th>EON<br/>Term Courses</th>
+            <th>MODULE 3</th>
+            <th>MODULE 4</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Priority Registration for Spring begins</td><td colspan="4">September 29</td></tr>
+          <tr><td>$100 Late Registration Fee for Returning Students</td><td>November 5</td><td>N/A</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Classes begin</td><td>January 7</td><td>January 7</td><td>January 7</td><td>March 9</td></tr>
+          <tr><td>Attendance due</td><td>January 14 by noon</td><td>January 14 by noon</td><td>January 14 by noon</td><td>March 16 by noon</td></tr>
+          <tr><td>Last day to add a class</td><td>January 16</td><td>January 16</td><td>January 9</td><td>March 11</td></tr>
+          <tr><td>Last day for 100% refund</td><td>January 16</td><td>January 16</td><td>January 16</td><td>March 18</td></tr>
+          <tr><td>Martin Luther King holiday</td><td colspan="2">January 19*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day for 50% refund</td><td>January 23</td><td>January 23</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day for 25% refund</td><td>January 30</td><td>January 30</td><td>January 20</td><td>March 22</td></tr>
+          <tr><td>No refund begins</td><td>January 31</td><td>January 31</td><td>January 21</td><td>March 23</td></tr>
+          <tr><td>Application Due Date for May & August 2026 Graduates</td><td colspan="4">March 2</td></tr>
+          <tr><td>Mid-Term</td><td>March 1</td><td>March 1</td><td>February 1</td><td>April 5</td></tr>
+          <tr><td>Mid-Term Grades due</td><td>March 4 by noon</td><td>March 4 by noon</td><td>February 2 by noon</td><td>April 6 by noon</td></tr>
+          <tr><td>Spring Break</td><td colspan="2">March 2–6*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day to withdraw from a course</td><td>March 13</td><td>March 13</td><td>February 4</td><td>April 8</td></tr>
+          <tr><td>Good Friday holiday</td><td colspan="2">April 3 (noon)*</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>Last day of classes</td><td>April 24</td><td>April 24</td><td>March 1</td><td>May 3</td></tr>
+          <tr><td>Final Exams</td><td colspan="2">April 27–30</td><td>Due by March 1</td><td>Due by May 3</td></tr>
+          <tr><td>Final Grades due</td><td colspan="4">May 5 by noon</td></tr>
+          <tr><td>Graduation</td><td colspan="4">May 9</td></tr>
+        </tbody>
+      </table>
+      <p><em>*Not applicable for Online courses</em></p>
+      <p><em>NOTE: Some Nursing and Teacher Education summer courses have different start and end dates.</em></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

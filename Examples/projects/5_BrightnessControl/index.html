@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Hand Gesture Brightness Control 💡</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <h1>AI Hand Gesture Brightness Control 💡</h1>
+
+    <!-- Webcam video for capturing hand gestures -->
+    <video id="webcam" width="640" height="480" autoplay muted playsinline></video>
+
+    <!-- Canvas for drawing landmarks -->
+    <canvas id="canvas" width="640" height="480"></canvas>
+
+    <!-- Result section to display brightness status -->
+    <div id="result">🖐️ Ready for hand gestures...</div>
+
+    <!-- Import MediaPipe and JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+    <!-- Main JavaScript file -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Edge Progress Clock (Real‑Time)</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --fg: #e6f0ff;
+      --muted: #8aa0c2;
+      --track: #1e2a3b;
+      --stroke: #6cb6ff;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 800px at 50% 50%, #0f1520 0%, var(--bg) 60%);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Stage */
+    .stage {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      text-align: center;
+    }
+
+    /* Clock display */
+    .time {
+      font-variant-numeric: tabular-nums;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,.35));
+      line-height: 1.1;
+    }
+    .time-main { font-weight: 800; letter-spacing: 2px; font-size: clamp(56px, 12vw, 320px); }
+    .time-sub  { margin-top: 10px; color: var(--muted); font-size: clamp(14px, 2.4vw, 24px); }
+
+    /* Controls */
+    .controls {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: rgba(8,12,18,0.55);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+    button { cursor: pointer; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08); background: #121a26; color: var(--fg); padding: 10px 14px; font-size: 15px; }
+    button:hover { filter: brightness(1.08); }
+
+    /* Edge progress using SVG */
+    svg#edge { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+    .track { stroke: var(--track); stroke-width: 12; fill: none; rx: 16; ry: 16; }
+    .bar   { stroke: var(--stroke); stroke-width: 12; fill: none; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(76, 182, 255, 0.35)); rx: 16; ry: 16; }
+
+    .brand { position: fixed; right: 16px; top: 12px; color: var(--muted); font-size: 12px; opacity: .85; letter-spacing: .3px; }
+  </style>
+</head>
+<body>
+  <!-- Edge Progress (SVG) -->
+  <svg id="edge" aria-hidden="true">
+    <rect id="track" class="track" x="0" y="0" width="100%" height="100%" />
+    <rect id="bar" class="bar" x="0" y="0" width="100%" height="100%" />
+  </svg>
+
+  <div class="stage">
+    <div class="time" aria-live="polite" aria-atomic="true">
+      <div id="clock" class="time-main">00:00:00</div>
+      <div id="date" class="time-sub">—</div>
+    </div>
+  </div>
+
+  <div class="controls" role="group" aria-label="Clock controls">
+    <button id="btnFull" title="F">Fullscreen</button>
+    <button id="btnBeep" title="Toggle chime at minute">Chime: Off</button>
+    <span style="color:var(--muted); font-size:12px; user-select:none;">Keys: F = Fullscreen</span>
+  </div>
+
+  <div class="brand">Edge Clock • 60s perimeter</div>
+
+  <script>
+    // ===== SVG perimeter setup =====
+    var svg = document.getElementById('edge');
+    var bar = document.getElementById('bar');
+    var track = document.getElementById('track');
+    var perimeter = 0; // px
+    var margin = 10;   // inset
+
+    function computePerimeter() {
+      var w = window.innerWidth - margin * 2;
+      var h = window.innerHeight - margin * 2;
+      var x = margin, y = margin;
+      track.setAttribute('x', x); track.setAttribute('y', y);
+      track.setAttribute('width', w); track.setAttribute('height', h);
+      bar.setAttribute('x', x); bar.setAttribute('y', y);
+      bar.setAttribute('width', w); bar.setAttribute('height', h);
+      perimeter = 2 * (w + h);
+      bar.style.strokeDasharray = String(perimeter);
+      bar.style.strokeDashoffset = String(perimeter);
+    }
+
+    function setProgress(fraction) {
+      var f = Math.min(Math.max(fraction, 0), 1);
+      var offset = perimeter * (1 - f);
+      bar.style.strokeDashoffset = String(offset);
+    }
+
+    // ===== Clock =====
+    var clockEl = document.getElementById('clock');
+    var dateEl  = document.getElementById('date');
+    var lastMinute = -1;
+    var chimeOn = false;
+
+    function fmt2(n){return String(n).padStart(2,'0');}
+
+    function updateClock() {
+      var now = new Date();
+      var h = now.getHours();
+      var m = now.getMinutes();
+      var s = now.getSeconds();
+      var ms = now.getMilliseconds();
+
+      clockEl.textContent = `${fmt2(h)}:${fmt2(m)}:${fmt2(s)}`;
+      // Human-readable date line
+      dateEl.textContent = now.toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+      // Progress across the minute (0..1)
+      var frac = (s + ms / 1000) / 60; // 60-second perimeter fill
+      setProgress(frac);
+
+      // Optional minute chime
+      if (chimeOn && s === 0 && lastMinute !== m) {
+        lastMinute = m;
+        beep();
+      }
+
+      requestAnimationFrame(updateClock);
+    }
+
+    // Simple WebAudio beep
+    function beep(){
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.value = 880; // A5
+        o.connect(g); g.connect(ctx.destination);
+        var t = ctx.currentTime;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.3, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+        o.start(t); o.stop(t + 0.26);
+      } catch(e){}
+    }
+
+    // ===== Controls =====
+    var btnFull = document.getElementById('btnFull');
+    var btnBeep = document.getElementById('btnBeep');
+
+    function toggleFullscreen(){
+      var elem = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (elem.requestFullscreen) elem.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    btnFull.addEventListener('click', toggleFullscreen);
+    btnBeep.addEventListener('click', function(){
+      chimeOn = !chimeOn;
+      btnBeep.textContent = 'Chime: ' + (chimeOn ? 'On' : 'Off');
+    });
+
+    window.addEventListener('keydown', function(e){
+      var k = e.key.toLowerCase();
+      if (k === 'f') { e.preventDefault(); toggleFullscreen(); }
+    });
+
+    window.addEventListener('resize', computePerimeter);
+
+    // ===== Init =====
+    computePerimeter();
+    requestAnimationFrame(updateClock);
+  </script>
+</body>
+</html>

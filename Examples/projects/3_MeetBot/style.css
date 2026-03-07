@@ -1,0 +1,129 @@
+/* Body background as an image */
+body {
+  background-size: cover;
+  margin: 0px;
+  background-color: darkblue;
+}
+
+/* Simple styling for hidden instructions */
+.hidden {
+  display: none;
+}
+
+/* Header background as an image */
+.header {
+  background-color: darkyellow;
+  text-align: center;
+}
+
+/* Clock styling and positioning */
+.clock {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: yellow;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 20px;
+}
+
+.first-row {
+  margin-top: 42px;
+  text-align: center;
+  margin-bottom: 21px;
+}
+
+.instructions-title {
+  display: inline;
+  font-family: 'Work Sans';
+  font-size: 18px;
+  color: yellow;
+}
+
+.second-row {
+  margin: 0 auto;
+  width: 400px;
+}
+
+.instructions-number {
+  padding-right: 25px;
+  font-family: 'Work Sans';
+  font-size: 36px;
+  color: yellow;
+}
+
+.instructions-text {
+  padding: 10px;
+  font-family: 'Work Sans';
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.door-row {
+  text-align: center;
+}
+
+.door-frame {
+  cursor: pointer;
+  padding: 10px;
+  width: 150px;
+  height: 300px;
+  object-fit: cover;
+  transition: transform 1s ease-in-out; /* Add smooth rotation transition */
+  transform-origin: left; /* Ensure rotation starts from left */
+  /* Hide door images by default */
+  opacity: 1;
+}
+
+/* Rotate the door when clicked */
+.door-frame.opened {
+  transform: rotateY(120deg); /* Rotate around the Y-axis */
+  opacity: 0; /* Hide door after opening */
+}
+
+/* Ensure that images are correctly sized and visible when rotated */
+.door-frame.opened img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.start-row {
+  margin: auto;
+  width: 120px;
+  height: 43px;
+  background-color: yellow;
+  padding-top: 18px;
+  font-family: 'Work Sans';
+  font-size: 18px;
+  text-align: center;
+  color: #010165;
+  margin-bottom: 9px;
+  cursor: pointer;
+}
+
+.score-row {
+  text-align: center;
+  width: 100%;
+}
+
+.score-text {
+  margin-right: 17px;
+  padding: 5px;
+  display: inline;
+  font-family: 'Work Sans';
+  font-size: 12px;
+  letter-spacing: 1.1px;
+  color: yellow;
+}
+
+.score-box {
+  margin-top: 9px;
+  display: inline-block;
+  padding: 8px;
+  margin: 18px;
+  margin-right: 29px;
+  width: 59px;
+  background-color: yellow;
+  font-family: 'Work Sans';
+  font-size: 45px;
+}

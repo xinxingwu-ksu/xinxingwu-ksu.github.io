@@ -1,0 +1,240 @@
+/* STYLES FOR HOMEPAGE'S MAIN CONTENT */
+
+main {
+  padding: 0 20px 140px;
+}
+
+.nav-list {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+}
+
+/* Google logo styles */
+h1 {
+  margin-top: 1.55rem;
+  margin-bottom: 1rem;
+}
+
+.google-logo {
+  max-width: 272px;
+}
+
+/* Tooltip styles */
+.tooltip {
+  display: none;
+  position: absolute;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+}
+
+/* Header styles */
+header {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  height: 60px;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  margin-right: 11px;
+  margin-left: 16px;
+}
+
+.header-item .nav-list a,
+.header-item .nav-list a:visited,
+.header-item .nav-list a:hover,
+.header-item .nav-list a:active,
+.header-item .nav-list a:focus {
+  font-size: 0.8rem;
+  margin: 0 10px;
+}
+
+.header-item.right .nav-list a,
+.header-item.right .nav-list a:visited,
+.header-item.right .nav-list a:hover,
+.header-item.right .nav-list a:active,
+.header-item.right .nav-list a:focus {
+  font-size: 0.8rem;
+  margin: 0 7px;
+}
+
+.apps-button,
+.apps-button:hover,
+.apps-button:active,
+.apps-button:focus {
+  border-radius: 50%;
+  height: 40px;
+  margin: 0 5px 0 11px;
+  padding: 4px;
+  position: relative;
+  width: 40px;
+}
+
+.apps-button:hover {
+  background: hsl(0, 0%, 94%);
+}
+
+.apps-button:focus {
+  background: rgba(60,64,67,.12);
+}
+
+.apps-button .apps-icon {
+  font-size: 1.55rem;
+  vertical-align: middle;
+}
+
+.apps-button .tooltip {
+  background: hsl(0, 0%, 35%);
+  border-radius: 3px;
+  color: hsl(0, 0%, 100%);
+  font-size: 0.88rem;
+  padding: 5px 9px;
+}
+
+.apps-button:hover .tooltip {
+  bottom: -29px;
+  display: block;
+  right: -25px;
+}
+
+.sign-in-button,
+.sign-in-button:visited,
+.sign-in-button:hover,
+.sign-in-button:active,
+.sign-in-button:focus {
+  color: hsl(0, 0%, 100%);
+  background: #1a73e8;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  display: initial;
+  min-width: 60px;
+  padding: 8.5px 25px;
+}
+
+.sign-in-button:hover {
+  background: #1b66c9;
+  -webkit-box-shadow: 0 1px 3px 1px rgb(66 64 67 / 15%), 0 1px 2px 0 rgb(60 64 67 / 30%);
+  box-shadow: 0 1px 3px 1px rgb(66 64 67 / 15%), 0 1px 2px 0 rgb(60 64 67 / 30%);
+}
+
+/* Footer styles */
+footer {
+  background: hsl(0, 0%, 95%);
+  bottom: 0;
+  color: #70757a;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  left: 0;
+  padding: 0 20px;
+  position: absolute;
+  right: 0;
+  width: 100%;
+}
+
+.carbon-neutral-link,
+.footer-item .nav-list a,
+.footer-item .nav-list a:visited,
+.footer-item .nav-list a:hover,
+.footer-item .nav-list a:active,
+.footer-item .nav-list a:focus {
+  padding: 15px;
+}
+
+.carbon-neutral-link {
+  -webkit-box-ordinal-group: 0;
+  -ms-flex-order: -1;
+  order: -1;
+}
+
+.carbon-neutral-link .green-leaf {
+  max-width: 12px;
+}
+
+/* Media queries */
+@media all and (min-width: 600px) {
+
+  main {
+    padding-bottom: 95px;
+  }
+
+  .header-item .nav-list a,
+  .header-item .nav-list a:visited,
+  .header-item .nav-list a:hover,
+  .header-item .nav-list a:active,
+  .header-item .nav-list a:focus {
+    font-size: 1rem;
+  }
+
+  .header-item.right .nav-list .sign-in-button,
+  .header-item.right .nav-list .sign-in-button:visited,
+  .header-item.right .nav-list .sign-in-button:hover,
+  .header-item.right .nav-list .sign-in-button:active,
+  .header-item.right .nav-list .sign-in-button:focus {
+    font-size: 1.03rem;
+  }
+
+  .header-item.right .nav-list a,
+  .header-item.right .nav-list a:visited,
+  .header-item.right .nav-list a:hover,
+  .header-item.right .nav-list a:active,
+  .header-item.right .nav-list a:focus {
+    font-size: 0.95rem;
+  }
+
+  footer {
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -webkit-box-pack: space-evenly;
+    -ms-flex-pack: space-evenly;
+    justify-content: space-evenly;
+  }
+
+  .carbon-neutral-link {
+    width: 100%;
+  }
+}
+
+@media all and (min-width: 1200px) {
+
+  main {
+    padding-bottom: 50px;
+  }
+
+  footer {
+    -ms-flex-wrap: initial;
+    flex-wrap: initial;
+    -webkit-box-pack: justify;
+    -ms-flex-pack: justify;
+    justify-content: space-between;
+  }
+
+  .carbon-neutral-link {
+    -webkit-box-ordinal-group: 1;
+    -ms-flex-order: 0;
+    order: 0;
+    width: initial;
+  }
+}

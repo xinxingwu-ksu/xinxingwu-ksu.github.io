@@ -1,0 +1,10 @@
+/* style.css */
+body, html {
+  margin: 0;
+  overflow: hidden;
+}
+canvas {
+  position: absolute;
+  top: 0; left: 0;
+  /* no CSS background here—we draw it by script */
+}

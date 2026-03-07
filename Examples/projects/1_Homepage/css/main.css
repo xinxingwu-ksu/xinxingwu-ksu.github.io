@@ -1,0 +1,68 @@
+html {
+  min-height: 100%;
+  background-image: url(../img/background.gif);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  background-color: rgba(0, 0, 0, 0.6);
+  background-blend-mode: multiply;
+
+  font-family: 'Merriweather', serif;
+  text-align: center;
+}
+
+a {
+  text-decoration: none;
+  color: #779bff;
+}
+
+.profile-img {
+  position: inline-block;
+  height: 256px;
+  width: 256px;
+  margin: 5rem;
+}
+
+.rounded {
+  border-radius: 100%;
+  overflow: hidden;
+}
+
+.title {
+  color: #EEE;
+  font-size: 60px;
+}
+
+.subtitle {
+  color: #DDD;
+  font-size: 30px;
+}
+
+.social {
+  display: flex;
+  flex-direction: row;
+  margin-left: 30%;
+  margin-right: 30%;
+  justify-content: space-evenly;
+}
+
+.social-icon {
+  color: #EEE;
+  font-size: 40px;
+}
+
+.social-icon:hover {
+  color: #779bff;
+}
+
+@media (max-width: 736px) {
+  .profile-img {
+    margin: 2rem;
+  }
+
+  .social {
+    margin-left: 0%;
+    margin-right: 0%;
+  }
+}

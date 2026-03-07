@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Eyes Follow Cursor — Teacher Mode & Metrics</title>
+<style>
+  :root{
+    --bg:#0d3a5a;
+    --skin:#ffc7b9;
+    --cloth:#ffffff;
+    --sleeve:#d5d7db;
+    --pants:#586a7c;
+    --shoe:#2f3b46;
+    --shadow:rgba(0,0,0,.25);
+
+    /* layout knobs */
+    --torso-top: 190px;
+    --torso-h:   170px;
+    --hip-gap:     6px;
+
+    /* scales */
+    --ui-scale: 1;
+    --person-scale: 1;
+
+    /* eye outline */
+    --eye-border: 3px;
+  }
+
+  /* High-contrast */
+  .hc{
+    --bg:#000;
+    --skin:#ffd6cc;
+    --cloth:#fff;
+    --sleeve:#e5e7eb;
+    --pants:#334155;
+    --shoe:#111827;
+  }
+
+  /* Low-Vision */
+  .lv{
+    --ui-scale: 1.3;
+    --person-scale: 1.25;
+    --eye-border: 5px;
+  }
+
+  /* Kid Mode palette */
+  .kid{
+    --bg: linear-gradient(145deg,#69c0ff,#ffd166);
+    --skin:#ffd3c7;
+    --cloth:#fff7ae;
+    --sleeve:#ffd6e7;
+    --pants:#78c2ad;
+    --shoe:#3a3d5a;
+  }
+
+  /* Color-Safe (Okabe–Ito inspired) */
+  .cbsafe{
+    --bg: linear-gradient(135deg,#0072B2,#009E73);
+    --skin:#ffd6cc;
+    --cloth:#F0E442;
+    --sleeve:#56B4E9;
+    --pants:#009E73;
+    --shoe:#D55E00;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; height:100vh; display:grid; place-items:center;
+    background:var(--bg); font-family:system-ui,sans-serif; color:#fff;
+  }
+
+  /* Control bar (bottom center default) */
+  .ui{
+    position:fixed; inset:auto 12px 12px 12px;
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap;
+    z-index:10; transform:scale(var(--ui-scale)); transform-origin:bottom center;
+  }
+  /* Dock variants */
+  .dock-left  .ui{ inset:auto auto 12px 12px; justify-content:flex-start; transform-origin:bottom left; }
+  .dock-right .ui{ inset:auto 12px 12px auto; justify-content:flex-end;   transform-origin:bottom right; }
+  .dock-top   .ui{ inset:12px 12px auto 12px; justify-content:center;     transform-origin:top center; }
+
+  .btn{
+    appearance:none; border:2px solid #fff; background:transparent; color:#fff;
+    padding:.45rem .8rem; border-radius:999px; font-weight:600; letter-spacing:.2px;
+    cursor:pointer;
+  }
+  .btn[aria-pressed="true"]{ background:#ffffff28; }
+  .btn:focus-visible{ outline:3px solid #fff; outline-offset:2px; }
+  .hc .btn{ border-color:#fffc; color:#fffc; }
+  .hc .btn[aria-pressed="true"]{ background:#ffffff40; }
+  .lv .btn{ padding:.6rem 1rem; } /* larger hit-areas */
+
+  .hint{
+    position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    background:#0009; padding:.35rem .6rem; border-radius:8px; font-size:.9rem;
+    box-shadow:0 6px 18px #0006;
+  }
+
+  .person{
+    position:relative; width:260px; height:520px;
+    transform: scale(var(--person-scale)); transform-origin:center;
+  }
+  .person[aria-hidden="true"]{ opacity:.7; }
+
+  /* Head */
+  .head{
+    position:absolute; left:50%; top:10px; transform:translateX(-50%);
+    width:170px; height:170px; border-radius:50%;
+    background:var(--skin);
+    box-shadow:inset 0 16px 24px rgba(0,0,0,.15), 0 10px 24px var(--shadow);
+    display:flex; justify-content:center; align-items:center; gap:18px;
+  }
+
+  /* Eyes */
+  .eye{
+    width:60px; height:60px; background:#fff; border-radius:50%;
+    box-shadow:inset 0 0 0 var(--eye-border) #c7c9cc, 0 2px 8px #0003;
+    position:relative; overflow:hidden;
+  }
+  .pupil{
+    width:22px; height:22px; background:#111; border-radius:50%;
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  }
+  .pupil:after{
+    content:""; position:absolute; width:6px; height:6px; border-radius:50%;
+    background:#fff8; left:4px; top:4px;
+  }
+
+  /* Eyelids (blinking) */
+  .eye::before,
+  .eye::after{
+    content:""; position:absolute; left:0; right:0; height:50%;
+    background: var(--skin);
+    transform: scaleY(0); transform-origin: top;
+    transition: transform .08s linear;
+    pointer-events:none;
+  }
+  .eye::after{ top:auto; bottom:0; transform-origin: bottom; }
+  .blink .eye::before{ transform: scaleY(1); }
+  .blink .eye::after { transform: scaleY(1); }
+
+  /* Torso / arms / legs / feet */
+  .torso{
+    position:absolute; left:50%; top:var(--torso-top); transform:translateX(-50%);
+    width:180px; height:var(--torso-h); border-radius:22px; background:var(--cloth);
+    box-shadow:0 18px 28px var(--shadow);
+  }
+  .arm{
+    position:absolute; top:calc(var(--torso-top) + 15px); width:26px; height:110px;
+    background:var(--sleeve); border-radius:15px; transform-origin:top center;
+    box-shadow:0 4px 10px #0003;
+  }
+  .arm.left  { left:32px;  transform:rotate(12deg); }
+  .arm.right { right:32px; transform:rotate(-12deg); }
+  .hand{
+    position:absolute; bottom:-12px; left:50%; transform:translateX(-50%);
+    width:30px; height:30px; background:var(--skin); border-radius:50%;
+    box-shadow:0 2px 6px #0003;
+  }
+  .leg{
+    position:absolute; top:calc(var(--torso-top) + var(--torso-h) + var(--hip-gap));
+    width:36px; height:110px; background:var(--pants);
+    border-radius:18px;
+  }
+  .leg.left  { left:86px; }
+  .leg.right { right:86px; }
+  .foot{
+    position:absolute; top:calc(var(--torso-top) + var(--torso-h) + var(--hip-gap) + 100px);
+    width:66px; height:22px; background:#2f3b46;
+    border-radius:12px 12px 8px 8px; box-shadow:0 6px 10px #0005;
+  }
+  .ground{
+    position:absolute; left:50%; bottom:14px; transform:translateX(-50%);
+    width:220px; height:18px; background:#00000020; filter:blur(6px); border-radius:50%;
+  }
+
+  /* Settings panel */
+  .panel{
+    position:fixed; right:12px; bottom:70px; width:min(90vw, 380px);
+    background:#0b1220cc; backdrop-filter:blur(6px);
+    border:1px solid #ffffff33; border-radius:14px; padding:12px 14px;
+    box-shadow:0 10px 24px #0008; display:none; z-index:20;
+  }
+  .panel.open{ display:block; }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:8px 0; }
+  .row label{ font-size:.95rem; }
+  .row input[type="range"]{ width:170px; }
+  .seg{ display:inline-flex; border:1px solid #fff; border-radius:999px; overflow:hidden; }
+  .seg button{ border:none; padding:.35rem .6rem; background:transparent; color:#fff; cursor:pointer; }
+  .seg button[aria-pressed="true"]{ background:#ffffff28; }
+  .panel .note{ font-size:.8rem; opacity:.9; margin-top:6px; }
+  .panel .topline{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .close{ border:2px solid #fff; background:transparent; color:#fff; border-radius:999px; padding:.25rem .5rem; cursor:pointer; }
+
+  /* Tiny emoji celebration (Kid Mode) */
+  @keyframes floatUp {
+    0%{ transform:translateY(0) scale(0.9); opacity:0; }
+    10%{ opacity:1; }
+    100%{ transform:translateY(-90px) scale(1.1); opacity:0; }
+  }
+  .cele{
+    position:fixed; font-size:24px; pointer-events:none; z-index:50;
+    animation: floatUp 900ms ease-out forwards;
+    text-shadow:0 2px 6px #0007;
+  }
+
+  /* Shortcuts overlay */
+  .sheet{
+    position:fixed; inset:0; background:#000a; display:none; z-index:40;
+    align-items:center; justify-content:center; padding:24px;
+  }
+  .sheet.open{ display:flex; }
+  .sheet .card{
+    background:#0b1220f0; border:1px solid #ffffff33; border-radius:16px;
+    padding:16px 18px; width:min(95vw,700px); color:#fff; box-shadow:0 12px 30px #0008;
+  }
+  .sheet h2{ margin:.2rem 0 0.6rem; }
+  .kbd{
+    display:inline-block; min-width:1.6rem; padding:.15rem .4rem; margin:0 .1rem;
+    border:1px solid #fff; border-radius:6px; background:#111; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .sheet ul{ margin:.5rem 0 0; padding-left:1.1rem; line-height:1.6; }
+  .sheet .actions{ margin-top:.8rem; display:flex; gap:8px; justify-content:flex-end; }
+  .sheet button{ border:2px solid #fff; background:transparent; color:#fff; padding:.35rem .7rem; border-radius:999px; cursor:pointer; }
+
+  /* Teacher Mode overlay */
+  .tm{
+    position:fixed; inset:0; pointer-events:none; z-index:35;
+  }
+  .callout{
+    position:absolute; max-width:280px; background:#0b1220f0; color:#fff;
+    border:1px solid #ffffff33; border-radius:12px; padding:.6rem .7rem;
+    box-shadow:0 10px 24px #0008; font-size:.95rem; line-height:1.3;
+  }
+  .callout::after{
+    content:""; position:absolute; width:0; height:0; border:8px solid transparent;
+  }
+  .callout[data-arrow="up"]::after   { bottom:-16px; left:18px; border-top-color:#0b1220f0; }
+  .callout[data-arrow="down"]::after { top:-16px;    left:18px; border-bottom-color:#0b1220f0; }
+  .callout strong{ display:block; margin-bottom:.25rem; }
+
+  /* Metrics drawer */
+  .drawer{
+    position:fixed; right:12px; top:12px; width:min(92vw,380px);
+    transform:translateY(-20px); opacity:0; pointer-events:none; transition:.15s ease;
+    background:#0b1220f0; border:1px solid #ffffff33; border-radius:14px; padding:12px 14px;
+    box-shadow:0 12px 30px #0008; z-index:45;
+  }
+  .drawer.open{ transform:none; opacity:1; pointer-events:auto; }
+  .drawer h3{ margin:.1rem 0 .6rem; }
+  .metric{ display:flex; align-items:center; gap:8px; margin:6px 0; }
+  .metric .label{ width:56%; font-size:.95rem; }
+  .metric .value{ width:20%; text-align:right; }
+  .barwrap{ width:100%; height:8px; background:#ffffff22; border-radius:999px; overflow:hidden; }
+  .bar{ height:100%; width:0%; background:#56B4E9; }
+
+  @media (prefers-reduced-motion: reduce){
+    .blink .eye::before, .blink .eye::after{ transform:none; }
+    .cele{ animation:none; opacity:1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hint" id="hint" role="status" aria-live="polite">
+  Press <b>?</b> for shortcuts • Try 🎓 Teacher Mode (T) and 📊 Metrics (M).
+</div>
+
+<div class="person" id="person" role="img" aria-label="Cartoon person whose eyes follow your cursor">
+  <div class="head" id="head">
+    <div class="eye" id="eyeL"><div class="pupil"></div></div>
+    <div class="eye" id="eyeR"><div class="pupil"></div></div>
+  </div>
+
+  <div class="arm left"><div class="hand"></div></div>
+  <div class="arm right"><div class="hand"></div></div>
+
+  <div class="torso" id="torso"></div>
+
+  <div class="leg left"></div>
+  <div class="leg right"></div>
+  <div class="foot left"></div>
+  <div class="foot right"></div>
+
+  <div class="ground"></div>
+</div>
+
+<div class="ui" aria-label="Controls">
+  <button class="btn" id="toggle" aria-pressed="true">👀 Follow: ON</button>
+  <button class="btn" id="reset">⟳ Reset Gaze</button>
+  <button class="btn" id="contrast" aria-pressed="false">⚡ High Contrast: OFF</button>
+  <button class="btn" id="settings">⚙️ Settings</button>
+  <button class="btn" id="lang">🌐 EN</button>
+  <button class="btn" id="teach" aria-pressed="false">🎓 Teacher</button>
+  <button class="btn" id="metrics" aria-pressed="false">📊 Metrics</button>
+  <button class="btn" id="help">❓</button>
+</div>
+
+<!-- Settings panel -->
+<div class="panel" id="panel" role="dialog" aria-modal="false" aria-labelledby="panelTitle">
+  <div class="topline">
+    <strong id="panelTitle">Settings</strong>
+    <button class="close" id="closePanel" aria-label="Close">✕</button>
+  </div>
+
+  <div class="row">
+    <label for="gaze">Gaze Range</label>
+    <input type="range" id="gaze" min="15" max="40" step="1" value="30" />
+    <span id="gazeVal">30%</span>
+  </div>
+
+  <div class="row">
+    <label for="smooth">Smoothing</label>
+    <input type="range" id="smooth" min="0" max="90" step="5" value="40" />
+    <span id="smoothVal">40</span>
+  </div>
+
+  <div class="row">
+    <label>Control Size</label>
+    <div class="seg" role="group" aria-label="Control size">
+      <button type="button" class="segbtn size" data-size="S" aria-pressed="false">S</button>
+      <button type="button" class="segbtn size" data-size="M" aria-pressed="true">M</button>
+      <button type="button" class="segbtn size" data-size="L" aria-pressed="false">L</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>Dock Position</label>
+    <div class="seg" role="group" aria-label="Dock">
+      <button type="button" class="segbtn dock" data-dock="left"   aria-pressed="false">Left</button>
+      <button type="button" class="segbtn dock" data-dock="bottom" aria-pressed="true">Bottom</button>
+      <button type="button" class="segbtn dock" data-dock="right"  aria-pressed="false">Right</button>
+      <button type="button" class="segbtn dock" data-dock="top"    aria-pressed="false">Top</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label for="lv">Low-Vision Mode</label>
+    <input type="checkbox" id="lv" />
+  </div>
+
+  <div class="row">
+    <label for="kid">Kid Mode</label>
+    <input type="checkbox" id="kid" />
+  </div>
+
+  <div class="row">
+    <label for="cbsafe">Color-Safe Mode</label>
+    <input type="checkbox" id="cbsafe" />
+  </div>
+
+  <div class="row">
+    <label for="remember">Remember settings</label>
+    <input type="checkbox" id="remember" checked />
+  </div>
+
+  <div class="note" id="note">
+    Your choices are saved on this device.
+  </div>
+</div>
+
+<!-- Shortcuts help overlay -->
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="card">
+    <h2 id="sheetTitle">Keyboard Shortcuts</h2>
+    <ul>
+      <li><span class="kbd">?</span> Show/Hide this help • <span class="kbd">Esc</span> close panels/help</li>
+      <li><span class="kbd">F</span> Follow ON/OFF • <span class="kbd">R</span> Reset • <span class="kbd">C</span> High-Contrast</li>
+      <li><span class="kbd">G</span> Settings • <span class="kbd">L</span> Language • <span class="kbd">V</span> Low-Vision • <span class="kbd">K</span> Kid Mode • <span class="kbd">B</span> Color-Safe</li>
+      <li><span class="kbd">D</span> Cycle Dock (Left→Bottom→Right→Top)</li>
+      <li><span class="kbd">+</span>/<span class="kbd">−</span> Gaze Range • <span class="kbd">[</span>/<span class="kbd">]</span> Smoothing</li>
+      <li><span class="kbd">T</span> Teacher Mode • <span class="kbd">M</span> Metrics Drawer</li>
+    </ul>
+    <div class="actions">
+      <button id="closeSheet">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Teacher Mode overlay container (populated dynamically) -->
+<div class="tm" id="tm" aria-hidden="true"></div>
+
+<!-- Metrics Drawer -->
+<div class="drawer" id="drawer" aria-live="polite" aria-label="Interaction Metrics">
+  <h3>Metrics (local, reset anytime)</h3>
+  <div class="metric"><div class="label">Follow toggles</div><div class="value" id="mFollow">0</div></div>
+  <div class="metric"><div class="label">Resets</div><div class="value" id="mReset">0</div></div>
+  <div class="metric"><div class="label">High-Contrast toggles</div><div class="value" id="mHC">0</div></div>
+  <div class="metric"><div class="label">Low-Vision toggles</div><div class="value" id="mLV">0</div></div>
+  <div class="metric"><div class="label">Kid Mode toggles</div><div class="value" id="mKid">0</div></div>
+  <div class="metric"><div class="label">Color-Safe toggles</div><div class="value" id="mCB">0</div></div>
+  <div class="metric"><div class="label">Language switches</div><div class="value" id="mLang">0</div></div>
+  <div class="metric"><div class="label">Settings open</div><div class="value" id="mSettings">0</div></div>
+  <div class="metric"><div class="label">Dock changes</div><div class="value" id="mDock">0</div></div>
+  <div class="metric"><div class="label">Gaze adjusts</div><div class="value" id="mGaze">0</div></div>
+  <div class="metric"><div class="label">Smoothing adjusts</div><div class="value" id="mSmooth">0</div></div>
+
+  <h3 style="margin-top:.8rem;">Time in modes (since load)</h3>
+  <div class="metric"><div class="label">Follow ON</div><div class="value" id="tFollow">0s</div></div>
+  <div class="barwrap"><div class="bar" id="bFollow"></div></div>
+  <div class="metric"><div class="label">High-Contrast</div><div class="value" id="tHC">0s</div></div>
+  <div class="barwrap"><div class="bar" id="bHC"></div></div>
+  <div class="metric"><div class="label">Low-Vision</div><div class="value" id="tLV">0s</div></div>
+  <div class="barwrap"><div class="bar" id="bLV"></div></div>
+  <div class="metric"><div class="label">Kid Mode</div><div class="value" id="tKid">0s</div></div>
+  <div class="barwrap"><div class="bar" id="bKid"></div></div>
+  <div class="metric"><div class="label">Color-Safe</div><div class="value" id="tCB">0s</div></div>
+  <div class="barwrap"><div class="bar" id="bCB"></div></div>
+
+  <div class="actions" style="display:flex; gap:8px; justify-content:flex-end; margin-top:.8rem;">
+    <button class="btn" id="resetMetrics">Reset metrics</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const eyes   = Array.prototype.slice.call(document.querySelectorAll('.eye'));
+  const pupils = Array.prototype.slice.call(document.querySelectorAll('.pupil'));
+
+  const btnFollow   = document.getElementById('toggle');
+  const btnReset    = document.getElementById('reset');
+  const btnContrast = document.getElementById('contrast');
+  const btnSettings = document.getElementById('settings');
+  const btnLang     = document.getElementById('lang');
+  const btnHelp     = document.getElementById('help');
+  const btnTeach    = document.getElementById('teach');
+  const btnMetrics  = document.getElementById('metrics');
+
+  const panel   = document.getElementById('panel');
+  const closePanelBtn = document.getElementById('closePanel');
+
+  const gazeIn  = document.getElementById('gaze');
+  const gazeVal = document.getElementById('gazeVal');
+  const smoothIn  = document.getElementById('smooth');
+  const smoothVal = document.getElementById('smoothVal');
+
+  const segSizeBtns = Array.prototype.slice.call(document.querySelectorAll('.segbtn.size'));
+  const segDockBtns = Array.prototype.slice.call(document.querySelectorAll('.segbtn.dock'));
+
+  const lvChk   = document.getElementById('lv');
+  const kidChk  = document.getElementById('kid');
+  const cbChk   = document.getElementById('cbsafe');
+  const rememberChk = document.getElementById('remember');
+  const hint    = document.getElementById('hint');
+
+  const sheet   = document.getElementById('sheet');
+  const closeSheetBtn = document.getElementById('closeSheet');
+
+  const tm      = document.getElementById('tm');
+  const drawer  = document.getElementById('drawer');
+  const resetMetricsBtn = document.getElementById('resetMetrics');
+
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* State */
+  let followEnabled = true;
+  let gazeRange = 0.30;          // 15–40% via slider
+  let smoothing = 0.40;          // 0.00 (instant) → 0.90 (very smooth)
+  let uiScale = 'M';             // 'S' | 'M' | 'L'
+  let dock = 'bottom';           // 'left' | 'bottom' | 'right' | 'top'
+  let contrastOn = false;
+  let lowVision = false;
+  let kidMode = false;
+  let colorSafe = false;
+  let lang = 'en';               // 'en' | 'zh'
+  let remember = true;
+
+  let teacherOn = false;
+  let metricsOn = false;
+
+  /* Metrics (local only) */
+  const M = {
+    follow:0, reset:0, hc:0, lv:0, kid:0, cb:0, lang:0, settings:0, dock:0, gaze:0, smooth:0,
+    tStart: performance.now(),
+    tFollow:0, tHC:0, tLV:0, tKid:0, tCB:0,
+    onSince:{ follow: performance.now(), hc:0, lv:0, kid:0, cb:0 }
+  };
+
+  /* i18n strings */
+  const I18N = {
+    en: {
+      followOn:'👀 Follow: ON', followOff:'👀 Follow: OFF',
+      reset:'⟳ Reset Gaze',
+      contrastOn:'⚡ High Contrast: ON', contrastOff:'⚡ High Contrast: OFF',
+      settings:'⚙️ Settings',
+      lang:'🌐 EN',
+      hint:'Press ? for shortcuts • Try 🎓 Teacher Mode (T) and 📊 Metrics (M).',
+      panelTitle:'Settings', gaze:'Gaze Range', smooth:'Smoothing',
+      size:'Control Size', dock:'Dock Position',
+      lv:'Low-Vision Mode', kid:'Kid Mode', cbsafe:'Color-Safe Mode',
+      remember:'Remember settings',
+      note:'Your choices are saved on this device.',
+      left:'Left', bottom:'Bottom', right:'Right', top:'Top',
+      kbTitle:'Keyboard Shortcuts',
+      kbClose:'Close',
+      teacher:'🎓 Teacher', metrics:'📊 Metrics'
+    },
+    zh: {
+      followOn:'👀 跟随：开启', followOff:'👀 跟随：关闭',
+      reset:'⟳ 视线复位',
+      contrastOn:'⚡ 高对比度：开', contrastOff:'⚡ 高对比度：关',
+      settings:'⚙️ 设置',
+      lang:'🌐 中文',
+      hint:'按 ? 查看快捷键 • 试试 🎓教学模式 (T) 与 📊指标面板 (M)。',
+      panelTitle:'设置', gaze:'视线幅度', smooth:'平滑度',
+      size:'控制大小', dock:'停靠位置',
+      lv:'低视力模式', kid:'儿童模式', cbsafe:'色觉友好模式',
+      remember:'记住设置',
+      note:'偏好将保存在本设备。',
+      left:'左', bottom:'下', right:'右', top:'上',
+      kbTitle:'键盘快捷键',
+      kbClose:'关闭',
+      teacher:'🎓 教学', metrics:'📊 指标'
+    }
+  };
+  function t(k){ return I18N[lang][k]; }
+
+  /* Storage */
+  const KEY = 'eyes_demo_prefs_v5';
+  function save(){
+    if(!remember) return;
+    const data = {followEnabled, gazeRange, smoothing, uiScale, dock, contrastOn, lowVision, kidMode, colorSafe, lang, remember:true, teacherOn, metricsOn};
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+  }
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY); if(!raw) return;
+      const d = JSON.parse(raw);
+      if(typeof d.followEnabled === 'boolean') followEnabled = d.followEnabled;
+      if(typeof d.gazeRange === 'number') gazeRange = d.gazeRange;
+      if(typeof d.smoothing === 'number') smoothing = d.smoothing;
+      if(typeof d.uiScale === 'string') uiScale = d.uiScale;
+      if(typeof d.dock === 'string') dock = d.dock;
+      if(typeof d.contrastOn === 'boolean') contrastOn = d.contrastOn;
+      if(typeof d.lowVision === 'boolean') lowVision = d.lowVision;
+      if(typeof d.kidMode === 'boolean') kidMode = d.kidMode;
+      if(typeof d.colorSafe === 'boolean') colorSafe = d.colorSafe;
+      if(typeof d.lang === 'string') lang = d.lang;
+      if(typeof d.remember === 'boolean') remember = d.remember;
+      if(typeof d.teacherOn === 'boolean') teacherOn = d.teacherOn;
+      if(typeof d.metricsOn === 'boolean') metricsOn = d.metricsOn;
+    }catch(e){}
+  }
+
+  /* Apply UI text */
+  function applyI18N(){
+    btnFollow.textContent   = followEnabled ? t('followOn') : t('followOff');
+    btnReset.textContent    = t('reset');
+    btnContrast.textContent = contrastOn ? t('contrastOn') : t('contrastOff');
+    btnSettings.textContent = t('settings');
+    btnLang.textContent     = t('lang');
+    btnTeach.textContent    = t('teacher');
+    btnMetrics.textContent  = t('metrics');
+    document.getElementById('sheetTitle').textContent = t('kbTitle');
+    closeSheetBtn.textContent = t('kbClose');
+    const hintEl = document.getElementById('hint');
+    if(hintEl) hintEl.textContent = t('hint');
+
+    document.getElementById('panelTitle').textContent = t('panelTitle');
+    document.querySelector('label[for="gaze"]').textContent   = t('gaze');
+    document.querySelector('label[for="smooth"]').textContent = t('smooth');
+    panel.querySelectorAll('.row')[2].querySelector('label').textContent = t('size');
+    panel.querySelectorAll('.row')[3].querySelector('label').textContent = t('dock');
+    document.querySelector('label[for="lv"]').textContent = t('lv');
+    document.querySelector('label[for="kid"]').textContent = t('kid');
+    document.querySelector('label[for="cbsafe"]').textContent = t('cbsafe');
+    document.querySelector('label[for="remember"]').textContent = t('remember');
+    document.getElementById('note').textContent = t('note');
+
+    segDockBtns.forEach(btn=>{
+      const key = btn.dataset.dock;
+      btn.textContent = t(key);
+    });
+  }
+
+  /* Apply visuals */
+  function applyVisual(){
+    document.body.classList.toggle('hc', !!contrastOn);
+    document.body.classList.toggle('lv', !!lowVision);
+    document.body.classList.toggle('kid', !!kidMode);
+    document.body.classList.toggle('cbsafe', !!colorSafe);
+
+    btnContrast.setAttribute('aria-pressed', String(contrastOn));
+    btnFollow.setAttribute('aria-pressed', String(followEnabled));
+    btnTeach.setAttribute('aria-pressed', String(teacherOn));
+    btnMetrics.setAttribute('aria-pressed', String(metricsOn));
+
+    document.body.classList.remove('dock-left','dock-right','dock-top');
+    if(dock === 'left')  document.body.classList.add('dock-left');
+    if(dock === 'right') document.body.classList.add('dock-right');
+    if(dock === 'top')   document.body.classList.add('dock-top');
+
+    document.body.style.setProperty('--ui-scale', uiScale === 'S' ? 0.9 : uiScale === 'L' ? 1.2 : 1);
+
+    gazeIn.value   = Math.round(gazeRange * 100);
+    gazeVal.textContent = Math.round(gazeRange * 100) + '%';
+    smoothIn.value = Math.round(smoothing * 100);
+    smoothVal.textContent = Math.round(smoothing * 100);
+
+    segSizeBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.size === uiScale)));
+    segDockBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dock === dock)));
+
+    lvChk.checked  = !!lowVision;
+    kidChk.checked = !!kidMode;
+    cbChk.checked  = !!colorSafe;
+    rememberChk.checked = !!remember;
+
+    drawer.classList.toggle('open', metricsOn);
+    tm.setAttribute('aria-hidden', String(!teacherOn));
+    tm.innerHTML = '';
+    if(teacherOn) renderTeacher();
+  }
+
+  function setFollow(on){
+    followEnabled = !!on;
+    btnFollow.textContent = on ? t('followOn') : t('followOff');
+    btnFollow.setAttribute('aria-pressed', String(on));
+    save();
+  }
+
+  /* Smooth motion engine (from Step 4+) */
+  const cur = pupils.map(()=>({x:0, y:0}));
+  const tgt = pupils.map(()=>({x:0, y:0}));
+
+  function centerTargets(){
+    for(let i=0;i<tgt.length;i++){ tgt[i].x = 0; tgt[i].y = 0; cur[i].x = 0; cur[i].y = 0; }
+    applyTransforms();
+  }
+  function applyTransforms(){
+    for(let i=0;i<pupils.length;i++){
+      pupils[i].style.transform = 'translate(calc(-50% + '+cur[i].x+'px), calc(-50% + '+cur[i].y+'px))';
+    }
+  }
+  function moveTo(x, y){
+    if(!followEnabled) return;
+    for(let i=0;i<eyes.length;i++){
+      const r = eyes[i].getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top  + r.height/2;
+      const dx = x - cx, dy = y - cy;
+      const d  = Math.hypot(dx, dy) || 1;
+      const ux = dx/d,  uy = dy/d;
+      const max = Math.min(r.width, r.height) * gazeRange;
+      tgt[i].x = ux * max;
+      tgt[i].y = uy * max;
+    }
+  }
+  function tick(){
+    const step = reduced ? 1 : Math.max(0, Math.min(1, 1 - smoothing));
+    for(let i=0;i<cur.length;i++){
+      cur[i].x += (tgt[i].x - cur[i].x) * step;
+      cur[i].y += (tgt[i].y - cur[i].y) * step;
+    }
+    applyTransforms();
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* Mouse / touch */
+  document.addEventListener('mousemove', e => moveTo(e.clientX, e.clientY));
+  document.addEventListener('touchmove', e => {
+    if(e.touches && e.touches[0]) moveTo(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true});
+
+  /* Buttons */
+  btnFollow.addEventListener('click', () => { setFollow(!followEnabled); M.follow++;  updateMetrics(); });
+  btnReset .addEventListener('click', () => { centerTargets(); if(kidMode && !reduced) spawnCelebration(); M.reset++; updateMetrics(); });
+  btnContrast.addEventListener('click', () => { toggleHC(); });
+  btnSettings.addEventListener('click', () => { panel.classList.toggle('open'); if(panel.classList.contains('open')) closePanelBtn.focus(); M.settings++; updateMetrics(); });
+  closePanelBtn.addEventListener('click', () => panel.classList.remove('open'));
+  btnLang.addEventListener('click', () => { lang = (lang === 'en' ? 'zh' : 'en'); M.lang++; applyI18N(); save(); updateMetrics(); });
+  btnHelp.addEventListener('click', toggleSheet);
+  document.getElementById('closeSheet').addEventListener('click', toggleSheet);
+  btnTeach.addEventListener('click', () => { teacherOn = !teacherOn; applyVisual(); save(); });
+  btnMetrics.addEventListener('click', () => { metricsOn = !metricsOn; applyVisual(); save(); });
+
+  /* Panel controls */
+  gazeIn.addEventListener('input', e => {
+    gazeRange = Math.max(0.15, Math.min(0.40, (+e.target.value)/100));
+    gazeVal.textContent = Math.round(gazeRange*100) + '%';
+    M.gaze++; updateMetrics(); save();
+  });
+  smoothIn.addEventListener('input', e => {
+    smoothing = Math.max(0, Math.min(0.90, (+e.target.value)/100));
+    smoothVal.textContent = Math.round(smoothing*100);
+    M.smooth++; updateMetrics(); save();
+  });
+  segSizeBtns.forEach(b => b.addEventListener('click', () => { uiScale = b.dataset.size; applyVisual(); save(); }));
+  segDockBtns.forEach(b => b.addEventListener('click', () => { dock = b.dataset.dock; M.dock++; applyVisual(); save(); updateMetrics(); }));
+
+  lvChk.addEventListener('change', e => { lowVision = !!e.target.checked; toggleTimed('lv', lowVision); applyVisual(); save(); });
+  kidChk.addEventListener('change', e => { kidMode   = !!e.target.checked; toggleTimed('kid', kidMode); applyVisual(); save(); });
+  cbChk .addEventListener('change', e => { colorSafe = !!e.target.checked; toggleTimed('cb', colorSafe); applyVisual(); save(); });
+
+  rememberChk.addEventListener('change', e => {
+    remember = !!e.target.checked;
+    if(!remember){ try{ localStorage.removeItem(KEY); }catch(_e){} }
+    save();
+  });
+
+  /* Keyboard shortcuts (ignore when typing in inputs/textarea) */
+  function isTypingTarget(el){
+    return el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+  }
+  function cycleDock(){
+    const order = ['left','bottom','right','top'];
+    const idx = order.indexOf(dock);
+    dock = order[(idx + 1) % order.length];
+    M.dock++; applyVisual(); save(); updateMetrics();
+  }
+  function adjustGaze(delta){
+    let v = Math.round(gazeRange*100) + delta;
+    v = Math.max(15, Math.min(40, v));
+    gazeRange = v/100; gazeIn.value = v; gazeVal.textContent = v + '%';
+    M.gaze++; updateMetrics(); save();
+  }
+  function adjustSmooth(delta){
+    let v = Math.round(smoothing*100) + delta;
+    v = Math.max(0, Math.min(90, v));
+    smoothing = v/100; smoothIn.value = v; smoothVal.textContent = v;
+    M.smooth++; updateMetrics(); save();
+  }
+  function toggleSheet(){
+    const isOpen = sheet.classList.toggle('open');
+    sheet.setAttribute('aria-hidden', String(!isOpen));
+    if(isOpen){ closeSheetBtn.focus(); }
+  }
+
+  document.addEventListener('keydown', function(e){
+    if(isTypingTarget(e.target)) return;
+    if(e.key === '?'){ e.preventDefault(); toggleSheet(); return; }
+    if(e.key === 'Escape'){
+      if(sheet.classList.contains('open')){ toggleSheet(); return; }
+      if(panel.classList.contains('open')){ panel.classList.remove('open'); return; }
+    }
+    const k = e.key;
+    if(k === 'f' || k === 'F'){ setFollow(!followEnabled); M.follow++; updateMetrics(); }
+    else if(k === 'r' || k === 'R'){ centerTargets(); if(kidMode && !reduced) spawnCelebration(); M.reset++; updateMetrics(); }
+    else if(k === 'c' || k === 'C'){ toggleHC(); }
+    else if(k === 'g' || k === 'G'){ panel.classList.toggle('open'); if(panel.classList.contains('open')) closePanelBtn.focus(); M.settings++; updateMetrics(); }
+    else if(k === 'l' || k === 'L'){ lang = (lang === 'en' ? 'zh' : 'en'); M.lang++; applyI18N(); save(); updateMetrics(); }
+    else if(k === 'v' || k === 'V'){ lowVision = !lowVision; toggleTimed('lv', lowVision); applyVisual(); save(); }
+    else if(k === 'k' || k === 'K'){ kidMode   = !kidMode;   toggleTimed('kid', kidMode); applyVisual(); save(); }
+    else if(k === 'b' || k === 'B'){ colorSafe = !colorSafe; toggleTimed('cb', colorSafe); applyVisual(); save(); }
+    else if(k === 'd' || k === 'D'){ cycleDock(); }
+    else if(k === 't' || k === 'T'){ teacherOn = !teacherOn; applyVisual(); save(); }
+    else if(k === 'm' || k === 'M'){ metricsOn = !metricsOn; applyVisual(); save(); }
+    else if(k === '+'){ adjustGaze(+1); }
+    else if(k === '-'){ adjustGaze(-1); }
+    else if(k === '['){ adjustSmooth(-5); }
+    else if(k === ']'){ adjustSmooth(+5); }
+  });
+
+  /* High-contrast toggle with time tracking */
+  function toggleHC(){
+    contrastOn = !contrastOn; toggleTimed('hc', contrastOn);
+    applyVisual(); save();
+  }
+
+  /* Time tracking helpers (per-mode) */
+  function toggleTimed(key, on){
+    const map = {hc:'tHC', lv:'tLV', kid:'tKid', cb:'tCB', follow:'tFollow'};
+    const countMap = {hc:'hc', lv:'lv', kid:'kid', cb:'cb'};
+    const now = performance.now();
+
+    if(key === 'follow'){
+      if(on){ M.onSince.follow = now; }
+      else{ M.tFollow += (now - (M.onSince.follow||now)); }
+    } else {
+      if(on){
+        M.onSince[key] = now;
+        if(countMap[key]) M[countMap[key]]++;
+      } else {
+        const since = M.onSince[key] || now;
+        M[ map[key] ] += (now - since);
+        if(countMap[key]) M[countMap[key]]++; // count toggles both ways
+      }
+    }
+    updateMetrics();
+  }
+
+  /* Periodically update "time in mode" bars */
+  function updateMetrics(){
+    // counts
+    setTxt('mFollow', M.follow);
+    setTxt('mReset',  M.reset);
+    setTxt('mHC',     M.hc);
+    setTxt('mLV',     M.lv);
+    setTxt('mKid',    M.kid);
+    setTxt('mCB',     M.cb);
+    setTxt('mLang',   M.lang);
+    setTxt('mSettings', M.settings);
+    setTxt('mDock',   M.dock);
+    setTxt('mGaze',   M.gaze);
+    setTxt('mSmooth', M.smooth);
+
+    // durations — include currently-on modes up to "now"
+    const now = performance.now();
+    const total = Math.max(1, now - M.tStart);
+
+    function dur(ms){ return Math.round(ms/1000) + 's'; }
+    function frac(ms){ return Math.min(100, Math.round(ms / total * 100)); }
+
+    const curFollow = followEnabled ? (now - (M.onSince.follow||now)) : 0;
+    const curHC     = contrastOn   ? (now - (M.onSince.hc||now))     : 0;
+    const curLV     = lowVision    ? (now - (M.onSince.lv||now))     : 0;
+    const curKid    = kidMode      ? (now - (M.onSince.kid||now))    : 0;
+    const curCB     = colorSafe    ? (now - (M.onSince.cb||now))     : 0;
+
+    setTxt('tFollow', dur(M.tFollow + curFollow));
+    setWidth('bFollow', frac(M.tFollow + curFollow));
+
+    setTxt('tHC', dur(M.tHC + curHC));
+    setWidth('bHC', frac(M.tHC + curHC));
+
+    setTxt('tLV', dur(M.tLV + curLV));
+    setWidth('bLV', frac(M.tLV + curLV));
+
+    setTxt('tKid', dur(M.tKid + curKid));
+    setWidth('bKid', frac(M.tKid + curKid));
+
+    setTxt('tCB', dur(M.tCB + curCB));
+    setWidth('bCB', frac(M.tCB + curCB));
+  }
+  function setTxt(id, val){ const el = document.getElementById(id); if(el) el.textContent = val; }
+  function setWidth(id, pct){ const el = document.getElementById(id); if(el) el.style.width = pct + '%'; }
+
+  resetMetricsBtn.addEventListener('click', () => {
+    const keep = { tStart: performance.now(), onSince:{ follow: performance.now(), hc:0, lv:0, kid:0, cb:0 } };
+    for(const k of Object.keys(M)){
+      if(typeof M[k] === 'number') M[k] = 0;
+    }
+    M.tStart = keep.tStart;
+    M.onSince = keep.onSince;
+    updateMetrics();
+  });
+
+  setInterval(updateMetrics, 1000);
+
+  /* Teacher Mode – callouts */
+  function renderTeacher(){
+    const targets = [
+      {
+        el: document.getElementById('toggle'),
+        arrow:'down',
+        title:'Affordance: Follow Toggle',
+        text:'Clear control to start/stop motion. Improves discoverability & error recovery.'
+      },
+      {
+        el: document.getElementById('reset'),
+        arrow:'down',
+        title:'Error Tolerance',
+        text:'“Reset Gaze” offers a quick, safe default state—supports learnability.'
+      },
+      {
+        el: document.getElementById('contrast'),
+        arrow:'down',
+        title:'Accessibility: Contrast',
+        text:'High-contrast mode aids low-vision users and poor lighting contexts.'
+      },
+      {
+        el: document.getElementById('settings'),
+        arrow:'down',
+        title:'Customization → Personalization',
+        text:'Gaze range, smoothing, size, dock, and persistence (localStorage).'
+      },
+      {
+        el: document.getElementById('lang'),
+        arrow:'down',
+        title:'Localization',
+        text:'Language toggle (EN/中文) aligns with cultural & contextual needs.'
+      },
+      {
+        el: document.getElementById('person'),
+        arrow:'up',
+        title:'Delight with Restraint',
+        text:'Eyes track cursor; natural blinking respects prefers-reduced-motion.'
+      }
+    ];
+
+    const rectBody = document.body.getBoundingClientRect();
+    targets.forEach(tg => {
+      const r = tg.el.getBoundingClientRect();
+      const div = document.createElement('div');
+      div.className = 'callout';
+      div.dataset.arrow = tg.arrow;
+      div.innerHTML = '<strong>'+tg.title+'</strong>'+tg.text;
+      // position: place above/below with small offset
+      const pad = 10;
+      if(tg.arrow === 'down'){
+        div.style.left = (r.left) + 'px';
+        div.style.top  = (r.bottom + pad) + 'px';
+      } else {
+        div.style.left = (r.left) + 'px';
+        div.style.top  = (r.top - pad - 60) + 'px';
+      }
+      tm.appendChild(div);
+    });
+  }
+  window.addEventListener('resize', () => { if(teacherOn){ tm.innerHTML=''; renderTeacher(); } });
+
+  /* Blinking */
+  (function autoBlink(){
+    if(reduced) return;
+    function blinkOnce(){
+      document.body.classList.add('blink');
+      setTimeout(()=>document.body.classList.remove('blink'), 120);
+    }
+    function loop(){
+      blinkOnce();
+      setTimeout(loop, 3000 + Math.random()*3000);
+    }
+    setTimeout(loop, 2000 + Math.random()*1500);
+  })();
+
+  /* Kid Mode celebration */
+  function spawnCelebration(){
+    const emojis = ['🎈','✨','⭐','🎉','💫','🌟','🫧','💥'];
+    const centerX = innerWidth/2, baseY = innerHeight/2 + 80;
+    for(let i=0;i<12;i++){
+      const el = document.createElement('div');
+      el.className = 'cele';
+      el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+      const x = centerX + (Math.random()*180 - 90);
+      const y = baseY + (Math.random()*40 - 20);
+      el.style.left = x + 'px';
+      el.style.top  = y + 'px';
+      document.body.appendChild(el);
+      setTimeout(()=> el.remove(), 1000);
+    }
+  }
+
+  /* Init */
+  load();
+  applyI18N();
+  applyVisual();
+  // Set time tracker initial ON states
+  M.onSince.follow = performance.now();
+  if(contrastOn) M.onSince.hc = performance.now();
+  if(lowVision)  M.onSince.lv = performance.now();
+  if(kidMode)    M.onSince.kid = performance.now();
+  if(colorSafe)  M.onSince.cb = performance.now();
+
+  centerTargets();
+  moveTo(innerWidth/2, innerHeight/2);
+  setTimeout(()=> hint && hint.remove(), 3200);
+  updateMetrics();
+})();
+</script>
+</body>
+</html>

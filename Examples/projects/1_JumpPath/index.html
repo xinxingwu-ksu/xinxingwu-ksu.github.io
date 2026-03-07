@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Life+Savers:wght@800&display=swap");
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background-color: #f6dcfc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        a {
+            height: 100px;
+        }
+
+        path {
+            stroke: #ed5af2;
+            stroke-width: 4px;
+            fill: none;
+            stroke-linecap: round;
+        }
+
+        text {
+            fill: #0568f2;
+            font-family: "Life Savers", serif;
+            font-weight: 800;
+            font-style: normal;
+            font-size: 28px;
+        }
+    </style>
+</head>
+
+<body>
+    <a href="#" id="anchor">
+        <svg viewBox="0 0 200 120" width="200px" height="120px">
+            <path id="top" d="M 10,70 Q 100,70 190,70" />
+
+            <text class="path-text">
+                <textPath href="#top" startOffset="50%" text-anchor="middle">
+                    <tspan dy="-12">Hover me!</tspan>
+                </textPath>
+            </text>
+        </svg>
+    </a>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.1/gsap.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const anchor = document.getElementById("anchor");
+
+            const animateTo = (d, ease, duration = 1) => {
+                gsap.killTweensOf("#top");
+                gsap.to("#top", {
+                    attr: { d },
+                    ease,
+                    duration
+                });
+            };
+
+            anchor.addEventListener("pointerenter", () => {
+                animateTo("M 10,70 Q 100,20 190,70", "elastic.out(1.4, 0.4)", 0.8);
+            });
+
+            anchor.addEventListener("pointerleave", () => {
+                animateTo("M 10,70 Q 100,70 190,70", "elastic.out(1.8, 0.2)", 1.5);
+            });
+        });
+
+    </script>
+</body>
+
+</html>

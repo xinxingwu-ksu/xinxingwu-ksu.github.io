@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tic-Tac-Toe (Kids Edition)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Soft floating shapes (pure CSS) -->
+  <div class="bg-shapes" aria-hidden="true">
+    <span class="shape s1"></span>
+    <span class="shape s2"></span>
+    <span class="shape s3"></span>
+    <span class="shape s4"></span>
+    <span class="shape s5"></span>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <header class="header">
+        <div class="title-row">
+          <div class="mascot" aria-hidden="true">🧸</div>
+          <div>
+            <h1 class="title">Tic-Tac-Toe</h1>
+            <p class="subtitle">Tap a square to play!</p>
+          </div>
+        </div>
+      </header>
+
+      <div class="status-wrap" role="status" aria-live="polite">
+        <div id="status">Player X's Turn</div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" aria-label="Tic Tac Toe board"></div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" onclick="resetGame()" aria-label="Restart Game">
+          🔄 Restart Game
+        </button>
+        <div class="hint">Two players take turns. Get 3 in a row to win!</div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span aria-hidden="true">⭐</span> Have fun and be kind! <span aria-hidden="true">⭐</span>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

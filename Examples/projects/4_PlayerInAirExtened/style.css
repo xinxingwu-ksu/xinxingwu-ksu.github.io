@@ -1,0 +1,93 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+}
+
+video {
+  display: none;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.top-menu {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  z-index: 10;
+}
+
+#toggleBtn,
+#videoToggleBtn,
+#resetBtn,
+#scheduleBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid white;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#volumeBarContainer {
+  width: 200px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+#volumeBar {
+  height: 100%;
+  width: 50%;
+  background: limegreen;
+  transition: width 0.1s ease-out;
+}
+
+#volumeTrigger {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: red;
+  border: 2px solid white;
+  z-index: 11;
+  pointer-events: none;
+  display: none;
+}
+
+#termScheduleContainer {
+  position: absolute;
+  top: 80px;
+  right: 20px;
+  width: 50vw;
+  height: 70vh;
+  background: rgba(255, 255, 255, 0.55);
+  overflow-y: scroll;
+  padding: 15px;
+  border-radius: 10px;
+  display: none;
+  z-index: 99;
+  color: black;
+}
+
+#termScheduleContainer table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+#termScheduleContainer th,
+#termScheduleContainer td {
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  text-align: left;
+}
