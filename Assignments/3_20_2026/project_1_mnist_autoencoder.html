@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 1 — Build Your First Keras Autoencoder on MNIST</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --card:#ffffff;
+  --soft:#f8fafc;
+  --accent:#2563eb;
+  --accent-2:#0f766e;
+  --gold:#b45309;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.62}
+body{padding:28px}
+.page{max-width:1100px;margin:0 auto}
+.hero{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border:1px solid var(--line); border-radius:22px; padding:32px 34px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
+}
+.badge{
+  display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); background:#eff6ff; border:1px solid #dbeafe;
+  padding:7px 10px; border-radius:999px; font-weight:700
+}
+h1{font-size:34px; line-height:1.15; margin:14px 0 10px}
+h2{font-size:24px; margin:28px 0 12px}
+h3{font-size:18px; margin:20px 0 10px}
+p,li{font-size:16px}
+.subtitle{font-size:18px;color:#374151;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+.card{
+  grid-column:span 12;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:22px 24px;box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+@media(min-width:900px){
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
+  .span-8{grid-column:span 8}
+}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:8px 16px}
+.kv div{padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv strong{color:#111827}
+ul{padding-left:22px;margin:10px 0}
+ol{padding-left:22px;margin:10px 0}
+pre{
+  white-space:pre-wrap; word-break:break-word; margin:0;
+  background:#f8fafc; border:1px solid var(--line); border-radius:16px;
+  padding:18px; overflow:auto; font-size:13px; line-height:1.5
+}
+code{font-family:Consolas,Menlo,monospace}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+th{background:#f8fafc}
+.note{
+  border-left:4px solid var(--accent); background:#f8fbff; padding:14px 16px; border-radius:12px
+}
+.warn{
+  border-left:4px solid var(--gold); background:#fffaf0; padding:14px 16px; border-radius:12px
+}
+.good{
+  border-left:4px solid var(--accent-2); background:#f0fdfa; padding:14px 16px; border-radius:12px
+}
+.details summary{cursor:pointer;font-weight:700}
+.footer{margin-top:30px;color:var(--muted);font-size:14px}
+.small{font-size:14px;color:var(--muted)}
+.section-label{
+  font-size:13px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:.08em
+}
+
+.release-box{
+  grid-column:span 12;
+  margin:0;
+  border:1px solid #fde68a;
+  background:linear-gradient(180deg,#fffbeb 0%, #fff7ed 100%);
+  border-radius:18px;
+  padding:18px 20px;
+  box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+.release-box h3{margin:0 0 8px;font-size:20px;color:#92400e}
+.release-box p{margin:6px 0}
+.release-countdown{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #fcd34d;
+  font-weight:700;
+  color:#78350f
+}
+.locked-answer{display:none}
+.answer-released{
+  border-left:4px solid var(--accent-2);
+  background:#f0fdfa;
+  padding:14px 16px;
+  border-radius:12px;
+  margin-top:10px
+}
+
+.wiggle{display:inline-block;text-decoration:none;}
+.wiggle{animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <span class="badge">Keras Project Assignment</span>
+    <h1>Project 1 — Build Your First Keras Autoencoder on MNIST</h1>
+    <p class="subtitle">Build a basic dense autoencoder, learn the role of the encoder, bottleneck, and decoder, and connect reconstruction quality to representation learning.</p>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>Project Snapshot</h3>
+        <div class="kv"><div><strong>Difficulty</strong></div><div>Beginner</div><div><strong>Recommended time</strong></div><div>1–2 weeks</div><div><strong>Main tools</strong></div><div>TensorFlow / Keras, Matplotlib</div><div><strong>Dataset</strong></div><div>MNIST from keras.datasets</div><div><strong>Main output</strong></div><div>Trained autoencoder + reconstruction figure</div><div><strong>Connection to the <a href="https://cdn.aaai.org/ojs/17242/17242-13-20736-1-2-20210518.pdf" target="_blank">Paper</a> you have read</strong></div><div>Foundational practice for later feature-selection models</div></div>
+      </div>
+      <div class="card span-6">
+        <h3>Why this matters</h3>
+        
+    <p>This project gives you a clean first experience with autoencoders. Before you study feature scoring or feature selection, you should be comfortable with the core reconstruction idea: compress the input into a smaller latent vector and then recover the input from that vector.</p>
+	<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+    <div class="note"><strong>Note:</strong> This assignment is intentionally simple. It prepares you for later Keras projects that move closer to the paper’s one-to-one scoring and subset-selection ideas.</div>
+    		<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+	
+	<div>
+	<a href="https://xinxingwu-ksu.github.io/schedule/wu.html" target="_blank">My Spring 2026 Schedule</a> 
+	
+	<a class="wiggle" href="https://outlook.office.com/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu?anonymous&ismsaljsauthenabled" target="_blank">😊 Book time to meet</a> 
+      </div>
+    </div>
+  </section>
+  <div class="grid">
+    
+        <section class="card">
+          <div class="section-label">Assignment</div>
+          <h2>Detailed Assignment Description</h2>
+          
+            <p><strong>Goal.</strong> Build and train a dense autoencoder on MNIST handwritten digits.</p>
+            <h3>Your tasks</h3>
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+            <ol>
+              <li>Load MNIST with <code>keras.datasets.mnist.load_data()</code>.</li>
+              <li>Normalize pixel values to the range <code>[0,1]</code>.</li>
+              <li>Flatten each image from <code>28×28</code> into a vector of length <code>784</code>.</li>
+              <li>Build an encoder and decoder in Keras. Use a bottleneck of size <code>32</code>.</li>
+              <li>Train the model with MSE loss.</li>
+              <li>Plot 10 original images and their reconstructions.</li>
+              <li>Change the bottleneck to <code>16</code> and compare the test MSE.</li>
+              <li>Write a short reflection explaining why a smaller bottleneck usually loses more detail.</li>
+            </ol>
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+            <h3>Deliverables</h3>
+            <ul>
+              <li>Python file or notebook (JupyterLab or Google Colab)</li>
+              <li>One figure with original vs reconstructed images</li>
+              <li>One table reporting bottleneck size and test MSE</li>
+              <li>A 1-paragraph reflection</li>
+            </ul>
+        
+        </section>
+		
+		
+        <section class="card release-box" id="releaseBox">
+          <div class="section-label">Answer Release</div>
+          <h3>Reference answers will open automatically on April 1, 2026</h3>
+          <p>Until then, please focus on completing the project independently.</p>
+          <p class="small">Release time: April 1, 2026, 12:00 AM Eastern Time</p>
+          <div class="release-countdown" id="countdown">Checking release time...</div>
+          <div class="answer-released" id="releasedMessage" style="display:none;">The answer sections are now available.</div>
+        </section>
+
+        <section class="card locked-answer">
+          <div class="section-label">Answer</div>
+          <h2>Reference Answer / Solution</h2>
+          <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from tensorflow.keras import layers
+
+# 1) Load and normalize MNIST
+(x_train, _), (x_test, _) = keras.datasets.mnist.load_data()
+x_train = x_train.astype(&quot;float32&quot;) / 255.0
+x_test = x_test.astype(&quot;float32&quot;) / 255.0
+
+x_train = x_train.reshape((-1, 28 * 28))
+x_test = x_test.reshape((-1, 28 * 28))
+
+# 2) Build a simple dense autoencoder
+input_dim = 784
+latent_dim = 32
+
+inputs = keras.Input(shape=(input_dim,))
+encoded = layers.Dense(128, activation=&quot;relu&quot;)(inputs)
+encoded = layers.Dense(64, activation=&quot;relu&quot;)(encoded)
+latent = layers.Dense(latent_dim, activation=&quot;relu&quot;, name=&quot;latent&quot;)(encoded)
+
+decoded = layers.Dense(64, activation=&quot;relu&quot;)(latent)
+decoded = layers.Dense(128, activation=&quot;relu&quot;)(decoded)
+outputs = layers.Dense(input_dim, activation=&quot;sigmoid&quot;)(decoded)
+
+autoencoder = keras.Model(inputs, outputs, name=&quot;mnist_autoencoder&quot;)
+encoder = keras.Model(inputs, latent, name=&quot;mnist_encoder&quot;)
+
+autoencoder.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+
+# 3) Train
+history = autoencoder.fit(
+    x_train, x_train,
+    validation_split=0.1,
+    epochs=20,
+    batch_size=256,
+    shuffle=True,
+    verbose=1
+)
+
+# 4) Evaluate
+test_mse = autoencoder.evaluate(x_test, x_test, verbose=0)
+print(&quot;Test MSE:&quot;, test_mse)
+
+# 5) Visualize original vs reconstructed images
+recon = autoencoder.predict(x_test[:10], verbose=0)
+
+plt.figure(figsize=(14, 4))
+for i in range(10):
+    ax = plt.subplot(2, 10, i + 1)
+    plt.imshow(x_test[i].reshape(28, 28), cmap=&quot;gray&quot;)
+    plt.axis(&quot;off&quot;)
+    ax = plt.subplot(2, 10, i + 11)
+    plt.imshow(recon[i].reshape(28, 28), cmap=&quot;gray&quot;)
+    plt.axis(&quot;off&quot;)
+plt.suptitle(&quot;Top row: original | Bottom row: reconstruction&quot;)
+plt.tight_layout()
+plt.show()
+
+# 6) Optional comparison with a smaller bottleneck
+for smaller_dim in [16]:
+    inputs2 = keras.Input(shape=(input_dim,))
+    z = layers.Dense(128, activation=&quot;relu&quot;)(inputs2)
+    z = layers.Dense(64, activation=&quot;relu&quot;)(z)
+    z = layers.Dense(smaller_dim, activation=&quot;relu&quot;)(z)
+    z = layers.Dense(64, activation=&quot;relu&quot;)(z)
+    z = layers.Dense(128, activation=&quot;relu&quot;)(z)
+    outputs2 = layers.Dense(input_dim, activation=&quot;sigmoid&quot;)(z)
+    model2 = keras.Model(inputs2, outputs2)
+    model2.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+    model2.fit(
+        x_train, x_train,
+        validation_split=0.1,
+        epochs=10,
+        batch_size=256,
+        shuffle=True,
+        verbose=0
+    )
+    mse2 = model2.evaluate(x_test, x_test, verbose=0)
+    print(f&quot;Test MSE with latent_dim={smaller_dim}:&quot;, mse2)</code></pre>
+        </section>
+        <section class="card locked-answer">
+          <div class="section-label">Answer</div>
+          <h2>Expected Results and Notes</h2>
+          
+            <div class="good">
+              <p><strong>Outcome:</strong> You should see clearly recognizable reconstructed digits. With a bottleneck of 32, reconstructions are usually better than with a bottleneck of 16.</p>
+              <p><strong>Loss range:</strong> the exact MSE depends on random initialization, number of epochs, and hardware, but the final test MSE should usually be substantially lower than the starting loss.</p>
+            </div>
+            <div class="warn">
+              <p><strong>Reminder - Common mistakes:</strong> forgetting normalization, using the wrong output activation, not flattening the images, or comparing images before reshaping them back to <code>28×28</code>.</p>
+            </div>
+        
+        </section>
+  </div>
+  <div class="footer">Prepared for Step 2: Keras practice before feature-selection experiments.  Xinxing Wu</div>
+</div>
+
+<script>
+(function () {
+  var releaseTimeUtcMs = Date.parse('2026-04-01T04:00:00Z');
+  var countdownEl = document.getElementById('countdown');
+  var releaseBox = document.getElementById('releaseBox');
+  var releasedMessage = document.getElementById('releasedMessage');
+  var answerSections = document.querySelectorAll('.locked-answer');
+
+  function showAnswers() {
+    answerSections.forEach(function (section) {
+      section.style.display = 'block';
+    });
+    if (countdownEl) countdownEl.style.display = 'none';
+    if (releasedMessage) releasedMessage.style.display = 'block';
+    if (releaseBox) {
+      releaseBox.style.borderColor = '#99f6e4';
+      releaseBox.style.background = 'linear-gradient(180deg,#f0fdfa 0%, #ecfeff 100%)';
+    }
+  }
+
+  function formatRemaining(ms) {
+    var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    var days = Math.floor(totalSeconds / 86400);
+    var hours = Math.floor((totalSeconds % 86400) / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's remaining';
+  }
+
+  function updateCountdown() {
+    var diff = releaseTimeUtcMs - Date.now();
+    if (diff <= 0) {
+      showAnswers();
+      return;
+    }
+    if (countdownEl) {
+      countdownEl.textContent = formatRemaining(diff);
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+})();
+</script>
+
+</body>
+</html>

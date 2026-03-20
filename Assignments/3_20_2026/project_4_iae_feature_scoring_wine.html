@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 4 — Identification Autoencoder (IAE)-Inspired Feature Scoring on the Wine Dataset</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --card:#ffffff;
+  --soft:#f8fafc;
+  --accent:#2563eb;
+  --accent-2:#0f766e;
+  --gold:#b45309;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.62}
+body{padding:28px}
+.page{max-width:1100px;margin:0 auto}
+.hero{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border:1px solid var(--line); border-radius:22px; padding:32px 34px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
+}
+.badge{
+  display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); background:#eff6ff; border:1px solid #dbeafe;
+  padding:7px 10px; border-radius:999px; font-weight:700
+}
+h1{font-size:34px; line-height:1.15; margin:14px 0 10px}
+h2{font-size:24px; margin:28px 0 12px}
+h3{font-size:18px; margin:20px 0 10px}
+p,li{font-size:16px}
+.subtitle{font-size:18px;color:#374151;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+.card{
+  grid-column:span 12;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:22px 24px;box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+@media(min-width:900px){
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
+  .span-8{grid-column:span 8}
+}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:8px 16px}
+.kv div{padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv strong{color:#111827}
+ul{padding-left:22px;margin:10px 0}
+ol{padding-left:22px;margin:10px 0}
+pre{
+  white-space:pre-wrap; word-break:break-word; margin:0;
+  background:#f8fafc; border:1px solid var(--line); border-radius:16px;
+  padding:18px; overflow:auto; font-size:13px; line-height:1.5
+}
+code{font-family:Consolas,Menlo,monospace}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+th{background:#f8fafc}
+.note{
+  border-left:4px solid var(--accent); background:#f8fbff; padding:14px 16px; border-radius:12px
+}
+.warn{
+  border-left:4px solid var(--gold); background:#fffaf0; padding:14px 16px; border-radius:12px
+}
+.good{
+  border-left:4px solid var(--accent-2); background:#f0fdfa; padding:14px 16px; border-radius:12px
+}
+.details summary{cursor:pointer;font-weight:700}
+.footer{margin-top:30px;color:var(--muted);font-size:14px}
+.small{font-size:14px;color:var(--muted)}
+.section-label{
+  font-size:13px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:.08em
+}
+
+.wiggle{display:inline-block;text-decoration:none;}
+.wiggle{animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.release-box{
+  grid-column:span 12;
+  margin:0;
+  border:1px solid #fde68a;
+  background:linear-gradient(180deg,#fffbeb 0%, #fff7ed 100%);
+  border-radius:18px;
+  padding:18px 20px;
+  box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+.release-box h3{margin:0 0 8px;font-size:20px;color:#92400e}
+.release-box p{margin:6px 0}
+.release-countdown{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #fcd34d;
+  font-weight:700;
+  color:#78350f
+}
+.locked-answer{display:none}
+.answer-released{
+  border-left:4px solid var(--accent-2);
+  background:#f0fdfa;
+  padding:14px 16px;
+  border-radius:12px;
+  margin-top:10px
+}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <span class="badge">Keras Project Assignment</span>
+    <h1>Project 4 — Identification Autoencoder (IAE)-Inspired Feature Scoring on the Wine Dataset</h1>
+    <p class="subtitle">You implement a custom Keras one-to-one feature scoring layer with nonnegative trainable weights, then rank features and evaluate selected subsets.</p>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>Project Snapshot</h3>
+        <div class="kv"><div><strong>Difficulty</strong></div><div>Intermediate to Advanced</div><div><strong>Recommended time</strong></div><div>2 weeks</div><div><strong>Main tools</strong></div><div>TensorFlow / Keras, pandas, scikit-learn</div><div><strong>Dataset</strong></div><div>Local file: datasets/wine.csv</div><div><strong>Main output</strong></div><div>Top-k feature ranking + reconstruction/classification results</div><div><strong>Connection to the <a href="https://cdn.aaai.org/ojs/17242/17242-13-20736-1-2-20210518.pdf" target="_blank">Paper</a></strong></div><div>Directly inspired by the paper’s one-to-one scoring layer</div></div>
+      </div>
+      <div class="card span-6">
+        <h3>Why this matters</h3>
+        
+    <p>This project is the first direct step toward the paper. You implement a trainable one-to-one feature scoring layer, which is a simplified classroom version of the scoring idea used before the full fractal autoencoder framework.</p>
+    <div class="warn"><strong>Note:</strong> this assignment is <em>IAE-inspired</em>, not a full reproduction of FAE. It is designed for learning and for Step 2 preparation.</div>
+     		<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+	
+	<div>
+	<a href="https://xinxingwu-ksu.github.io/schedule/wu.html" target="_blank">My Spring 2026 Schedule</a> 
+	
+	<a class="wiggle" href="https://outlook.office.com/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu?anonymous&ismsaljsauthenabled" target="_blank">😊 Book time to meet</a> 
+      </div>   
+      </div>
+    </div>
+  </section>
+  <div class="grid">
+    
+        <section class="card">
+          <div class="section-label">Assignment</div>
+          <h2>Detailed Assignment Description</h2>
+          
+            <p><strong>Goal.</strong> Learn feature scoring by multiplying each input feature by its own trainable nonnegative weight.</p>
+			
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+			
+            <h3>Tasks</h3>
+            <ol>
+              <li>Load <code>datasets/wine.csv</code>.</li>
+              <li>Split into training and testing sets.</li>
+              <li>Standardize the input features.</li>
+              <li>Create a custom Keras layer that learns one nonnegative weight per feature.</li>
+              <li>Add L1 regularization on those weights to encourage sparsity.</li>
+              <li>Train an autoencoder to reconstruct the original features.</li>
+              <li>Rank features by learned score and keep the top <code>k=5</code>.</li>
+              <li>Use the selected features for:
+                <ul>
+                  <li>linear reconstruction of the full input</li>
+                  <li>downstream classification</li>
+                </ul>
+              </li>
+              <li>Compare the selected subset against a random subset of 5 features.</li>
+            </ol>
+			
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+			
+            <h3>Required reflection</h3>
+            <ul>
+              <li>Why does L1 regularization help feature scoring?</li>
+              <li>Why do we constrain scores to be nonnegative?</li>
+              <li>Why might a selected feature subset help classification but not perfectly reconstruct the whole dataset?</li>
+            </ul>
+            
+        
+        </section>
+
+        <section class="card release-box" id="releaseBox">
+          <div class="section-label">Answer Release</div>
+          <h3>Reference answers will open automatically on April 19, 2026</h3>
+          <p>Until then, please focus on completing the project independently.</p>
+          <p class="small">Release time: April 19, 2026, 12:00 AM Eastern Time</p>
+          <div class="release-countdown" id="countdown">Checking release time...</div>
+          <div class="answer-released" id="releasedMessage" style="display:none;">The answer sections are now available.</div>
+        </section>
+
+        <section class="card locked-answer" id="answerSection1">
+          <div class="section-label">Answer</div>
+          <h2>Reference Answer / Solution</h2>
+          <pre><code>import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import accuracy_score, mean_squared_error
+
+# ---------------------------------------------------
+# 1) Load local dataset
+# ---------------------------------------------------
+df = pd.read_csv(&quot;datasets/wine.csv&quot;)
+X = df.drop(columns=[&quot;target&quot;]).values.astype(&quot;float32&quot;)
+y = df[&quot;target&quot;].values
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train).astype(&quot;float32&quot;)
+X_test = scaler.transform(X_test).astype(&quot;float32&quot;)
+
+n_features = X_train.shape[1]
+top_k = 5
+
+# ---------------------------------------------------
+# 2) Custom one-to-one feature scoring layer
+# ---------------------------------------------------
+class FeatureScaler(layers.Layer):
+    def __init__(self, l1_strength=1e-3, **kwargs):
+        super().__init__(**kwargs)
+        self.l1_strength = l1_strength
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=(input_shape[-1],),
+            initializer=&quot;ones&quot;,
+            trainable=True,
+            constraint=keras.constraints.NonNeg(),
+            name=&quot;feature_scores&quot;
+        )
+
+    def call(self, inputs):
+        self.add_loss(self.l1_strength * tf.reduce_sum(self.w))
+        return inputs * self.w
+
+# ---------------------------------------------------
+# 3) Build IAE-inspired autoencoder
+# ---------------------------------------------------
+inputs = keras.Input(shape=(n_features,))
+scaled = FeatureScaler(l1_strength=1e-3, name=&quot;feature_scaler&quot;)(inputs)
+x = layers.Dense(16, activation=&quot;relu&quot;)(scaled)
+latent = layers.Dense(8, activation=&quot;relu&quot;, name=&quot;latent&quot;)(x)
+x = layers.Dense(16, activation=&quot;relu&quot;)(latent)
+outputs = layers.Dense(n_features, activation=&quot;linear&quot;)(x)
+
+model = keras.Model(inputs, outputs)
+model.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+
+# ---------------------------------------------------
+# 4) Train
+# ---------------------------------------------------
+model.fit(
+    X_train, X_train,
+    validation_split=0.1,
+    epochs=150,
+    batch_size=16,
+    verbose=0
+)
+
+# ---------------------------------------------------
+# 5) Read learned scores
+# ---------------------------------------------------
+feature_layer = model.get_layer(&quot;feature_scaler&quot;)
+scores = feature_layer.get_weights()[0]
+
+feature_names = df.drop(columns=[&quot;target&quot;]).columns.to_list()
+ranking = pd.DataFrame({
+    &quot;feature&quot;: feature_names,
+    &quot;score&quot;: scores
+}).sort_values(&quot;score&quot;, ascending=False)
+
+print(&quot;Top learned features:&quot;)
+print(ranking.head(top_k))
+
+selected_features = ranking[&quot;feature&quot;].head(top_k).tolist()
+selected_idx = [feature_names.index(name) for name in selected_features]
+
+# ---------------------------------------------------
+# 6) Reconstruction from selected features using linear regression
+# ---------------------------------------------------
+lr = LinearRegression()
+lr.fit(X_train[:, selected_idx], X_train)
+recon_test = lr.predict(X_test[:, selected_idx])
+recon_mse = mean_squared_error(X_test, recon_test)
+
+# ---------------------------------------------------
+# 7) Downstream classification with selected features
+# ---------------------------------------------------
+clf = RandomForestClassifier(n_estimators=300, random_state=42)
+clf.fit(X_train[:, selected_idx], y_train)
+pred = clf.predict(X_test[:, selected_idx])
+acc = accuracy_score(y_test, pred)
+
+# ---------------------------------------------------
+# 8) Compare against random features
+# ---------------------------------------------------
+rng = np.random.default_rng(42)
+random_idx = rng.choice(n_features, size=top_k, replace=False)
+
+lr_rand = LinearRegression()
+lr_rand.fit(X_train[:, random_idx], X_train)
+recon_rand = lr_rand.predict(X_test[:, random_idx])
+rand_mse = mean_squared_error(X_test, recon_rand)
+
+clf_rand = RandomForestClassifier(n_estimators=300, random_state=42)
+clf_rand.fit(X_train[:, random_idx], y_train)
+pred_rand = clf_rand.predict(X_test[:, random_idx])
+rand_acc = accuracy_score(y_test, pred_rand)
+
+print(&quot;\nSelected feature names:&quot;, selected_features)
+print(&quot;Selected-feature reconstruction MSE:&quot;, recon_mse)
+print(&quot;Selected-feature classification accuracy:&quot;, acc)
+print(&quot;Random-feature reconstruction MSE:&quot;, rand_mse)
+print(&quot;Random-feature classification accuracy:&quot;, rand_acc)</code></pre>
+        </section>
+        <section class="card locked-answer" id="answerSection2">
+          <div class="section-label">Answer</div>
+          <h2>Expected Results and Notes</h2>
+          
+            <div class="good">
+              <p><strong>outcome:</strong> the selected top-k subset should usually outperform a random-k subset in either reconstruction, classification, or both.</p>
+              <p>The exact ranked features may vary because neural training is stochastic, but the overall pattern should be stable enough for discussion.</p>
+            </div>
+            <div class="warn">
+              <p><strong>Reminder - Common mistakes:</strong> accidentally using a fully connected dense layer instead of a one-to-one scaling layer, forgetting standardization, or forgetting to enforce nonnegative weights.</p>
+            </div>
+        
+        </section>
+  </div>
+  <div class="footer">Prepared for Step 2: Keras practice before feature-selection experiments. Xinxing Wu</div>
+</div>
+
+<script>
+(function () {
+  var releaseTimeUtcMs = Date.parse('2026-04-19T04:00:00Z');
+  var countdownEl = document.getElementById('countdown');
+  var releaseBox = document.getElementById('releaseBox');
+  var releasedMessage = document.getElementById('releasedMessage');
+  var answerSections = document.querySelectorAll('.locked-answer');
+
+  function showAnswers() {
+    answerSections.forEach(function (section) {
+      section.style.display = 'block';
+    });
+    if (countdownEl) countdownEl.style.display = 'none';
+    if (releasedMessage) releasedMessage.style.display = 'block';
+    if (releaseBox) {
+      releaseBox.style.borderColor = '#99f6e4';
+      releaseBox.style.background = 'linear-gradient(180deg,#f0fdfa 0%, #ecfeff 100%)';
+    }
+  }
+
+  function formatRemaining(ms) {
+    var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    var days = Math.floor(totalSeconds / 86400);
+    var hours = Math.floor((totalSeconds % 86400) / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's remaining';
+  }
+
+  function updateCountdown() {
+    var diff = releaseTimeUtcMs - Date.now();
+    if (diff <= 0) {
+      showAnswers();
+      return;
+    }
+    if (countdownEl) {
+      countdownEl.textContent = formatRemaining(diff);
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+})();
+</script>
+
+</body>
+</html>

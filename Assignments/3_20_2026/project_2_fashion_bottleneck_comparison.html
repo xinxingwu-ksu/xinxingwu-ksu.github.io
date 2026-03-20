@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 2 — Compare Bottleneck Sizes on Fashion-MNIST</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --card:#ffffff;
+  --soft:#f8fafc;
+  --accent:#2563eb;
+  --accent-2:#0f766e;
+  --gold:#b45309;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.62}
+body{padding:28px}
+.page{max-width:1100px;margin:0 auto}
+.hero{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border:1px solid var(--line); border-radius:22px; padding:32px 34px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
+}
+.badge{
+  display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); background:#eff6ff; border:1px solid #dbeafe;
+  padding:7px 10px; border-radius:999px; font-weight:700
+}
+h1{font-size:34px; line-height:1.15; margin:14px 0 10px}
+h2{font-size:24px; margin:28px 0 12px}
+h3{font-size:18px; margin:20px 0 10px}
+p,li{font-size:16px}
+.subtitle{font-size:18px;color:#374151;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+.card{
+  grid-column:span 12;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:22px 24px;box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+@media(min-width:900px){
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
+  .span-8{grid-column:span 8}
+}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:8px 16px}
+.kv div{padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv strong{color:#111827}
+ul{padding-left:22px;margin:10px 0}
+ol{padding-left:22px;margin:10px 0}
+pre{
+  white-space:pre-wrap; word-break:break-word; margin:0;
+  background:#f8fafc; border:1px solid var(--line); border-radius:16px;
+  padding:18px; overflow:auto; font-size:13px; line-height:1.5
+}
+code{font-family:Consolas,Menlo,monospace}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+th{background:#f8fafc}
+.note{
+  border-left:4px solid var(--accent); background:#f8fbff; padding:14px 16px; border-radius:12px
+}
+.warn{
+  border-left:4px solid var(--gold); background:#fffaf0; padding:14px 16px; border-radius:12px
+}
+.good{
+  border-left:4px solid var(--accent-2); background:#f0fdfa; padding:14px 16px; border-radius:12px
+}
+.details summary{cursor:pointer;font-weight:700}
+.footer{margin-top:30px;color:var(--muted);font-size:14px}
+.small{font-size:14px;color:var(--muted)}
+.section-label{
+  font-size:13px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:.08em
+}
+
+.wiggle{display:inline-block;text-decoration:none;}
+.wiggle{animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+.answer-release-notice{
+  border:1px solid #dbeafe;
+  background:#eff6ff;
+  color:#1e3a8a;
+  padding:16px 18px;
+  border-radius:14px;
+  margin:0;
+}
+.answer-release-notice strong{display:block;font-size:16px;margin-bottom:4px}
+.answer-release-notice .countdown{font-weight:700}
+.answer-release-notice .small-note{font-size:14px;color:#374151;margin-top:6px}
+.answer-locked > *{display:none !important}
+.answer-locked > .answer-release-notice{display:block !important}
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <span class="badge">Keras Project Assignment</span>
+    <h1>Project 2 — Compare Bottleneck Sizes on Fashion-MNIST</h1>
+    <p class="subtitle">Compare multiple latent dimensions and evaluate both reconstruction quality and downstream classification accuracy, mirroring the paper’s habit of looking at more than one metric.</p>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>Project Snapshot</h3>
+        <div class="kv"><div><strong>Difficulty</strong></div><div>Beginner to Intermediate</div><div><strong>Recommended time</strong></div><div>1–2 weeks</div><div><strong>Main tools</strong></div><div>TensorFlow / Keras, scikit-learn, pandas</div><div><strong>Dataset</strong></div><div>Fashion-MNIST from keras.datasets</div><div><strong>Main output</strong></div><div>Comparison table across latent dimensions</div><div><strong>Connection to the <a href="https://cdn.aaai.org/ojs/17242/17242-13-20736-1-2-20210518.pdf" target="_blank">Paper</a> you have read</strong></div><div>Uses reconstruction and downstream evaluation together</div></div>
+      </div>
+      <div class="card span-6">
+        <h3>Why this matters</h3>
+
+    <p>This project moves beyond “it trains” and asks you to compare model choices. The paper evaluates feature-selection quality using reconstruction and downstream learning, so this assignment trains you to think in that same experimental style.</p>
+
+	<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+
+    <div class="note"><strong>Note:</strong> this is not feature selection yet, but it teaches you how to run controlled model comparisons and report results clearly.</div>
+
+		<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+
+	<div>
+	<a href="https://xinxingwu-ksu.github.io/schedule/wu.html" target="_blank">My Spring 2026 Schedule</a> 
+
+	<a class="wiggle" href="https://outlook.office.com/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu?anonymous&ismsaljsauthenabled" target="_blank">😊 Book time to meet</a> 
+
+      </div>
+    </div>
+  </section>
+  <div class="grid">
+
+        <section class="card">
+          <div class="section-label">Assignment</div>
+          <h2>Detailed Assignment Description</h2>
+
+            <p><strong>Goal.</strong> Train four autoencoders on Fashion-MNIST with latent dimensions 8, 16, 32, and 64.</p>
+
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+
+            <h3>Tasks</h3>
+            <ol>
+              <li>Use the same preprocessing for all experiments.</li>
+              <li>Keep the network structure the same except for the latent dimension.</li>
+              <li>Train each model and record test reconstruction MSE.</li>
+              <li>Extract latent vectors using the encoder.</li>
+              <li>Train a simple downstream classifier on latent vectors and report test accuracy.</li>
+              <li>Create a summary table and a short discussion of the trade-off between compression and performance.</li>
+            </ol>
+
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+
+            <h3>Required discussion questions</h3>
+            <ul>
+              <li>Which latent dimension gives the best reconstruction?</li>
+              <li>Does better reconstruction always mean better classification?</li>
+              <li>Which model would you choose if memory is limited?</li>
+            </ul>
+
+        </section>
+        <section class="card">
+          <div class="section-label">Answer</div>
+          <h2>Reference Answer / Solution</h2>
+          <pre><code>import numpy as np
+import pandas as pd
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# 1) Load Fashion-MNIST
+(x_train, y_train), (x_test, y_test) = keras.datasets.fashion_mnist.load_data()
+x_train = x_train.astype(&quot;float32&quot;) / 255.0
+x_test = x_test.astype(&quot;float32&quot;) / 255.0
+x_train = x_train.reshape((-1, 784))
+x_test = x_test.reshape((-1, 784))
+
+def build_autoencoder(latent_dim):
+    inputs = keras.Input(shape=(784,))
+    x = layers.Dense(256, activation=&quot;relu&quot;)(inputs)
+    x = layers.Dense(128, activation=&quot;relu&quot;)(x)
+    latent = layers.Dense(latent_dim, activation=&quot;relu&quot;, name=&quot;latent&quot;)(x)
+
+    x = layers.Dense(128, activation=&quot;relu&quot;)(latent)
+    x = layers.Dense(256, activation=&quot;relu&quot;)(x)
+    outputs = layers.Dense(784, activation=&quot;sigmoid&quot;)(x)
+
+    autoencoder = keras.Model(inputs, outputs)
+    encoder = keras.Model(inputs, latent)
+    autoencoder.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+    return autoencoder, encoder
+
+results = []
+
+for latent_dim in [8, 16, 32, 64]:
+    autoencoder, encoder = build_autoencoder(latent_dim)
+
+    autoencoder.fit(
+        x_train, x_train,
+        validation_split=0.1,
+        epochs=15,
+        batch_size=256,
+        shuffle=True,
+        verbose=0
+    )
+
+    recon_mse = autoencoder.evaluate(x_test, x_test, verbose=0)
+
+    z_train = encoder.predict(x_train, verbose=0)
+    z_test = encoder.predict(x_test, verbose=0)
+
+    clf = LogisticRegression(max_iter=1000)
+    clf.fit(z_train, y_train)
+    y_pred = clf.predict(z_test)
+    acc = accuracy_score(y_test, y_pred)
+
+    results.append({
+        &quot;latent_dim&quot;: latent_dim,
+        &quot;test_reconstruction_mse&quot;: recon_mse,
+        &quot;downstream_accuracy&quot;: acc
+    })
+
+results_df = pd.DataFrame(results)
+print(results_df.sort_values(&quot;latent_dim&quot;))</code></pre>
+        </section>
+        <section class="card">
+          <div class="section-label">Answer</div>
+          <h2>Expected Results and Notes</h2>
+
+            <div class="good">
+              <p><strong>Pattern:</strong> larger latent dimensions usually give lower reconstruction error, while downstream accuracy often improves up to a point and then may level off.</p>
+              <p>This is a strong place to teach that a single metric is not enough.</p>
+            </div>
+            <div class="warn">
+              <p><strong>Reminder - Common mistake:</strong> changing multiple architectural choices at once. You should isolate the latent dimension as the only major variable.</p>
+            </div>
+
+        </section>
+  </div>
+  <div class="footer">Prepared for Step 2: Keras practice before feature-selection experiments. Xinxing Wu</div>
+</div>
+
+<script>
+(function () {
+  var releaseDate = new Date('2026-04-05T00:00:00-04:00');
+
+  function formatRemaining(ms) {
+    if (ms <= 0) return 'Answers are now available.';
+    var totalSeconds = Math.floor(ms / 1000);
+    var days = Math.floor(totalSeconds / 86400);
+    var hours = Math.floor((totalSeconds % 86400) / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's';
+  }
+
+  function getAnswerSections() {
+    var cards = document.querySelectorAll('section.card');
+    var answerCards = [];
+    cards.forEach(function(card) {
+      var label = card.querySelector('.section-label');
+      if (label && label.textContent.trim().toLowerCase() === 'answer') {
+        answerCards.push(card);
+      }
+    });
+    return answerCards;
+  }
+
+  function applyLockState() {
+    var now = new Date();
+    var locked = now < releaseDate;
+    var answerCards = getAnswerSections();
+
+    answerCards.forEach(function(card) {
+      var notice = card.querySelector('.answer-release-notice');
+      if (!notice) {
+        notice = document.createElement('div');
+        notice.className = 'answer-release-notice';
+        notice.innerHTML = '<strong>Answer locked</strong>'
+          + '<div>The answer will be visible after <strong>April 5, 2026</strong>.</div>'
+          + '<div class="countdown"></div>'
+          + '<div class="small-note">Release time: April 5, 2026, 12:00 AM Eastern Time.</div>';
+        card.insertBefore(notice, card.firstChild);
+      }
+
+      var countdown = notice.querySelector('.countdown');
+      if (locked) {
+        card.classList.add('answer-locked');
+        countdown.textContent = 'Time remaining: ' + formatRemaining(releaseDate - now);
+      } else {
+        card.classList.remove('answer-locked');
+        notice.style.display = 'none';
+      }
+    });
+  }
+
+  applyLockState();
+  setInterval(applyLockState, 1000);
+})();
+</script>
+</body>
+</html>

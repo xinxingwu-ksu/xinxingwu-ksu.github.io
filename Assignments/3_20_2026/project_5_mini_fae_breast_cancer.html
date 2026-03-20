@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Project 5 — Mini FAE-Inspired Two-Stage Feature Selection on Breast Cancer Data</title>
+<style>
+:root{
+  --bg:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --card:#ffffff;
+  --soft:#f8fafc;
+  --accent:#2563eb;
+  --accent-2:#0f766e;
+  --gold:#b45309;
+}
+*{box-sizing:border-box}
+<!-- html,body{margin:0;padding:0;background:var(--bg);color:var(--text); -->
+font-family:Inter,Segoe UI,Arial,sans-serif;line-height:1.62}
+body{padding:28px}
+.page{max-width:1100px;margin:0 auto}
+.hero{
+  background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);
+  border:1px solid var(--line); border-radius:22px; padding:32px 34px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06)
+}
+.badge{
+  display:inline-block; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); background:#eff6ff; border:1px solid #dbeafe;
+  padding:7px 10px; border-radius:999px; font-weight:700
+}
+h1{font-size:34px; line-height:1.15; margin:14px 0 10px}
+h2{font-size:24px; margin:28px 0 12px}
+h3{font-size:18px; margin:20px 0 10px}
+p,li{font-size:16px}
+.subtitle{font-size:18px;color:#374151;max-width:900px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+.card{
+  grid-column:span 12;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:22px 24px;box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+@media(min-width:900px){
+  .span-6{grid-column:span 6}
+  .span-4{grid-column:span 4}
+  .span-8{grid-column:span 8}
+}
+.kv{display:grid;grid-template-columns:190px 1fr;gap:8px 16px}
+.kv div{padding:6px 0;border-bottom:1px dashed var(--line)}
+.kv strong{color:#111827}
+ul{padding-left:22px;margin:10px 0}
+ol{padding-left:22px;margin:10px 0}
+pre{
+  white-space:pre-wrap; word-break:break-word; margin:0;
+  background:#f8fafc; border:1px solid var(--line); border-radius:16px;
+  padding:18px; overflow:auto; font-size:13px; line-height:1.5
+}
+code{font-family:Consolas,Menlo,monospace}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid var(--line);padding:10px 12px;vertical-align:top;text-align:left}
+th{background:#f8fafc}
+.note{
+  border-left:4px solid var(--accent); background:#f8fbff; padding:14px 16px; border-radius:12px
+}
+.warn{
+  border-left:4px solid var(--gold); background:#fffaf0; padding:14px 16px; border-radius:12px
+}
+.good{
+  border-left:4px solid var(--accent-2); background:#f0fdfa; padding:14px 16px; border-radius:12px
+}
+.details summary{cursor:pointer;font-weight:700}
+.footer{margin-top:30px;color:var(--muted);font-size:14px}
+.small{font-size:14px;color:var(--muted)}
+.section-label{
+  font-size:13px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:.08em
+}
+
+.wiggle{display:inline-block;text-decoration:none;}
+.wiggle{animation:wiggle 1.6s ease-in-out infinite}
+@keyframes wiggle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+
+.release-box{
+  grid-column:span 12;
+  margin:0;
+  border:1px solid #fde68a;
+  background:linear-gradient(180deg,#fffbeb 0%, #fff7ed 100%);
+  border-radius:18px;
+  padding:18px 20px;
+  box-shadow:0 6px 18px rgba(15,23,42,.04)
+}
+.release-box h3{margin:0 0 8px;font-size:20px;color:#92400e}
+.release-box p{margin:6px 0}
+.release-countdown{
+  display:inline-block;
+  margin-top:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid #fcd34d;
+  font-weight:700;
+  color:#78350f
+}
+.locked-answer{display:none}
+.answer-released{
+  border-left:4px solid var(--accent-2);
+  background:#f0fdfa;
+  padding:14px 16px;
+  border-radius:12px;
+  margin-top:10px
+}
+
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <span class="badge">Keras Project Assignment</span>
+    <h1>Project 5 — Mini FAE-Inspired Two-Stage Feature Selection on Breast Cancer Data</h1>
+    <p class="subtitle">You build a teaching-friendly, FAE-inspired pipeline: first learn global feature scores with a scoring autoencoder, then test whether the top-k subset reconstructs and predicts better than comparison subsets.</p>
+    <div class="grid">
+      <div class="card span-6">
+        <h3>Project Snapshot</h3>
+        <div class="kv"><div><strong>Difficulty</strong></div><div>Advanced</div><div><strong>Recommended time</strong></div><div>2–3 weeks</div><div><strong>Main tools</strong></div><div>TensorFlow / Keras, pandas, scikit-learn</div><div><strong>Dataset</strong></div><div>Local file: datasets/breast_cancer.csv</div><div><strong>Main output</strong></div><div>Top-k / next-k / random-k comparison</div><div><strong>Connection to the <a href="https://cdn.aaai.org/ojs/17242/17242-13-20736-1-2-20210518.pdf" target="_blank">Paper</a></strong></div><div>Closest Step 2 bridge toward FAE-style experiments</div></div>
+      </div>
+      <div class="card span-6">
+        <h3>Why this matters</h3>
+        
+    <p>This is the strongest Step 2 practice project. You do not implement the full paper exactly, but you work with the two key ideas: first learn global importance scores, then test whether a selected subset is genuinely informative.</p>
+    <div class="warn"><strong>Important honesty note:</strong> this is a <em>mini FAE-inspired classroom pipeline</em>, not the full objective from the paper. It is meant to prepare you for Step 3 experiments.</div>
+    
+	    		<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+	
+	<div>
+	<a href="https://xinxingwu-ksu.github.io/schedule/wu.html" target="_blank">My Spring 2026 Schedule</a> 
+	
+	<a class="wiggle" href="https://outlook.office.com/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu?anonymous&ismsaljsauthenabled" target="_blank">😊 Book time to meet</a> 
+      </div>
+      </div>
+    </div>
+  </section>
+  <div class="grid">
+    
+        <section class="card">
+          <div class="section-label">Assignment</div>
+          <h2>Detailed Assignment Description</h2>
+          
+            <p><strong>Goal.</strong> Create a two-stage experiment that approximates the paper’s intuition in a classroom-friendly way.</p>
+			
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+			
+            <h3>Tasks</h3>
+            <ol>
+              <li>Load <code>datasets/breast_cancer.csv</code> and standardize the features.</li>
+              <li>Train a scoring autoencoder with a one-to-one nonnegative feature weight layer.</li>
+              <li>Rank features by learned score.</li>
+              <li>Create three subsets of equal size:
+                <ul>
+                  <li>top-k features</li>
+                  <li>next-k features</li>
+                  <li>random-k features</li>
+                </ul>
+              </li>
+              <li>For each subset, train a small local reconstructor that predicts the full feature vector.</li>
+              <li>For each subset, also train a downstream classifier and report test accuracy.</li>
+              <li>Discuss whether the top-k subset is clearly better and what that suggests about learned feature importance.</li>
+            </ol>
+			
+			<hr style="border:0;height:6px;border-radius:999px;background:linear-gradient(90deg,#ff3b3b,#ffb13b,#fff23b,#3bff8f,#3bc8ff,#8a3bff,#ff3b3b);background-size:300% 100%;animation:rainbowLine 4s linear infinite;"><style>@keyframes rainbowLine{0%{background-position:0% 50%}100%{background-position:300% 50%}}</style>
+			
+            <h3>What students should learn</h3>
+            <ul>
+              <li>The difference between global scoring and subset evaluation</li>
+              <li>Why a feature subset should be tested, not just ranked</li>
+              <li>Why different subsets can still contain useful information</li>
+            </ul>
+        
+        </section>
+
+        <section class="release-box" id="releaseBox">
+          <h3>Answers are currently locked</h3>
+          <p>The answer sections on this page will automatically become visible on <strong>April 19, 2026 at 12:00 AM Eastern Time</strong>.</p>
+          <p class="small">Until then, students can read the project description, but the answer sections remain hidden in the page view.</p>
+          <div class="release-countdown" id="countdown">Loading countdown...</div>
+          <div class="answer-released" id="releasedMessage" style="display:none;">
+            The release time has arrived. The answer sections are now visible.
+          </div>
+        </section>
+
+        <section class="card locked-answer">
+          <div class="section-label">Answer</div>
+          <h2>Reference Answer / Solution</h2>
+          <pre><code>import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.metrics import accuracy_score, mean_squared_error
+
+# ---------------------------------------------------
+# 1) Load local dataset
+# ---------------------------------------------------
+df = pd.read_csv(&quot;datasets/breast_cancer.csv&quot;)
+X = df.drop(columns=[&quot;target&quot;]).values.astype(&quot;float32&quot;)
+y = df[&quot;target&quot;].values
+feature_names = df.drop(columns=[&quot;target&quot;]).columns.to_list()
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=7, stratify=y
+)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train).astype(&quot;float32&quot;)
+X_test = scaler.transform(X_test).astype(&quot;float32&quot;)
+
+n_features = X_train.shape[1]
+top_k = 10
+
+# ---------------------------------------------------
+# 2) Stage A: learn global feature scores with a scoring autoencoder
+# ---------------------------------------------------
+class FeatureScaler(layers.Layer):
+    def __init__(self, l1_strength=1e-3, **kwargs):
+        super().__init__(**kwargs)
+        self.l1_strength = l1_strength
+
+    def build(self, input_shape):
+        self.w = self.add_weight(
+            shape=(input_shape[-1],),
+            initializer=&quot;ones&quot;,
+            trainable=True,
+            constraint=keras.constraints.NonNeg(),
+            name=&quot;feature_scores&quot;
+        )
+
+    def call(self, inputs):
+        self.add_loss(self.l1_strength * tf.reduce_sum(self.w))
+        return inputs * self.w
+
+inputs = keras.Input(shape=(n_features,))
+scaled = FeatureScaler(l1_strength=1e-3, name=&quot;feature_scaler&quot;)(inputs)
+x = layers.Dense(24, activation=&quot;relu&quot;)(scaled)
+latent = layers.Dense(12, activation=&quot;relu&quot;)(x)
+x = layers.Dense(24, activation=&quot;relu&quot;)(latent)
+recon = layers.Dense(n_features, activation=&quot;linear&quot;)(x)
+
+global_model = keras.Model(inputs, recon)
+global_model.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+global_model.fit(
+    X_train, X_train,
+    validation_split=0.1,
+    epochs=200,
+    batch_size=16,
+    verbose=0
+)
+
+scores = global_model.get_layer(&quot;feature_scaler&quot;).get_weights()[0]
+ranking = pd.DataFrame({&quot;feature&quot;: feature_names, &quot;score&quot;: scores}).sort_values(
+    &quot;score&quot;, ascending=False
+)
+
+top_idx = ranking.index[:top_k].tolist()
+next_idx = ranking.index[top_k:2*top_k].tolist()
+
+# ---------------------------------------------------
+# 3) Stage B: local reconstruction from selected subsets
+# ---------------------------------------------------
+def train_local_reconstructor(Xtr_sel, Xtr_full, Xte_sel, Xte_full, epochs=200):
+    sel_dim = Xtr_sel.shape[1]
+    inputs = keras.Input(shape=(sel_dim,))
+    x = layers.Dense(16, activation=&quot;relu&quot;)(inputs)
+    x = layers.Dense(16, activation=&quot;relu&quot;)(x)
+    outputs = layers.Dense(Xtr_full.shape[1], activation=&quot;linear&quot;)(x)
+    model = keras.Model(inputs, outputs)
+    model.compile(optimizer=&quot;adam&quot;, loss=&quot;mse&quot;)
+    model.fit(Xtr_sel, Xtr_full, validation_split=0.1, epochs=epochs, batch_size=16, verbose=0)
+    pred = model.predict(Xte_sel, verbose=0)
+    mse = mean_squared_error(Xte_full, pred)
+    return mse
+
+top_mse = train_local_reconstructor(X_train[:, top_idx], X_train, X_test[:, top_idx], X_test)
+next_mse = train_local_reconstructor(X_train[:, next_idx], X_train, X_test[:, next_idx], X_test)
+
+# random subset baseline
+rng = np.random.default_rng(7)
+rand_idx = rng.choice(n_features, size=top_k, replace=False).tolist()
+rand_mse = train_local_reconstructor(X_train[:, rand_idx], X_train, X_test[:, rand_idx], X_test)
+
+# ---------------------------------------------------
+# 4) Downstream classification on selected subsets
+# ---------------------------------------------------
+def clf_acc(Xtr_sel, ytr, Xte_sel, yte):
+    clf = LogisticRegression(max_iter=5000)
+    clf.fit(Xtr_sel, ytr)
+    pred = clf.predict(Xte_sel)
+    return accuracy_score(yte, pred)
+
+top_acc = clf_acc(X_train[:, top_idx], y_train, X_test[:, top_idx], y_test)
+next_acc = clf_acc(X_train[:, next_idx], y_train, X_test[:, next_idx], y_test)
+rand_acc = clf_acc(X_train[:, rand_idx], y_train, X_test[:, rand_idx], y_test)
+
+print(&quot;Top-k features:&quot;)
+print(ranking.head(top_k))
+
+print(&quot;\nReconstruction MSE&quot;)
+print(&quot;Top-k subset :&quot;, top_mse)
+print(&quot;Next-k subset:&quot;, next_mse)
+print(&quot;Random-k     :&quot;, rand_mse)
+
+print(&quot;\nClassification accuracy&quot;)
+print(&quot;Top-k subset :&quot;, top_acc)
+print(&quot;Next-k subset:&quot;, next_acc)
+print(&quot;Random-k     :&quot;, rand_acc)</code></pre>
+        </section>
+        <section class="card locked-answer">
+          <div class="section-label">Answer</div>
+          <h2>Expected Results and Notes</h2>
+          
+            <div class="good">
+              <p><strong>Pattern:</strong> the top-k subset should usually perform better than the random-k subset, and often better than the next-k subset, especially on reconstruction or classification.</p>
+            </div>
+            <div class="warn">
+              <p><strong>Important discussion point:</strong> if the next-k subset also performs reasonably well, why? It suggests redundancy or correlated structure in the data, which connects nicely to the paper’s diversity motivation.</p>
+            </div>
+        
+        </section>
+  </div>
+  <div class="footer">Prepared for Step 2: Keras practice before feature-selection experiments. Xinxing Wu</div>
+</div>
+
+<script>
+(function () {
+  var releaseTimeUtcMs = Date.parse('2026-04-19T04:00:00Z');
+  var countdownEl = document.getElementById('countdown');
+  var releaseBox = document.getElementById('releaseBox');
+  var releasedMessage = document.getElementById('releasedMessage');
+  var answerSections = document.querySelectorAll('.locked-answer');
+
+  function showAnswers() {
+    answerSections.forEach(function (section) {
+      section.style.display = 'block';
+    });
+    if (countdownEl) countdownEl.style.display = 'none';
+    if (releasedMessage) releasedMessage.style.display = 'block';
+    if (releaseBox) {
+      releaseBox.style.borderColor = '#99f6e4';
+      releaseBox.style.background = 'linear-gradient(180deg,#f0fdfa 0%, #ecfeff 100%)';
+    }
+  }
+
+  function formatRemaining(ms) {
+    var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    var days = Math.floor(totalSeconds / 86400);
+    var hours = Math.floor((totalSeconds % 86400) / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    return days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's remaining';
+  }
+
+  function updateCountdown() {
+    var diff = releaseTimeUtcMs - Date.now();
+    if (diff <= 0) {
+      showAnswers();
+      return;
+    }
+    if (countdownEl) {
+      countdownEl.textContent = formatRemaining(diff);
+    }
+  }
+
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+})();
+</script>
+
+</body>
+</html>
