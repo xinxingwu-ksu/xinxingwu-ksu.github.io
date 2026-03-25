@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CourseTune AI | Kentucky IMPACT Competition</title>
+  <meta name="description" content="CourseTune AI is an AI-powered platform that transforms dense, text-based syllabi into accessible, memorable, and interactive course onboarding experiences." />
+  <style>
+    :root{
+      --ksu-green:#05714B;
+      --ksu-green-dark:#034634;
+      --ksu-gold:#F2C94C;
+      --ink:#0F172A;
+      --muted:#475569;
+      --soft:#F8FAFC;
+      --line:#E2E8F0;
+      --card:#FFFFFF;
+      --shadow:0 22px 60px rgba(2, 24, 17, .12);
+      --radius:24px;
+      --radius-sm:18px;
+      --wrap:min(1180px, calc(100vw - 32px));
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 500px at 0% 0%, rgba(5,113,75,.09), transparent 65%),
+        radial-gradient(900px 600px at 100% 10%, rgba(242,201,76,.12), transparent 58%),
+        linear-gradient(180deg, #ffffff 0%, #f7fbf9 100%);
+    }
+
+    a{color:var(--ksu-green); text-decoration:none}
+    a:hover{text-decoration:underline}
+    img{max-width:100%; display:block}
+    video{display:block; width:100%; height:100%; object-fit:contain; background:#08110d}
+
+    .wrap{width:var(--wrap); margin:0 auto}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(10px);
+      background:rgba(255,255,255,.82);
+      border-bottom:1px solid rgba(15,23,42,.08);
+    }
+    .topbar-inner{
+      width:var(--wrap);
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 0;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .brand-mark{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      background:linear-gradient(135deg, var(--ksu-green), var(--ksu-green-dark));
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      letter-spacing:.3px;
+      box-shadow:0 8px 24px rgba(5,113,75,.25);
+      flex:none;
+    }
+    .brand-text{min-width:0}
+    .brand-text strong{display:block; font-size:14px; line-height:1.15}
+    .brand-text span{display:block; color:var(--muted); font-size:12px; margin-top:3px}
+
+    .nav{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      font-size:14px;
+    }
+
+    .hero{
+      padding:38px 0 26px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.25fr .95fr;
+      gap:24px;
+      align-items:stretch;
+    }
+    .panel{
+      background:var(--card);
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .hero-copy{
+      padding:34px;
+      background:
+        radial-gradient(700px 300px at 20% 10%, rgba(242,201,76,.18), transparent 55%),
+        linear-gradient(145deg, #ffffff 0%, #f3fbf7 100%);
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(5,113,75,.10);
+      border:1px solid rgba(5,113,75,.12);
+      color:var(--ksu-green-dark);
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:.15px;
+    }
+    h1{
+      margin:16px 0 12px;
+      font-size:clamp(34px, 5vw, 56px);
+      line-height:1.02;
+      letter-spacing:-.03em;
+    }
+    .subtitle{
+      font-size:18px;
+      line-height:1.65;
+      color:#1f2937;
+      margin:0 0 20px;
+      max-width:62ch;
+    }
+    .hero-points{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:12px;
+      margin:24px 0 0;
+    }
+    .point{
+      padding:14px 15px;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.07);
+    }
+    .point strong{display:block; font-size:14px; margin-bottom:4px}
+    .point span{display:block; color:var(--muted); font-size:13px; line-height:1.45}
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:26px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      min-height:48px;
+      padding:0 18px;
+      border-radius:999px;
+      border:1px solid transparent;
+      font-weight:700;
+      font-size:14px;
+      transition:transform .16s ease, box-shadow .16s ease, background .16s ease;
+    }
+    .btn:hover{transform:translateY(-1px); text-decoration:none}
+    .btn-primary{
+      background:linear-gradient(135deg, var(--ksu-green), var(--ksu-green-dark));
+      color:#fff;
+      box-shadow:0 14px 32px rgba(5,113,75,.24);
+    }
+    .btn-secondary{
+      background:#fff;
+      color:var(--ksu-green-dark);
+      border-color:rgba(5,113,75,.18);
+    }
+
+    .logo-panel{
+      background:
+        radial-gradient(500px 250px at 20% 20%, rgba(242,201,76,.14), transparent 60%),
+        linear-gradient(135deg, #06120e 0%, #0a1c16 100%);
+      color:#fff;
+      padding:26px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      min-height:100%;
+    }
+    .logo-card{
+      padding:16px;
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .logo-card img{
+      width:100%;
+      height:auto;
+      border-radius:14px;
+    }
+    .logo-panel h2{
+      font-size:28px;
+      line-height:1.15;
+      margin:18px 0 10px;
+      color:#fff;
+    }
+    .logo-panel p{
+      margin:0;
+      color:rgba(255,255,255,.82);
+      line-height:1.7;
+      font-size:15px;
+    }
+    .mini-tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:18px;
+    }
+    .mini-tags span{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      font-size:12px;
+      color:rgba(255,255,255,.92);
+    }
+
+    section{padding:16px 0 0}
+    .section-head{
+      display:flex;
+      align-items:end;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+    }
+    .section-head h3{
+      margin:0;
+      font-size:30px;
+      line-height:1.1;
+      letter-spacing:-.02em;
+    }
+    .section-head p{
+      margin:8px 0 0;
+      color:var(--muted);
+      max-width:72ch;
+      line-height:1.65;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:16px;
+    }
+    .stat{
+      padding:22px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+    }
+    .stat .num{
+      font-size:30px;
+      font-weight:800;
+      color:var(--ksu-green-dark);
+      line-height:1;
+      margin-bottom:8px;
+    }
+    .stat .label{
+      font-weight:700;
+      margin-bottom:6px;
+    }
+    .stat p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .two-col{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+    .card{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+    .card h4{
+      margin:0 0 12px;
+      font-size:22px;
+      line-height:1.2;
+    }
+    .card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.72;
+    }
+    .bullet-list{
+      display:grid;
+      gap:12px;
+      margin-top:18px;
+    }
+    .bullet{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .bullet-dot{
+      width:11px;
+      height:11px;
+      border-radius:999px;
+      background:linear-gradient(135deg, var(--ksu-gold), #d9a400);
+      margin-top:8px;
+      flex:none;
+      box-shadow:0 0 0 5px rgba(242,201,76,.16);
+    }
+
+    .pillars{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:18px;
+    }
+    .pillar{
+      padding:24px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+    }
+    .pillar-icon{
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      display:grid;
+      place-items:center;
+      font-weight:800;
+      color:var(--ksu-green-dark);
+      background:linear-gradient(135deg, rgba(5,113,75,.12), rgba(242,201,76,.18));
+      margin-bottom:14px;
+    }
+    .pillar h4{margin:0 0 10px; font-size:20px}
+    .pillar p{margin:0; color:var(--muted); line-height:1.7}
+
+    .demo-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:18px;
+    }
+    .demo-card{
+      overflow:hidden;
+      padding:0;
+    }
+    .demo-top{
+      padding:22px 22px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .demo-title{
+      min-width:0;
+    }
+    .demo-title strong{
+      display:block;
+      font-size:18px;
+      line-height:1.2;
+      margin-bottom:4px;
+    }
+    .demo-title span{
+      display:block;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .course-tag{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(5,113,75,.08);
+      color:var(--ksu-green-dark);
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .video-wrap{
+      aspect-ratio:16/9;
+      background:#08110d;
+      border-top:1px solid rgba(15,23,42,.08);
+      border-bottom:1px solid rgba(15,23,42,.08);
+    }
+    .demo-foot{
+      padding:16px 22px 22px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .demo-foot p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:14px;
+      min-height:68px;
+    }
+    .demo-link{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-weight:700;
+      width:fit-content;
+    }
+
+    .roadmap{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:18px;
+    }
+    .step{
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      border-radius:24px;
+      box-shadow:var(--shadow);
+      padding:24px;
+      position:relative;
+    }
+    .step-no{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      background:linear-gradient(135deg, var(--ksu-green), var(--ksu-green-dark));
+      font-weight:800;
+      margin-bottom:14px;
+    }
+    .step h4{margin:0 0 10px; font-size:19px}
+    .step p{margin:0; color:var(--muted); line-height:1.65}
+
+    .footer{
+      padding:28px 0 42px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .footer-box{
+      padding:22px 24px;
+      border-radius:22px;
+      background:#fff;
+      border:1px solid rgba(15,23,42,.08);
+      box-shadow:var(--shadow);
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      align-items:center;
+    }
+    .footer strong{display:block; color:var(--ink); margin-bottom:4px}
+
+    @media (max-width: 1100px){
+      .stats{grid-template-columns:repeat(2, minmax(0,1fr))}
+      .demo-grid, .pillars, .roadmap{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 860px){
+      .hero-grid, .two-col{grid-template-columns:1fr}
+      .topbar-inner{align-items:flex-start; flex-direction:column}
+      .nav{justify-content:flex-start}
+      .hero-copy, .logo-panel, .card, .pillar, .step, .stat{padding:22px}
+      .hero-points{grid-template-columns:1fr}
+      .footer-box{flex-direction:column; align-items:flex-start}
+    }
+    @media (max-width: 680px){
+      .stats, .pillars, .demo-grid, .roadmap{grid-template-columns:1fr}
+      h1{font-size:clamp(30px, 9vw, 46px)}
+      .section-head h3{font-size:26px}
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">CT</div>
+        <div class="brand-text">
+          <strong>CourseTune AI</strong>
+          <span>Multimodal Interactive Syllabus-to-Success Platform</span>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Page navigation">
+        <a href="#problem">Kentucky Need</a>
+        <a href="#innovation">Innovation</a>
+        <a href="#demos">Pilot Demos</a>
+        <a href="#roadmap">Funding Roadmap</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="panel hero-copy">
+          <div class="eyebrow">Kentucky IMPACT Competition • Kentucky State University pilot</div>
+          <h1>CourseTune AI</h1>
+          <p class="subtitle">An AI-powered platform that transforms dense, text-based syllabi into accessible, memorable, and interactive course onboarding experiences through audio, avatar-based video, computer vision, AI-driven gesture tracking, plain-language adaptation, and music-enhanced delivery.</p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#demos">View pilot demos</a>
+            <a class="btn btn-secondary" href="#roadmap">See funding plan</a>
+          </div>
+
+          <div class="hero-points" aria-label="Key value points">
+            <div class="point">
+              <strong>Clearer course starts</strong>
+              <span>Transforms high-friction syllabus content into student-friendly onboarding that is easier to access, understand, and remember.</span>
+            </div>
+            <div class="point">
+              <strong>Built for diverse learners</strong>
+              <span>Designed to support first-generation, rural, adult, multilingual, online, transfer, and underprepared learners across Kentucky.</span>
+            </div>
+            <div class="point">
+              <strong>Interactive delivery</strong>
+              <span>Combines audio, avatar video, gesture-based interaction, plain-language adaptation, and multimodal presentation.</span>
+            </div>
+            <div class="point">
+              <strong>Commercialization ready</strong>
+              <span>Public course demos already exist, providing a practical foundation for pilot expansion, validation, and broader adoption.</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="panel logo-panel" aria-label="Kentucky State University branding panel">
+          <div class="logo-card">
+            <img src="./kentucky-logo-primary.png" alt="Kentucky State University logo" />
+          </div>
+          <div>
+            <h2>Kentucky-built innovation for student success</h2>
+            <p>CourseTune AI is positioned as a practical education technology platform for Kentucky institutions, connecting accessibility, course communication, and student success with a clear pathway toward pilot expansion and commercialization.</p>
+            <div class="mini-tags">
+              <span>Accessibility</span>
+              <span>Student Success</span>
+              <span>AI + Education</span>
+              <span>KSU Pilot</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section aria-label="Quick facts">
+      <div class="stats">
+        <article class="stat">
+          <div class="num">3</div>
+          <div class="label">Public course demos</div>
+          <p>Live pilot-style demonstrations currently support multiple Kentucky State University computer science courses.</p>
+        </article>
+        <article class="stat">
+          <div class="num">AI</div>
+          <div class="label">Multimodal delivery</div>
+          <p>Audio, avatar video, gesture-based interaction, plain-language adaptation, and music-enhanced onboarding in one platform.</p>
+        </article>
+        <article class="stat">
+          <div class="num">KY</div>
+          <div class="label">Kentucky-focused impact</div>
+          <p>Designed to support clearer course starts, stronger confidence, and better persistence for Kentucky learners.</p>
+        </article>
+        <article class="stat">
+          <div class="num">MVP</div>
+          <div class="label">Pilot-ready foundation</div>
+          <p>Current demonstrations provide visible feasibility and a starting point for refinement, scaling, and customer discovery.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="problem">
+      <div class="section-head">
+        <div>
+          <h3>Why this matters in Kentucky</h3>
+          <p>Many students struggle in the first weeks of class not because they lack ability, but because essential course expectations are buried in dense, traditional text-heavy syllabi. CourseTune AI addresses that hidden barrier by making course information easier to access, understand, and act upon.</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <article class="card">
+          <h4>Challenge</h4>
+          <div class="bullet-list">
+            <div class="bullet"><span class="bullet-dot"></span><div>Traditional syllabi often overload students with deadlines, policies, technology requirements, and support information in one static document.</div></div>
+            <div class="bullet"><span class="bullet-dot"></span><div>First-generation, rural, adult, multilingual, online, transfer, and underprepared learners may need clearer and more memorable onboarding formats.</div></div>
+            <div class="bullet"><span class="bullet-dot"></span><div>Early confusion can lead to missed assignments, lower confidence, delayed help-seeking, and preventable disengagement.</div></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h4>Opportunity</h4>
+          <div class="bullet-list">
+            <div class="bullet"><span class="bullet-dot"></span><div>Convert dense text into multimodal onboarding that students can watch, hear, review, and interact with more easily.</div></div>
+            <div class="bullet"><span class="bullet-dot"></span><div>Provide instructors with a reusable workflow for face-to-face, hybrid, online, dual-credit, and workforce-oriented settings.</div></div>
+            <div class="bullet"><span class="bullet-dot"></span><div>Support stronger student confidence, engagement, persistence, and readiness for academic and workforce success across Kentucky institutions.</div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="innovation">
+      <div class="section-head">
+        <div>
+          <h3>What makes CourseTune AI different</h3>
+          <p>CourseTune AI is not just a media generator. It is a purpose-built academic onboarding platform designed around accessibility, student success, and practical institutional adoption.</p>
+        </div>
+      </div>
+
+      <div class="pillars">
+        <article class="pillar">
+          <div class="pillar-icon">1</div>
+          <h4>Multimodal course onboarding</h4>
+          <p>Transforms static syllabus content into audio, avatar-based video, plain-language summaries, visual emphasis, and optional music-enhanced delivery that are easier to understand and remember.</p>
+        </article>
+        <article class="pillar">
+          <div class="pillar-icon">2</div>
+          <h4>Interactive experience</h4>
+          <p>Extends beyond passive viewing by incorporating computer vision and AI-driven gesture tracking, creating a more engaging and forward-looking onboarding experience.</p>
+        </article>
+        <article class="pillar">
+          <div class="pillar-icon">3</div>
+          <h4>Built for adoption</h4>
+          <p>Provides a reusable workflow that instructors and institutions can update each term, making the platform more scalable and practical than one-off design services or generic AI tools.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="demos">
+      <div class="section-head">
+        <div>
+          <h3>KSU pilot demonstrations</h3>
+          <p>These public examples show how CourseTune AI can support real course onboarding in current Kentucky State University settings. The existing demo foundation makes the project stronger for competition review, pilot expansion, and commercialization planning.</p>
+        </div>
+      </div>
+
+      <div class="demo-grid">
+        <article class="card demo-card">
+          <div class="demo-top">
+            <div class="demo-title">
+              <strong>COS-109</strong>
+              <span>C++ overview</span>
+            </div>
+            <div class="course-tag">Pilot Demo</div>
+          </div>
+          <div class="video-wrap">
+            <video controls playsinline preload="metadata">
+              <source src="../videos/CPlusPlus.mp4" type="video/mp4" />
+              Principle of Computer Science Foundation II.
+            </video>
+          </div>
+          <div class="demo-foot">
+            <p>Demonstrates how introductory computer science course content can be transformed into a more engaging, memorable, and student-friendly onboarding experience.</p>
+            <a class="demo-link" href="https://kysu.instructure.com/courses/7060" target="_blank" rel="noopener noreferrer">Open course Canvas link</a>
+          </div>
+        </article>
+
+        <article class="card demo-card">
+          <div class="demo-top">
+            <div class="demo-title">
+              <strong>COS-200</strong>
+              <span>Course introduction</span>
+            </div>
+            <div class="course-tag">Pilot Demo</div>
+          </div>
+          <div class="video-wrap">
+            <video controls playsinline preload="metadata">
+              <source src="../videos/COS200.mp4" type="video/mp4" />
+              Computer Information Systems.
+            </video>
+          </div>
+          <div class="demo-foot">
+            <p>Shows the platform’s use in a broader computer information systems context, highlighting clarity, accessibility, and early-semester student orientation.</p>
+            <a class="demo-link" href="https://kysu.instructure.com/courses/7063" target="_blank" rel="noopener noreferrer">Open course Canvas link</a>
+          </div>
+        </article>
+
+        <article class="card demo-card">
+          <div class="demo-top">
+            <div class="demo-title">
+              <strong>COS-506</strong>
+              <span>Graduate-level introduction</span>
+            </div>
+            <div class="course-tag">Pilot Demo</div>
+          </div>
+          <div class="video-wrap">
+            <video controls playsinline preload="metadata">
+              <source src="../videos/COS506.mp4" type="video/mp4" />
+              Advanced Programming/Data Structures.
+            </video>
+          </div>
+          <div class="demo-foot">
+            <p>Illustrates that the approach can support different learner levels and course types while maintaining a professional, reusable onboarding workflow.</p>
+            <a class="demo-link" href="https://kysu.instructure.com/courses/7061" target="_blank" rel="noopener noreferrer">Open course Canvas link</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="section-head">
+        <div>
+          <h3>How IMPACT funding would accelerate the project</h3>
+          <p>With IMPACT funding, the project will strengthen the platform, expand pilot implementation, enhance interactivity, accessibility, and multilingual support, and accelerate commercialization for broader adoption across Kentucky institutions.</p>
+        </div>
+      </div>
+
+      <div class="roadmap">
+        <article class="step">
+          <div class="step-no">1</div>
+          <h4>Strengthen the MVP</h4>
+          <p>Improve platform reliability, interface quality, content workflow, and technical performance so the system is easier to pilot and demonstrate.</p>
+        </article>
+        <article class="step">
+          <div class="step-no">2</div>
+          <h4>Expand pilot implementation</h4>
+          <p>Move beyond the current KSU demos to a broader set of pilot courses and instructional settings for richer feedback and validation.</p>
+        </article>
+        <article class="step">
+          <div class="step-no">3</div>
+          <h4>Advance accessibility and interaction</h4>
+          <p>Enhance multilingual features, plain-language adaptation, accessibility support, and gesture-based interaction to strengthen platform value.</p>
+        </article>
+        <article class="step">
+          <div class="step-no">4</div>
+          <h4>Build commercialization readiness</h4>
+          <p>Prepare customer-discovery materials, partner outreach assets, and adoption pathways for colleges, training programs, and workforce-focused settings.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="two-col">
+        <article class="card">
+          <h4>Competition-ready positioning</h4>
+          <p>CourseTune AI is framed as a Kentucky-built education technology platform with direct relevance to accessibility, student success, pilot evidence, and broader institutional adoption. This positioning is stronger for innovation and funding review than presenting the work only as a creative syllabus media project.</p>
+        </article>
+        <article class="card">
+          <h4>Broader institutional value</h4>
+          <p>By making essential course information easier to access, understand, and act upon, CourseTune AI aims to strengthen Kentucky students’ confidence, engagement, persistence, and readiness for academic and workforce success while also reducing repetitive clarification needs for instructors.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-box">
+        <div>
+          <strong>CourseTune AI</strong>
+          <span>Multimodal Interactive Syllabus-to-Success Platform • Kentucky State University pilot demonstrations</span>
+        </div>
+        <a class="btn btn-primary" href="#demos">Review pilot demonstrations</a>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
