@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stable Hand-Controlled WebGPU Earth</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    #cameraVideo {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      z-index: 0;
+      opacity: 1;
+    }
+
+    #threeContainer {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    #landmarksCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    #panel {
+      position: fixed;
+      left: 16px;
+      top: 16px;
+      z-index: 10;
+      color: white;
+      background: rgba(0, 0, 0, 0.48);
+      backdrop-filter: blur(8px);
+      padding: 14px 16px;
+      border-radius: 14px;
+      max-width: 500px;
+      line-height: 1.45;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+    }
+
+    #panel h2 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+
+    #panel p {
+      margin: 6px 0;
+      font-size: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin: 6px 6px 0 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #status {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #d8f3ff;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.webgpu.js",
+        "three": "https://cdn.jsdelivr.net/npm/three@0.176.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.176.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <video id="cameraVideo" playsinline muted></video>
+  <div id="threeContainer"></div>
+  <canvas id="landmarksCanvas"></canvas>
+
+  <div id="panel">
+    <h2>Hand-Controlled Earth</h2>
+    <p><b>Two hands:</b> zoom in / zoom out. Move hands farther apart to enlarge, closer together to shrink.</p>
+    <p><b>One hand:</b> only rotate. Move one hand left / right / up / down to rotate the Earth.</p>
+    <p><b>Tip:</b> hold your hand or hands steady for a very short moment before moving.</p>
+    <button id="startButton">Start Camera + Earth</button>
+    <button id="resetButton">Reset</button>
+    <button id="landmarkButton">Hide Landmarks</button>
+    <div id="status">Status: waiting to start</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three/webgpu';
+
+    const video = document.getElementById('cameraVideo');
+    const container = document.getElementById('threeContainer');
+    const landmarksCanvas = document.getElementById('landmarksCanvas');
+    const landmarksCtx = landmarksCanvas.getContext('2d');
+    const statusBox = document.getElementById('status');
+    const startButton = document.getElementById('startButton');
+    const resetButton = document.getElementById('resetButton');
+    const landmarkButton = document.getElementById('landmarkButton');
+
+    let renderer;
+    let scene;
+    let camera;
+    let earthGroup;
+    let earthMesh;
+    let cloudsMesh;
+    let atmosphereMesh;
+    let animationStarted = false;
+    let hands;
+    let cameraFeed;
+    let showLandmarks = true;
+
+    const target = {
+      rotX: 0,
+      rotY: 0,
+      rotZ: 0,
+      scale: 1
+    };
+
+    const current = {
+      rotX: 0,
+      rotY: 0,
+      rotZ: 0,
+      scale: 1
+    };
+
+    // Main control idea:
+    // 1 hand  = rotation only
+    // 2 hands = zoom only
+    // This is much more stable than mixing rotate, zoom, and spin at the same time.
+    const GESTURE = {
+      handInputSmoothing: 0.16,
+      renderSmoothing: 0.10,
+      modeStableFrames: 3,
+      grabStableFrames: 5,
+
+      oneHandDeadZone: 0.018,
+      oneHandRotationSensitivityX: 2.8,
+      oneHandRotationSensitivityY: 3.8,
+
+      twoHandScaleDeadZone: 0.035,
+      twoHandScalePower: 0.66,
+      minScale: 0.65,
+      maxScale: 2.25
+    };
+
+    const modeState = {
+      currentMode: 'none',
+      candidateMode: 'none',
+      candidateFrames: 0
+    };
+
+    const oneHandState = {
+      active: false,
+      stableFrames: 0,
+      filteredX: 0,
+      filteredY: 0,
+      baseX: 0,
+      baseY: 0,
+      baseRotX: 0,
+      baseRotY: 0
+    };
+
+    const twoHandState = {
+      active: false,
+      stableFrames: 0,
+      filteredDistance: 0,
+      baseDistance: 1,
+      baseScale: 1
+    };
+
+    function setStatus(text) {
+      statusBox.textContent = 'Status: ' + text;
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function smoothValue(previous, next, amount) {
+      return previous + (next - previous) * amount;
+    }
+
+    function deadZone(value, zone) {
+      if (Math.abs(value) < zone) {
+        return 0;
+      }
+
+      if (value > 0) {
+        return value - zone;
+      }
+
+      return value + zone;
+    }
+
+    function resize() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      if (renderer && camera) {
+        renderer.setSize(width, height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      landmarksCanvas.width = width;
+      landmarksCanvas.height = height;
+    }
+
+    function improveTexture(texture, isColorTexture) {
+      if (isColorTexture && THREE.SRGBColorSpace) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
+
+      texture.generateMipmaps = true;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.LinearFilter;
+      texture.anisotropy = 8;
+      texture.needsUpdate = true;
+    }
+
+    async function initThree() {
+      scene = new THREE.Scene();
+      scene.background = null;
+
+      camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(0, 0, 4.35);
+
+      renderer = new THREE.WebGPURenderer({
+        antialias: true,
+        alpha: true
+      });
+
+      await renderer.init();
+      renderer.setClearColor(0x000000, 0);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      container.appendChild(renderer.domElement);
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
+      scene.add(ambientLight);
+
+      const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x223366, 1.2);
+      scene.add(hemisphereLight);
+
+      const sunLight = new THREE.DirectionalLight(0xffffff, 3.8);
+      sunLight.position.set(5, 2.5, 4.5);
+      scene.add(sunLight);
+
+      const fillLight = new THREE.DirectionalLight(0x8fc7ff, 0.85);
+      fillLight.position.set(-4, -1.5, 3);
+      scene.add(fillLight);
+
+      earthGroup = new THREE.Group();
+      scene.add(earthGroup);
+
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.crossOrigin = 'anonymous';
+
+      const earthMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg', function(texture) {
+        improveTexture(texture, true);
+      });
+
+      const normalMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg', function(texture) {
+        improveTexture(texture, false);
+      });
+
+      const specularMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg', function(texture) {
+        improveTexture(texture, false);
+      });
+
+      const cloudMap = textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png', function(texture) {
+        improveTexture(texture, true);
+      });
+
+      const earthGeometry = new THREE.SphereGeometry(1.35, 160, 160);
+      const earthMaterial = new THREE.MeshPhongMaterial({
+        map: earthMap,
+        normalMap: normalMap,
+        specularMap: specularMap,
+        specular: new THREE.Color(0x335577),
+        shininess: 22
+      });
+
+      earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+      earthGroup.add(earthMesh);
+
+      const cloudsGeometry = new THREE.SphereGeometry(1.375, 160, 160);
+      const cloudsMaterial = new THREE.MeshLambertMaterial({
+        map: cloudMap,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false
+      });
+
+      cloudsMesh = new THREE.Mesh(cloudsGeometry, cloudsMaterial);
+      earthGroup.add(cloudsMesh);
+
+      const atmosphereGeometry = new THREE.SphereGeometry(1.44, 160, 160);
+      const atmosphereMaterial = new THREE.MeshBasicMaterial({
+        color: 0x77c9ff,
+        transparent: true,
+        opacity: 0.13,
+        side: THREE.BackSide
+      });
+
+      atmosphereMesh = new THREE.Mesh(atmosphereGeometry, atmosphereMaterial);
+      earthGroup.add(atmosphereMesh);
+
+      window.addEventListener('resize', resize);
+      resize();
+    }
+
+    function resetOneHandState() {
+      oneHandState.active = false;
+      oneHandState.stableFrames = 0;
+    }
+
+    function resetTwoHandState() {
+      twoHandState.active = false;
+      twoHandState.stableFrames = 0;
+    }
+
+    function resetEarth() {
+      target.rotX = 0;
+      target.rotY = 0;
+      target.rotZ = 0;
+      target.scale = 1;
+      current.rotX = 0;
+      current.rotY = 0;
+      current.rotZ = 0;
+      current.scale = 1;
+
+      if (earthGroup) {
+        earthGroup.rotation.set(0, 0, 0);
+        earthGroup.scale.set(1, 1, 1);
+      }
+
+      resetOneHandState();
+      resetTwoHandState();
+      modeState.currentMode = 'none';
+      modeState.candidateMode = 'none';
+      modeState.candidateFrames = 0;
+    }
+
+    function getMirroredPoint(landmark) {
+      return {
+        x: 1 - landmark.x,
+        y: landmark.y,
+        z: landmark.z || 0
+      };
+    }
+
+    function getPalmCenter(landmarks) {
+      const wrist = getMirroredPoint(landmarks[0]);
+      const indexBase = getMirroredPoint(landmarks[5]);
+      const middleBase = getMirroredPoint(landmarks[9]);
+      const pinkyBase = getMirroredPoint(landmarks[17]);
+
+      return {
+        x: (wrist.x + indexBase.x + middleBase.x + pinkyBase.x) / 4,
+        y: (wrist.y + indexBase.y + middleBase.y + pinkyBase.y) / 4,
+        z: (wrist.z + indexBase.z + middleBase.z + pinkyBase.z) / 4
+      };
+    }
+
+    function distance2D(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function sortHandsLeftToRight(handList) {
+      return handList.slice().sort(function(a, b) {
+        return getPalmCenter(a).x - getPalmCenter(b).x;
+      });
+    }
+
+    function drawHandOverlay(results) {
+      landmarksCtx.clearRect(0, 0, landmarksCanvas.width, landmarksCanvas.height);
+
+      if (!showLandmarks || !results.multiHandLandmarks) {
+        return;
+      }
+
+      landmarksCtx.save();
+      landmarksCtx.translate(landmarksCanvas.width, 0);
+      landmarksCtx.scale(-1, 1);
+
+      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+        drawConnectors(landmarksCtx, results.multiHandLandmarks[i], HAND_CONNECTIONS, {
+          color: '#00e5ff',
+          lineWidth: 3
+        });
+
+        drawLandmarks(landmarksCtx, results.multiHandLandmarks[i], {
+          color: '#ffffff',
+          lineWidth: 1,
+          radius: 3
+        });
+      }
+
+      landmarksCtx.restore();
+    }
+
+    function getRawMode(handCount) {
+      if (handCount >= 2) {
+        return 'two';
+      }
+
+      if (handCount === 1) {
+        return 'one';
+      }
+
+      return 'none';
+    }
+
+    function updateStableMode(rawMode) {
+      if (rawMode !== modeState.candidateMode) {
+        modeState.candidateMode = rawMode;
+        modeState.candidateFrames = 1;
+      } else {
+        modeState.candidateFrames++;
+      }
+
+      if (modeState.candidateFrames >= GESTURE.modeStableFrames && modeState.currentMode !== modeState.candidateMode) {
+        modeState.currentMode = modeState.candidateMode;
+        resetOneHandState();
+        resetTwoHandState();
+      }
+
+      return modeState.currentMode;
+    }
+
+    function handleOneHandRotation(hand) {
+      resetTwoHandState();
+      oneHandState.stableFrames++;
+
+      const palm = getPalmCenter(hand);
+
+      if (oneHandState.stableFrames < GESTURE.grabStableFrames) {
+        setStatus('one hand detected: hold steady, then move to rotate');
+        return;
+      }
+
+      if (!oneHandState.active) {
+        oneHandState.active = true;
+        oneHandState.filteredX = palm.x;
+        oneHandState.filteredY = palm.y;
+        oneHandState.baseX = palm.x;
+        oneHandState.baseY = palm.y;
+        oneHandState.baseRotX = target.rotX;
+        oneHandState.baseRotY = target.rotY;
+        setStatus('one-hand rotation ready');
+        return;
+      }
+
+      oneHandState.filteredX = smoothValue(oneHandState.filteredX, palm.x, GESTURE.handInputSmoothing);
+      oneHandState.filteredY = smoothValue(oneHandState.filteredY, palm.y, GESTURE.handInputSmoothing);
+
+      let dx = oneHandState.filteredX - oneHandState.baseX;
+      let dy = oneHandState.filteredY - oneHandState.baseY;
+
+      dx = deadZone(dx, GESTURE.oneHandDeadZone);
+      dy = deadZone(dy, GESTURE.oneHandDeadZone);
+
+      target.rotY = oneHandState.baseRotY + dx * GESTURE.oneHandRotationSensitivityY;
+      target.rotX = oneHandState.baseRotX + dy * GESTURE.oneHandRotationSensitivityX;
+
+      setStatus('one hand: rotate left / right / up / down');
+    }
+
+    function handleTwoHandZoom(handA, handB) {
+      resetOneHandState();
+      twoHandState.stableFrames++;
+
+      const p1 = getPalmCenter(handA);
+      const p2 = getPalmCenter(handB);
+      const distance = distance2D(p1, p2);
+
+      if (twoHandState.stableFrames < GESTURE.grabStableFrames) {
+        setStatus('two hands detected: hold steady, then spread/close to zoom');
+        return;
+      }
+
+      if (!twoHandState.active) {
+        twoHandState.active = true;
+        twoHandState.filteredDistance = distance;
+        twoHandState.baseDistance = Math.max(distance, 0.001);
+        twoHandState.baseScale = target.scale;
+        setStatus('two-hand zoom ready');
+        return;
+      }
+
+      twoHandState.filteredDistance = smoothValue(twoHandState.filteredDistance, distance, GESTURE.handInputSmoothing);
+
+      let scaleRatio = twoHandState.filteredDistance / twoHandState.baseDistance;
+
+      if (Math.abs(scaleRatio - 1) < GESTURE.twoHandScaleDeadZone) {
+        scaleRatio = 1;
+      }
+
+      const smoothScaleRatio = Math.pow(scaleRatio, GESTURE.twoHandScalePower);
+      target.scale = clamp(twoHandState.baseScale * smoothScaleRatio, GESTURE.minScale, GESTURE.maxScale);
+
+      setStatus('two hands: zoom only');
+    }
+
+    function handleHands(results) {
+      drawHandOverlay(results);
+
+      const handList = sortHandsLeftToRight(results.multiHandLandmarks || []);
+      const rawMode = getRawMode(handList.length);
+      const stableMode = updateStableMode(rawMode);
+
+      if (stableMode !== rawMode) {
+        setStatus('stabilizing hand tracking...');
+        return;
+      }
+
+      if (stableMode === 'two' && handList.length >= 2) {
+        handleTwoHandZoom(handList[0], handList[1]);
+        return;
+      }
+
+      if (stableMode === 'one' && handList.length === 1) {
+        handleOneHandRotation(handList[0]);
+        return;
+      }
+
+      resetOneHandState();
+      resetTwoHandState();
+      setStatus('no hands detected');
+    }
+
+    async function initHands() {
+      hands = new Hands({
+        locateFile: function(file) {
+          return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+        }
+      });
+
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.82,
+        minTrackingConfidence: 0.82
+      });
+
+      hands.onResults(handleHands);
+
+      cameraFeed = new Camera(video, {
+        onFrame: async function() {
+          await hands.send({ image: video });
+        },
+        width: 1280,
+        height: 720
+      });
+
+      await cameraFeed.start();
+    }
+
+    function animate() {
+      if (!animationStarted) {
+        return;
+      }
+
+      current.rotX = lerp(current.rotX, target.rotX, GESTURE.renderSmoothing);
+      current.rotY = lerp(current.rotY, target.rotY, GESTURE.renderSmoothing);
+      current.rotZ = lerp(current.rotZ, target.rotZ, GESTURE.renderSmoothing);
+      current.scale = lerp(current.scale, target.scale, GESTURE.renderSmoothing);
+
+      // Only auto-rotate when no hands are controlling the Earth.
+      if (modeState.currentMode === 'none') {
+        target.rotY += 0.0008;
+      }
+
+      earthGroup.rotation.x = current.rotX;
+      earthGroup.rotation.y = current.rotY;
+      earthGroup.rotation.z = current.rotZ;
+      earthGroup.scale.set(current.scale, current.scale, current.scale);
+
+      cloudsMesh.rotation.y += 0.00045;
+      atmosphereMesh.rotation.y += 0.00025;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    async function startApp() {
+      startButton.disabled = true;
+      setStatus('initializing Three.js WebGPU renderer...');
+
+      try {
+        await initThree();
+        setStatus('starting camera and hand tracking...');
+        await initHands();
+        animationStarted = true;
+        animate();
+        setStatus('ready');
+      } catch (error) {
+        console.error(error);
+        startButton.disabled = false;
+        setStatus('error: ' + error.message);
+      }
+    }
+
+    startButton.addEventListener('click', startApp);
+
+    resetButton.addEventListener('click', function() {
+      resetEarth();
+      setStatus('reset');
+    });
+
+    landmarkButton.addEventListener('click', function() {
+      showLandmarks = !showLandmarks;
+      landmarkButton.textContent = showLandmarks ? 'Hide Landmarks' : 'Show Landmarks';
+      landmarksCtx.clearRect(0, 0, landmarksCanvas.width, landmarksCanvas.height);
+    });
+
+    window.addEventListener('keydown', function(event) {
+      if (event.key === 'r' || event.key === 'R') {
+        resetEarth();
+      }
+
+      if (event.key === 'l' || event.key === 'L') {
+        showLandmarks = !showLandmarks;
+        landmarkButton.textContent = showLandmarks ? 'Hide Landmarks' : 'Show Landmarks';
+        landmarksCtx.clearRect(0, 0, landmarksCanvas.width, landmarksCanvas.height);
+      }
+    });
+
+    resize();
+  </script>
+</body>
+</html>

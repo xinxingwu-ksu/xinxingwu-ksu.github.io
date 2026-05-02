@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediaPipe Transparent Counter</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: black;
+    }
+
+    #app {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      background: black;
+    }
+
+    #overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    #ui {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    #centerBox {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      pointer-events: none;
+      background: transparent;
+    }
+
+    #demo {
+      margin: 0;
+      font-size: 100px;
+      font-weight: bold;
+      color: white;
+      text-align: center;
+      background: transparent;
+      text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+      user-select: none;
+    }
+
+    #buttonRow {
+      display: flex;
+      gap: 22px;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+    }
+
+    .counterBtn {
+      font-size: 30px;
+      padding: 16px 34px;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      color: white;
+      background: transparent;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .addBtn.hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 18px rgba(0, 255, 100, 0.9);
+      border-color: rgba(0, 255, 100, 0.95);
+      color: rgba(0, 255, 100, 1);
+    }
+
+    .minusBtn.hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 18px rgba(255, 60, 60, 0.9);
+      border-color: rgba(255, 60, 60, 0.95);
+      color: rgba(255, 60, 60, 1);
+    }
+
+    #startBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 20;
+      padding: 12px 18px;
+      font-size: 18px;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.95);
+      color: white;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    #status {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      color: white;
+      font-size: 16px;
+      text-align: center;
+      background: transparent;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+
+    <div id="ui">
+      <div id="centerBox">
+        <p id="demo">0</p>
+
+        <div id="buttonRow">
+          <button id="countBtn" class="counterBtn addBtn" type="button">Count +1</button>
+          <button id="minusBtn" class="counterBtn minusBtn" type="button">Count -1</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="startBtn" type="button">Start Camera</button>
+    <div id="status">Press Start Camera</div>
+  </div>
+
+  <script type="module">
+    import {
+      HandLandmarker,
+      FilesetResolver
+    } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/vision_bundle.mjs";
+
+    const video = document.getElementById("video");
+    const overlay = document.getElementById("overlay");
+    const ctx = overlay.getContext("2d");
+
+    const demo = document.getElementById("demo");
+    const countBtn = document.getElementById("countBtn");
+    const minusBtn = document.getElementById("minusBtn");
+    const startBtn = document.getElementById("startBtn");
+    const statusText = document.getElementById("status");
+
+    let count = 0;
+    let handLandmarker = null;
+    let lastVideoTime = -1;
+    let results = null;
+
+    let lastHoveredButton = null;
+    let lastTriggerTime = 0;
+    const cooldownMs = 450;
+
+    function addOne() {
+      count = count + 1;
+      demo.textContent = count;
+    }
+
+    function minusOne() {
+      count = count - 1;
+      demo.textContent = count;
+    }
+
+    countBtn.addEventListener("click", addOne);
+    minusBtn.addEventListener("click", minusOne);
+
+    function resizeCanvas() {
+      overlay.width = window.innerWidth;
+      overlay.height = window.innerHeight;
+    }
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    async function createTracker() {
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm"
+      );
+
+      handLandmarker = await HandLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO",
+        numHands: 1,
+        minHandDetectionConfidence: 0.5,
+        minHandPresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5
+      });
+    }
+
+    function fingertipToScreen(landmark) {
+      return {
+        x: (1 - landmark.x) * window.innerWidth,
+        y: landmark.y * window.innerHeight
+      };
+    }
+
+    function isInsideElement(x, y, element) {
+      const rect = element.getBoundingClientRect();
+
+      return x >= rect.left &&
+             x <= rect.right &&
+             y >= rect.top &&
+             y <= rect.bottom;
+    }
+
+    function drawCursor(x, y, hovering, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, hovering ? 18 : 14, 0, Math.PI * 2);
+      ctx.fillStyle = hovering ? color : "rgba(255,255,255,0.95)";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(x, y, hovering ? 30 : 22, 0, Math.PI * 2);
+      ctx.strokeStyle = hovering
+        ? color.replace("0.95", "0.45")
+        : "rgba(255,255,255,0.45)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    async function startCamera() {
+      try {
+        startBtn.disabled = true;
+        startBtn.textContent = "Loading...";
+
+        await createTracker();
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+
+        await new Promise(function(resolve) {
+          video.onloadedmetadata = resolve;
+        });
+
+        await video.play();
+
+        startBtn.style.display = "none";
+        statusText.textContent = "Touch the green or red button with your index finger";
+
+        requestAnimationFrame(loop);
+      } catch (error) {
+        console.error(error);
+        startBtn.disabled = false;
+        startBtn.textContent = "Start Camera";
+        statusText.textContent = "Camera failed. Use localhost or HTTPS and allow camera.";
+      }
+    }
+
+    async function loop() {
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+      if (video.readyState >= 2 && handLandmarker) {
+        if (video.currentTime !== lastVideoTime) {
+          lastVideoTime = video.currentTime;
+          results = handLandmarker.detectForVideo(video, performance.now());
+        }
+
+        if (results && results.landmarks && results.landmarks.length > 0) {
+          const indexTip = results.landmarks[0][8];
+          const point = fingertipToScreen(indexTip);
+
+          const hoveringAdd = isInsideElement(point.x, point.y, countBtn);
+          const hoveringMinus = isInsideElement(point.x, point.y, minusBtn);
+
+          countBtn.classList.toggle("hover", hoveringAdd);
+          minusBtn.classList.toggle("hover", hoveringMinus);
+
+          let currentButton = null;
+          let cursorColor = "rgba(255,255,255,0.95)";
+
+          if (hoveringAdd) {
+            currentButton = countBtn;
+            cursorColor = "rgba(0,255,100,0.95)";
+          } else if (hoveringMinus) {
+            currentButton = minusBtn;
+            cursorColor = "rgba(255,60,60,0.95)";
+          }
+
+          const hovering = currentButton !== null;
+
+          drawCursor(point.x, point.y, hovering, cursorColor);
+
+          const now = Date.now();
+
+          if (
+            currentButton &&
+            currentButton !== lastHoveredButton &&
+            now - lastTriggerTime > cooldownMs
+          ) {
+            currentButton.click();
+            lastTriggerTime = now;
+          }
+
+          lastHoveredButton = currentButton;
+        } else {
+          countBtn.classList.remove("hover");
+          minusBtn.classList.remove("hover");
+          lastHoveredButton = null;
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    startBtn.addEventListener("click", startCamera);
+  </script>
+</body>
+</html>

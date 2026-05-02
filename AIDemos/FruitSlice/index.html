@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fruit Slice in Air</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      cursor: none;
+    }
+    .panel {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 10;
+      background: rgba(0,0,0,0.50);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: min(92vw, 420px);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .panel button {
+      margin-top: 8px;
+      margin-right: 8px;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .startBtn { background: #39d353; color: #052b0f; }
+    .pauseBtn { background: #58a6ff; color: #071c37; }
+    .small { opacity: 0.93; font-size: 13px; }
+    .warn { color: #ffd166; }
+    .panelToggle {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 0;
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      font-size: 14px;
+      line-height: 24px;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.55;
+      padding: 0;
+      margin: 0;
+    }
+    .panelToggle:hover { opacity: 0.9; }
+    .showPanelBtn {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 11;
+      display: none;
+      border: 0;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      background: rgba(0,0,0,0.45);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="panel" id="panel">
+    <button class="panelToggle" id="hidePanelBtn" title="Hide panel">✕</button>
+    <div><strong>Fruit Slice in Air</strong></div>
+    <div id="status">Status: waiting</div>
+    <div class="small">Click <strong>Enable Camera</strong>. After the camera turns on, the game starts automatically.</div>
+    <div class="small">Move your <strong>index fingertip</strong> quickly through the fruit to slice it.</div>
+    <div class="small">Both hands can slice. Press <strong>Space</strong> to pause and <strong>R</strong> to restart.</div>
+    <button class="startBtn" id="startBtn">Enable Camera</button>
+    <button class="pauseBtn" id="pauseBtn">Pause / Resume</button>
+    <div class="small warn" id="warn"></div>
+  </div>
+  <button class="showPanelBtn" id="showPanelBtn" title="Show panel">☰</button>
+
+  <video id="video" playsinline muted style="display:none;"></video>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('video');
+    const statusEl = document.getElementById('status');
+    const warnEl = document.getElementById('warn');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const panel = document.getElementById('panel');
+    const hidePanelBtn = document.getElementById('hidePanelBtn');
+    const showPanelBtn = document.getElementById('showPanelBtn');
+
+    function setStatus(text) {
+      statusEl.textContent = 'Status: ' + text;
+    }
+
+    function setWarn(text) {
+      warnEl.textContent = text || '';
+    }
+
+    function hidePanel() {
+      panel.style.display = 'none';
+      showPanelBtn.style.display = 'block';
+    }
+
+    function showPanel() {
+      panel.style.display = 'block';
+      showPanelBtn.style.display = 'none';
+    }
+
+    hidePanelBtn.addEventListener('click', hidePanel);
+    showPanelBtn.addEventListener('click', showPanel);
+
+    function fitCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    fitCanvas();
+    window.addEventListener('resize', fitCanvas);
+
+    const gravity = 0.22;
+    const fruitTypes = [
+      { emoji: '🍎', color: '#ff4d6d' },
+      { emoji: '🍊', color: '#ff9f1c' },
+      { emoji: '🍋', color: '#ffd60a' },
+      { emoji: '🥝', color: '#7cb518' },
+      { emoji: '🍇', color: '#9b5de5' },
+      { emoji: '🍉', color: '#2ec4b6' }
+    ];
+
+    const game = {
+      running: false,
+      startedOnce: false,
+      over: false,
+      score: 0,
+      combo: 0,
+      bestCombo: 0,
+      lives: 3,
+      fruits: [],
+      particles: [],
+      slashEffects: [],
+      lastSpawnTime: 0,
+      spawnGap: 700,
+      handsSeen: 0,
+      leftSeenAt: 0,
+      rightSeenAt: 0,
+      lastTime: performance.now()
+    };
+
+    const handsState = {
+      Left: { active: false, x: 0, y: 0, prevX: 0, prevY: 0, speed: 0, lastSeen: 0, trail: [], smoothX: 0, smoothY: 0 },
+      Right: { active: false, x: 0, y: 0, prevX: 0, prevY: 0, speed: 0, lastSeen: 0, trail: [], smoothX: 0, smoothY: 0 }
+    };
+
+    function resetGame() {
+      game.score = 0;
+      game.combo = 0;
+      game.bestCombo = 0;
+      game.lives = 3;
+      game.over = false;
+      game.fruits = [];
+      game.particles = [];
+      game.slashEffects = [];
+      game.lastSpawnTime = performance.now();
+      game.spawnGap = 700;
+    }
+    resetGame();
+
+    const keys = {};
+    window.addEventListener('keydown', function(e) {
+      keys[e.key] = true;
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (!game.over) game.running = !game.running;
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        resetGame();
+        if (video.srcObject) game.running = true;
+      }
+    });
+    window.addEventListener('keyup', function(e) {
+      keys[e.key] = false;
+    });
+
+    function randomBetween(min, max) {
+      return min + Math.random() * (max - min);
+    }
+
+    function spawnFruit(burstCount) {
+      const count = burstCount || (Math.random() < 0.22 ? 2 : 1);
+      for (let i = 0; i < count; i++) {
+        const type = fruitTypes[(Math.random() * fruitTypes.length) | 0];
+        const radius = randomBetween(34, 54);
+        const fromLeft = Math.random() < 0.5;
+        const startX = fromLeft ? randomBetween(60, canvas.width * 0.45) : randomBetween(canvas.width * 0.55, canvas.width - 60);
+        const upward = randomBetween(12.5, 16.5);
+        const vxBase = fromLeft ? randomBetween(1.2, 4.4) : randomBetween(-4.4, -1.2);
+        game.fruits.push({
+          x: startX,
+          y: canvas.height + radius + randomBetween(0, 30),
+          vx: vxBase + randomBetween(-0.8, 0.8),
+          vy: -upward,
+          r: radius,
+          rotation: randomBetween(0, Math.PI * 2),
+          vr: randomBetween(-0.06, 0.06),
+          type: type,
+          sliced: false,
+          hitFlash: 0
+        });
+      }
+    }
+
+    function addJuiceBurst(x, y, color, scoreText) {
+      for (let i = 0; i < 16; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = randomBetween(2, 8);
+        game.particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.2,
+          life: randomBetween(22, 40),
+          maxLife: 40,
+          size: randomBetween(4, 9),
+          color: color
+        });
+      }
+      game.slashEffects.push({
+        x: x,
+        y: y,
+        life: 24,
+        text: scoreText
+      });
+    }
+
+    function segmentCircleHit(x1, y1, x2, y2, cx, cy, r) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const l2 = dx * dx + dy * dy;
+      if (l2 === 0) {
+        const ddx = cx - x1;
+        const ddy = cy - y1;
+        return ddx * ddx + ddy * ddy <= r * r;
+      }
+      let t = ((cx - x1) * dx + (cy - y1) * dy) / l2;
+      t = Math.max(0, Math.min(1, t));
+      const px = x1 + t * dx;
+      const py = y1 + t * dy;
+      const ddx = cx - px;
+      const ddy = cy - py;
+      return ddx * ddx + ddy * ddy <= r * r;
+    }
+
+    function pointCircleHit(px, py, cx, cy, r) {
+      const dx = cx - px;
+      const dy = cy - py;
+      return dx * dx + dy * dy <= r * r;
+    }
+
+    function pushTrailPoint(hand, x, y, now) {
+      const trail = hand.trail;
+      const last = trail.length ? trail[trail.length - 1] : null;
+      if (!last) {
+        trail.push({ x: x, y: y, t: now });
+        return;
+      }
+
+      const dx = x - last.x;
+      const dy = y - last.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxStep = 16;
+      const steps = Math.max(1, Math.ceil(dist / maxStep));
+
+      for (let s = 1; s <= steps; s++) {
+        const p = s / steps;
+        trail.push({
+          x: last.x + dx * p,
+          y: last.y + dy * p,
+          t: now - (steps - s) * 6
+        });
+      }
+
+      while (trail.length > 14) trail.shift();
+    }
+
+    function updateHandsFromResults(results) {
+      const now = performance.now();
+      handsState.Left.active = false;
+      handsState.Right.active = false;
+      game.handsSeen = 0;
+
+      if (!results || !results.multiHandLandmarks || !results.multiHandLandmarks.length) {
+        return;
+      }
+
+      for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+        const landmarks = results.multiHandLandmarks[i];
+        let label = 'Right';
+        if (results.multiHandedness && results.multiHandedness[i] && results.multiHandedness[i].label) {
+          label = results.multiHandedness[i].label;
+        }
+        if (!handsState[label]) continue;
+
+        const tip = landmarks[8];
+        const x = (1 - tip.x) * canvas.width;
+        const y = tip.y * canvas.height;
+        const hand = handsState[label];
+
+        if (!hand.lastSeen) {
+          hand.prevX = x;
+          hand.prevY = y;
+          hand.smoothX = x;
+          hand.smoothY = y;
+          hand.trail = [{ x: x, y: y, t: now }];
+        } else {
+          hand.prevX = hand.x;
+          hand.prevY = hand.y;
+          hand.smoothX = hand.smoothX * 0.2 + x * 0.8;
+          hand.smoothY = hand.smoothY * 0.2 + y * 0.8;
+        }
+
+        hand.x = hand.smoothX;
+        hand.y = hand.smoothY;
+        pushTrailPoint(hand, hand.x, hand.y, now);
+
+        const dx = hand.x - hand.prevX;
+        const dy = hand.y - hand.prevY;
+        hand.speed = Math.sqrt(dx * dx + dy * dy);
+        hand.active = true;
+        hand.lastSeen = now;
+        game.handsSeen++;
+        if (label === 'Left') game.leftSeenAt = now;
+        if (label === 'Right') game.rightSeenAt = now;
+      }
+    }
+
+    function trySliceFruitWithHand(fruit, hand) {
+      if (!hand.lastSeen) return false;
+
+      const recentlySeen = performance.now() - hand.lastSeen < 180;
+      if (!recentlySeen) return false;
+
+      const dynamicRadius = fruit.r + Math.max(18, Math.min(42, 16 + hand.speed * 0.28));
+      const trail = hand.trail || [];
+      const speedThreshold = 5;
+
+      if (pointCircleHit(hand.x, hand.y, fruit.x, fruit.y, dynamicRadius * 0.88) && hand.speed >= speedThreshold) {
+        return true;
+      }
+
+      for (let i = trail.length - 1; i > 0; i--) {
+        const p1 = trail[i - 1];
+        const p2 = trail[i];
+        if (performance.now() - p2.t > 170) continue;
+        if (segmentCircleHit(p1.x, p1.y, p2.x, p2.y, fruit.x, fruit.y, dynamicRadius)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function sliceFruit(fruit, handLabel) {
+      fruit.sliced = true;
+      game.score += 1;
+      game.combo += 1;
+      game.bestCombo = Math.max(game.bestCombo, game.combo);
+      const comboBonus = game.combo >= 5 ? ' COMBO!' : '';
+      addJuiceBurst(fruit.x, fruit.y, fruit.type.color, '+' + 1 + comboBonus);
+      for (let i = 0; i < 2; i++) {
+        game.fruits.push({
+          x: fruit.x + (i === 0 ? -10 : 10),
+          y: fruit.y,
+          vx: fruit.vx + (i === 0 ? -2.6 : 2.6),
+          vy: fruit.vy - 1.2,
+          r: fruit.r * 0.62,
+          rotation: fruit.rotation,
+          vr: fruit.vr + (i === 0 ? -0.08 : 0.08),
+          type: fruit.type,
+          slicedHalf: true,
+          halfSide: i === 0 ? -1 : 1,
+          life: 44
+        });
+      }
+    }
+
+    function updateGame(dt, now) {
+      if (!game.running && !game.over) {
+        return;
+      }
+
+      if (game.running && !game.over && now - game.lastSpawnTime > game.spawnGap) {
+        spawnFruit();
+        game.lastSpawnTime = now;
+        game.spawnGap = Math.max(320, 700 - Math.floor(game.score / 6) * 20);
+      }
+
+      for (let i = game.fruits.length - 1; i >= 0; i--) {
+        const fruit = game.fruits[i];
+        fruit.x += fruit.vx * dt * 0.06;
+        fruit.y += fruit.vy * dt * 0.06;
+        fruit.vy += gravity * dt * 0.06;
+        fruit.rotation += fruit.vr * dt * 0.06;
+
+        if (game.running && !game.over && !fruit.slicedHalf && !fruit.sliced) {
+          if (trySliceFruitWithHand(fruit, handsState.Left) || trySliceFruitWithHand(fruit, handsState.Right)) {
+            sliceFruit(fruit);
+            game.fruits.splice(i, 1);
+            continue;
+          }
+        }
+
+        if (fruit.slicedHalf) {
+          fruit.life -= dt * 0.06;
+          if (fruit.life <= 0 || fruit.y - fruit.r > canvas.height + 120) {
+            game.fruits.splice(i, 1);
+            continue;
+          }
+        } else if (fruit.y - fruit.r > canvas.height + 80) {
+          game.fruits.splice(i, 1);
+          if (!game.over && game.running) {
+            game.lives -= 1;
+            game.combo = 0;
+            addJuiceBurst(clamp(fruit.x, 50, canvas.width - 50), canvas.height - 60, '#ffffff', 'MISS');
+            if (game.lives <= 0) {
+              game.over = true;
+              game.running = false;
+            }
+          }
+          continue;
+        }
+      }
+
+      for (let i = game.particles.length - 1; i >= 0; i--) {
+        const p = game.particles[i];
+        p.x += p.vx * dt * 0.06;
+        p.y += p.vy * dt * 0.06;
+        p.vy += 0.16 * dt * 0.06;
+        p.life -= dt * 0.06;
+        if (p.life <= 0) game.particles.splice(i, 1);
+      }
+
+      for (let i = game.slashEffects.length - 1; i >= 0; i--) {
+        const s = game.slashEffects[i];
+        s.y -= 1.2 * dt * 0.06;
+        s.life -= dt * 0.06;
+        if (s.life <= 0) game.slashEffects.splice(i, 1);
+      }
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function drawVideoBackground() {
+      if (video.readyState >= 2) {
+        ctx.save();
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+        ctx.restore();
+      } else {
+        const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        g.addColorStop(0, '#101820');
+        g.addColorStop(1, '#1b263b');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.16)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawFruit(fruit) {
+      ctx.save();
+      ctx.translate(fruit.x, fruit.y);
+      ctx.rotate(fruit.rotation);
+
+      if (fruit.slicedHalf) {
+        ctx.beginPath();
+        ctx.fillStyle = fruit.type.color;
+        ctx.arc(0, 0, fruit.r, Math.PI / 2 * (fruit.halfSide === -1 ? 1 : -1), Math.PI / 2 * (fruit.halfSide === -1 ? 3 : 1), false);
+        ctx.lineTo(0, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.30)';
+        ctx.beginPath();
+        ctx.arc(0, 0, fruit.r * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
+
+      ctx.beginPath();
+      ctx.fillStyle = fruit.type.color;
+      ctx.arc(0, 0, fruit.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.arc(-fruit.r * 0.25, -fruit.r * 0.25, fruit.r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = (fruit.r * 1.15) + 'px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(fruit.type.emoji, 0, 2);
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of game.particles) {
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawSlashEffects() {
+      for (const s of game.slashEffects) {
+        ctx.globalAlpha = Math.max(0, s.life / 24);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(s.text, s.x, s.y);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHands() {
+      const now = performance.now();
+      ['Left', 'Right'].forEach(function(label) {
+        const hand = handsState[label];
+        if (!hand.active && now - hand.lastSeen > 250) return;
+
+        const age = now - hand.lastSeen;
+        const alpha = hand.active ? 1 : Math.max(0, 1 - age / 250);
+        const trail = hand.trail || [];
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = label === 'Left' ? 'rgba(80,220,255,0.95)' : 'rgba(255,120,180,0.95)';
+        ctx.lineWidth = Math.max(10, Math.min(30, hand.speed * 0.22 + 10));
+
+        if (trail.length > 1) {
+          ctx.beginPath();
+          ctx.moveTo(trail[0].x, trail[0].y);
+          for (let i = 1; i < trail.length; i++) {
+            ctx.lineTo(trail[i].x, trail[i].y);
+          }
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.moveTo(hand.prevX, hand.prevY);
+          ctx.lineTo(hand.x, hand.y);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(hand.x, hand.y, 11, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(hand.x, hand.y, Math.max(24, Math.min(52, hand.speed * 0.42 + 24)), 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+    }
+
+    function drawHud() {
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
+      ctx.font = 'bold 34px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Score: ' + game.score, 20, 46);
+      ctx.fillText('Combo: ' + game.combo, 20, 88);
+
+      ctx.textAlign = 'right';
+      ctx.fillText('Lives: ' + '❤'.repeat(Math.max(0, game.lives)), canvas.width - 20, 46);
+
+      if (!video.srcObject) {
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 42px Arial';
+        ctx.fillText('Enable Camera to Start', canvas.width / 2, canvas.height / 2 - 8);
+        ctx.font = '24px Arial';
+        ctx.fillText('Then move your index finger quickly through the fruit', canvas.width / 2, canvas.height / 2 + 34);
+      } else if (!game.running && !game.over) {
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 44px Arial';
+        ctx.fillText('Paused', canvas.width / 2, canvas.height / 2 - 6);
+        ctx.font = '24px Arial';
+        ctx.fillText('Press Space to resume', canvas.width / 2, canvas.height / 2 + 34);
+      }
+
+      if (game.over) {
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 58px Arial';
+        ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 40);
+        ctx.font = 'bold 30px Arial';
+        ctx.fillText('Final Score: ' + game.score, canvas.width / 2, canvas.height / 2 + 10);
+        ctx.fillText('Best Combo: ' + game.bestCombo, canvas.width / 2, canvas.height / 2 + 50);
+        ctx.font = '24px Arial';
+        ctx.fillText('Press R to restart', canvas.width / 2, canvas.height / 2 + 95);
+      }
+    }
+
+    function draw() {
+      drawVideoBackground();
+      for (const fruit of game.fruits) drawFruit(fruit);
+      drawParticles();
+      drawSlashEffects();
+      drawHands();
+      drawHud();
+    }
+
+    let hands = null;
+    let handsReady = false;
+    let cameraStarted = false;
+
+    async function enableCamera() {
+      if (cameraStarted) {
+        setStatus('camera already enabled');
+        if (!game.over) game.running = true;
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus('camera API unavailable');
+        setWarn('This browser does not expose getUserMedia here. Try Chrome and open the file directly.');
+        return;
+      }
+
+      if (typeof Hands === 'undefined') {
+        setStatus('MediaPipe script failed to load');
+        setWarn('The hand-tracking library did not load from the internet. Please make sure the computer is online.');
+        return;
+      }
+
+      try {
+        setStatus('requesting camera');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+        cameraStarted = true;
+
+        hands = new Hands({
+          locateFile: function(file) {
+            return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+          }
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence: 0.55
+        });
+
+        hands.onResults(function(results) {
+          updateHandsFromResults(results);
+        });
+
+        handsReady = true;
+        setStatus('camera on, hands loading');
+
+        const mpCamera = new Camera(video, {
+          onFrame: async function() {
+            if (handsReady) {
+              await hands.send({ image: video });
+            }
+          },
+          width: 1280,
+          height: 720
+        });
+
+        await mpCamera.start();
+        resetGame();
+        game.startedOnce = true;
+        game.running = true;
+        setStatus('camera on, game started, slice the fruit');
+        setWarn('Move your index fingertip quickly through the fruit. Both hands can slice.');
+      } catch (err) {
+        console.error(err);
+        setStatus('camera failed');
+        setWarn('Camera permission was blocked or unavailable. Error: ' + err.message);
+      }
+    }
+
+    startBtn.addEventListener('click', enableCamera);
+    pauseBtn.addEventListener('click', function() {
+      if (!game.over) game.running = !game.running;
+    });
+
+    function animate(now) {
+      const dt = Math.min(32, now - game.lastTime || 16.7);
+      game.lastTime = now;
+      updateGame(dt, now);
+      draw();
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+    setStatus('ready');
+    setWarn('Click Enable Camera first. After the camera turns on, the game starts automatically.');
+  </script>
+</body>
+</html>

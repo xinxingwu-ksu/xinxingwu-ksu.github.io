@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Webcam Pong - No Web Server Needed</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      cursor: none;
+    }
+    .panel {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 10;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: min(92vw, 420px);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .panel button {
+      margin-top: 8px;
+      margin-right: 8px;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .startBtn { background: #39d353; color: #052b0f; }
+    .pauseBtn { background: #58a6ff; color: #071c37; }
+    .small { opacity: 0.9; font-size: 13px; }
+    .warn { color: #ffd166; }
+    .panelToggle {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 0;
+      background: rgba(255,255,255,0.16);
+      color: #fff;
+      font-size: 14px;
+      line-height: 24px;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.55;
+      padding: 0;
+      margin: 0;
+    }
+    .panelToggle:hover { opacity: 0.9; }
+    .showPanelBtn {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 11;
+      display: none;
+      border: 0;
+      border-radius: 999px;
+      width: 34px;
+      height: 34px;
+      background: rgba(0,0,0,0.45);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div class="panel" id="panel">
+    <button class="panelToggle" id="hidePanelBtn" title="Hide panel">✕</button>
+    <div><strong>Webcam Pong</strong></div>
+    <div id="status">Status: waiting</div>
+   
+    <button class="startBtn" id="startBtn">Enable Camera</button>
+    <button class="pauseBtn" id="pauseBtn">Pause / Resume</button>
+    <button class="pauseBtn" id="swapBtn">Working</button>
+    <div class="small warn" id="warn"></div>
+  </div>
+  <button class="showPanelBtn" id="showPanelBtn" title="Show panel">☰</button>
+
+  <video id="video" playsinline muted style="display:none;"></video>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('video');
+    const statusEl = document.getElementById('status');
+    const warnEl = document.getElementById('warn');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const swapBtn = document.getElementById('swapBtn');
+    const panel = document.getElementById('panel');
+    const hidePanelBtn = document.getElementById('hidePanelBtn');
+    const showPanelBtn = document.getElementById('showPanelBtn');
+
+    function setStatus(text) {
+      statusEl.textContent = 'Status: ' + text;
+    }
+
+    function setWarn(text) {
+      warnEl.textContent = text || '';
+    }
+
+    function hidePanel() {
+      panel.style.display = 'none';
+      showPanelBtn.style.display = 'block';
+    }
+
+    function showPanel() {
+      panel.style.display = 'block';
+      showPanelBtn.style.display = 'none';
+    }
+
+    hidePanelBtn.addEventListener('click', hidePanel);
+    showPanelBtn.addEventListener('click', showPanel);
+
+    function fitCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    fitCanvas();
+    window.addEventListener('resize', fitCanvas);
+
+    const game = {
+      running: false,
+      leftScore: 0,
+      rightScore: 0,
+      leftPaddle: { x: 40, y: 0, w: 18, h: 150, targetY: 0 },
+      rightPaddle: { x: 0, y: 0, w: 18, h: 150, targetY: 0 },
+      ball: { x: 0, y: 0, vx: 8, vy: 5, r: 12 },
+      lastHitSide: 0,
+      handsSeen: 0,
+      leftHandSeenAt: 0,
+      rightHandSeenAt: 0,
+      swapHandLabels: true
+    };
+
+    function resetPositions(direction) {
+      game.leftPaddle.y = canvas.height / 2 - game.leftPaddle.h / 2;
+      game.rightPaddle.y = canvas.height / 2 - game.rightPaddle.h / 2;
+      game.leftPaddle.targetY = game.leftPaddle.y;
+      game.rightPaddle.targetY = game.rightPaddle.y;
+      game.rightPaddle.x = canvas.width - 40 - game.rightPaddle.w;
+      game.ball.x = canvas.width / 2;
+      game.ball.y = canvas.height / 2;
+      const dir = direction || (Math.random() < 0.5 ? -1 : 1);
+      const speedX = 7 + Math.random() * 2;
+      const speedY = (Math.random() * 6 - 3);
+      game.ball.vx = speedX * dir;
+      game.ball.vy = speedY === 0 ? 3 : speedY;
+      game.lastHitSide = 0;
+    }
+    resetPositions(1);
+
+    const keys = {};
+    window.addEventListener('keydown', function(e) {
+      keys[e.key] = true;
+      if (e.key === ' ') {
+        e.preventDefault();
+        game.running = !game.running;
+      }
+      if (e.key === 'r' || e.key === 'R') {
+        resetPositions(Math.random() < 0.5 ? -1 : 1);
+      }
+    });
+    window.addEventListener('keyup', function(e) {
+      keys[e.key] = false;
+    });
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function circleHitsRect(ball, p) {
+      const closestX = clamp(ball.x, p.x, p.x + p.w);
+      const closestY = clamp(ball.y, p.y, p.y + p.h);
+      const dx = ball.x - closestX;
+      const dy = ball.y - closestY;
+      return dx * dx + dy * dy < ball.r * ball.r;
+    }
+
+    function updateFromKeyboard() {
+      const speed = 10;
+      if (keys['w'] || keys['W']) game.leftPaddle.targetY -= speed;
+      if (keys['s'] || keys['S']) game.leftPaddle.targetY += speed;
+      if (keys['ArrowUp']) game.rightPaddle.targetY -= speed;
+      if (keys['ArrowDown']) game.rightPaddle.targetY += speed;
+    }
+
+    function smoothPaddles() {
+      game.leftPaddle.targetY = clamp(game.leftPaddle.targetY, 0, canvas.height - game.leftPaddle.h);
+      game.rightPaddle.targetY = clamp(game.rightPaddle.targetY, 0, canvas.height - game.rightPaddle.h);
+      game.leftPaddle.y += (game.leftPaddle.targetY - game.leftPaddle.y) * 0.25;
+      game.rightPaddle.y += (game.rightPaddle.targetY - game.rightPaddle.y) * 0.25;
+    }
+
+    function updateBall() {
+      if (!game.running) return;
+
+      game.ball.x += game.ball.vx;
+      game.ball.y += game.ball.vy;
+
+      if (game.ball.y - game.ball.r <= 0) {
+        game.ball.y = game.ball.r;
+        game.ball.vy *= -1;
+      }
+      if (game.ball.y + game.ball.r >= canvas.height) {
+        game.ball.y = canvas.height - game.ball.r;
+        game.ball.vy *= -1;
+      }
+
+      if (circleHitsRect(game.ball, game.leftPaddle) && game.ball.vx < 0) {
+        const offset = (game.ball.y - (game.leftPaddle.y + game.leftPaddle.h / 2)) / (game.leftPaddle.h / 2);
+        game.ball.x = game.leftPaddle.x + game.leftPaddle.w + game.ball.r;
+        game.ball.vx = Math.abs(game.ball.vx) * 1.03;
+        game.ball.vy += offset * 3;
+        game.lastHitSide = -1;
+      }
+
+      if (circleHitsRect(game.ball, game.rightPaddle) && game.ball.vx > 0) {
+        const offset = (game.ball.y - (game.rightPaddle.y + game.rightPaddle.h / 2)) / (game.rightPaddle.h / 2);
+        game.ball.x = game.rightPaddle.x - game.ball.r;
+        game.ball.vx = -Math.abs(game.ball.vx) * 1.03;
+        game.ball.vy += offset * 3;
+        game.lastHitSide = 1;
+      }
+
+      const maxSpeedY = 13;
+      game.ball.vy = clamp(game.ball.vy, -maxSpeedY, maxSpeedY);
+
+      if (game.ball.x + game.ball.r < 0) {
+        game.rightScore += 1;
+        resetPositions(-1);
+      }
+      if (game.ball.x - game.ball.r > canvas.width) {
+        game.leftScore += 1;
+        resetPositions(1);
+      }
+    }
+
+    function drawBackground() {
+      if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+        ctx.save();
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      } else {
+        const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        g.addColorStop(0, '#111');
+        g.addColorStop(1, '#000');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function drawCourt() {
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([14, 14]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.88)';
+      ctx.font = 'bold 54px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(game.leftScore + '     ' + game.rightScore, canvas.width / 2, 70);
+    }
+
+    function drawPaddle(p, color) {
+      ctx.fillStyle = color;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 16;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+      ctx.shadowBlur = 0;
+    }
+
+    function drawBall() {
+      ctx.beginPath();
+      ctx.arc(game.ball.x, game.ball.y, game.ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = '#fff';
+      ctx.shadowBlur = 15;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawHandsOverlay() {
+      const now = performance.now();
+      if (now - game.leftHandSeenAt < 300) {
+        ctx.fillStyle = 'rgba(90, 220, 255, 0.85)';
+        ctx.fillRect(game.leftPaddle.x + game.leftPaddle.w + 6, game.leftPaddle.y, 6, game.leftPaddle.h);
+      }
+      if (now - game.rightHandSeenAt < 300) {
+        ctx.fillStyle = 'rgba(255, 120, 120, 0.85)';
+        ctx.fillRect(game.rightPaddle.x - 12, game.rightPaddle.y, 6, game.rightPaddle.h);
+      }
+    }
+
+    function render() {
+      drawBackground();
+      drawCourt();
+      drawPaddle(game.leftPaddle, '#5adcff');
+      drawPaddle(game.rightPaddle, '#ff7878');
+      drawHandsOverlay();
+      drawBall();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.font = '18px Arial';
+      ctx.textAlign = 'center';
+      if (!game.running) {
+        ctx.fillText('Waiting for camera / Paused', canvas.width / 2, canvas.height - 28);
+      }
+
+      ctx.font = '16px Arial';
+      //ctx.fillText(game.swapHandLabels ? 'Regular' : 'Mirror', canvas.width / 2, canvas.height - 52);
+    }
+
+    let handsReady = false;
+    let cameraStarted = false;
+
+    function onResults(results) {
+      game.handsSeen = 0;
+
+      if (results.multiHandLandmarks && results.multiHandedness) {
+        for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+          const landmarks = results.multiHandLandmarks[i];
+          const handedness = results.multiHandedness[i];
+          const rawLabel = handedness.label;
+          const label = game.swapHandLabels
+            ? (rawLabel === 'Left' ? 'Right' : 'Left')
+            : rawLabel;
+          const indexTip = landmarks[8];
+          const y = indexTip.y * canvas.height - game.leftPaddle.h / 2;
+          game.handsSeen += 1;
+
+          if (label === 'Left') {
+            game.leftPaddle.targetY = y;
+            game.leftHandSeenAt = performance.now();
+          } else if (label === 'Right') {
+            game.rightPaddle.targetY = y;
+            game.rightHandSeenAt = performance.now();
+          }
+        }
+      }
+    }
+
+    async function startCameraAndHands() {
+      if (cameraStarted) return;
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus('camera API unavailable');
+        setWarn('This browser does not expose getUserMedia here. Try Chrome and open the file directly, not inside another app or frame.');
+        return;
+      }
+
+      if (typeof Hands === 'undefined') {
+        setStatus('MediaPipe script failed to load');
+        setWarn('The HTML file is fine, but the hand-tracking library did not load from the internet. Please make sure the computer is online.');
+        return;
+      }
+
+      try {
+        setStatus('requesting camera');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+        await video.play();
+        cameraStarted = true;
+
+        const hands = new Hands({
+          locateFile: function(file) {
+            return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+          }
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence: 0.6
+        });
+
+        hands.onResults(onResults);
+        handsReady = true;
+        setStatus('camera on, hands loading');
+
+        const camera = new Camera(video, {
+          onFrame: async function() {
+            if (handsReady) {
+              await hands.send({ image: video });
+            }
+          },
+          width: 1280,
+          height: 720
+        });
+
+        await camera.start();
+        game.running = true;
+        
+      } catch (err) {
+        setStatus('camera failed');
+        setWarn('Camera permission was blocked or unavailable. Error: ' + err.message);
+      }
+    }
+
+    startBtn.addEventListener('click', startCameraAndHands);
+    pauseBtn.addEventListener('click', function() {
+      game.running = !game.running;
+    });
+
+    swapBtn.addEventListener('click', function() {
+      game.swapHandLabels = !game.swapHandLabels;
+      setWarn(game.swapHandLabels
+        ? 'Hand labels are swapped so your real left hand controls the left paddle and your real right hand controls the right paddle.'
+        : 'Hand labels are using the browser default mapping. If the paddles feel reversed, click Swap Hand Labels again.');
+    });
+
+    function frame() {
+      updateFromKeyboard();
+      smoothPaddles();
+      updateBall();
+      render();
+      requestAnimationFrame(frame);
+    }
+    frame();
+
+    setStatus('ready');
+    setWarn('Click Enable Camera first. After the camera turns on, the game starts automatically.');
+  </script>
+</body>
+</html>
