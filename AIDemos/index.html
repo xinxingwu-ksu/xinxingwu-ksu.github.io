@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Demo Showcase | Kentucky State University</title>
+
+  <style>
+    :root {
+      --ksu-green: #006b35;
+      --ksu-green-dark: #004d26;
+      --ksu-green-light: #e9f5ef;
+      --text-dark: #1f2933;
+      --text-light: #5f6c7b;
+      --border: #e5e7eb;
+      --white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ffffff;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+
+    .top-line {
+      height: 5px;
+      background: var(--ksu-green);
+    }
+
+    header {
+      width: 100%;
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 22px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-text {
+      font-family: Georgia, serif;
+      color: var(--ksu-green);
+      font-weight: bold;
+      font-size: 28px;
+      line-height: 1.05;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    nav {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-size: 15px;
+      font-weight: 600;
+      transition: color 0.2s ease;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--ksu-green);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbfa 100%);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -100px;
+      top: 80px;
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0, 107, 53, 0.15) 2px, transparent 3px);
+      background-size: 22px 22px;
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    .hero-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 70px 24px 50px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      max-width: 680px;
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--ksu-green-light);
+      color: var(--ksu-green);
+      font-size: 14px;
+      font-weight: bold;
+      padding: 7px 14px;
+      border-radius: 999px;
+      margin-bottom: 18px;
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      line-height: 1.05;
+      color: var(--ksu-green);
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      font-size: 22px;
+      color: var(--text-light);
+      max-width: 620px;
+      margin-bottom: 30px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 13px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--ksu-green);
+      color: white;
+      border: 2px solid var(--ksu-green);
+    }
+
+    .btn-primary:hover {
+      background: var(--ksu-green-dark);
+      border-color: var(--ksu-green-dark);
+    }
+
+    .section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 38px;
+    }
+
+    .section-title h2 {
+      font-size: 36px;
+      color: var(--ksu-green);
+      margin-bottom: 10px;
+    }
+
+    .section-title p {
+      color: var(--text-light);
+      font-size: 18px;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .demo-card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 24px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      min-height: 240px;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 32px rgba(0, 107, 53, 0.12);
+    }
+
+    .demo-card:hover h3 {
+      text-decoration: underline;
+    }
+
+    .icon {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 22px;
+      border-radius: 18px;
+      background: var(--ksu-green-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ksu-green);
+      font-size: 34px;
+    }
+
+    .demo-card h3 {
+      color: var(--ksu-green);
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .demo-card p {
+      color: var(--text-light);
+      font-size: 15px;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    .info-band {
+      background: var(--ksu-green-light);
+      border-top: 1px solid #d8eadf;
+      border-bottom: 1px solid #d8eadf;
+    }
+
+    .info-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 50px 24px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+
+    .info-content h2 {
+      color: var(--ksu-green);
+      font-size: 34px;
+      margin-bottom: 14px;
+    }
+
+    .info-content p {
+      color: var(--text-light);
+      font-size: 17px;
+    }
+
+    .info-box {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+    }
+
+    .info-box strong {
+      color: var(--ksu-green);
+    }
+
+    .info-box p {
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    footer {
+      background: var(--ksu-green);
+      color: white;
+      padding: 28px 24px;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .footer-school {
+      font-family: Georgia, serif;
+      font-weight: bold;
+      font-size: 24px;
+      text-transform: uppercase;
+      line-height: 1.1;
+      letter-spacing: 1px;
+    }
+
+    .footer-text {
+      font-size: 15px;
+      opacity: 0.95;
+    }
+
+    @media (max-width: 900px) {
+      .nav-container {
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      nav {
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .hero h1 {
+        font-size: 46px;
+      }
+
+      .hero p {
+        font-size: 18px;
+      }
+
+      .demo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .info-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .logo-text {
+        font-size: 22px;
+        text-align: center;
+      }
+
+      .hero-container {
+        padding-top: 45px;
+      }
+
+      .hero h1 {
+        font-size: 38px;
+      }
+
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title h2 {
+        font-size: 30px;
+      }
+
+      .footer-container {
+        text-align: center;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="top-line"></div>
+
+  <header>
+    <div class="nav-container">
+      <div class="logo-text">
+        Kentucky State<br />
+        University
+      </div>
+
+      <nav>
+        <a href="#" class="active">Home</a>
+        <a href="#demos">Demos</a>
+        <a href="#about">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-container">
+        <div class="hero-content">
+          <span class="tag">Workshop / classroom Demonstration</span>
+
+          <h1>AI Demo Showcase</h1>
+
+          <p>
+            Explore interactive AI-powered demos designed for engaging,
+            hands-on workshop and classroom  presentations.
+          </p>
+
+          <div class="button-group">
+            <a href="#demos" class="btn btn-primary">Explore Demos</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="demos">
+      <div class="section-title">
+        <h2>Featured Interactive Demos</h2>
+        <p>
+          Simple, visual, and engaging demonstrations of AI, computer vision,
+          and gesture interaction.
+        </p>
+      </div>
+
+      <div class="demo-grid">
+        <a class="demo-card" href="CounterInAir/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="icon">✋</div>
+          <h3>Counter in Air</h3>
+          <p>Count numbers in the air using real-time hand gestures.</p>
+        </a>
+
+        <a class="demo-card" href="Earth/index.html target="_blank" rel="noopener noreferrer">
+          <div class="icon">🌎</div>
+          <h3>Hand-Controlled Earth</h3>
+          <p>Rotate, zoom, and explore the Earth using hand movements.</p>
+        </a>
+
+        <a class="demo-card" href="FingerCalculator/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="icon">🧮</div>
+          <h3>Finger Calculator</h3>
+          <p>Perform simple calculations using fingers as visual input.</p>
+        </a>
+
+        <a class="demo-card" href="FruitSlice/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="icon">🍎</div>
+          <h3>Fruit Slice</h3>
+          <p>Slice virtual fruits in the air with precise hand gestures.</p>
+        </a>
+
+        <a class="demo-card" href="HandPingPong/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="icon">🏓</div>
+          <h3>Hand Ping Pong</h3>
+          <p>Play ping pong using hand tracking and computer vision.</p>
+        </a>
+
+        <a class="demo-card" href="Particles/index.html" target="_blank" rel="noopener noreferrer">
+          <div class="icon">🧊</div>
+          <h3>3D Particle Transformer</h3>
+          <p>Transform and manipulate 3D particle objects in real time.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="info-band" id="about">
+      <div class="info-content">
+        <div>
+          <h2>Designed for Live Engagement</h2>
+          <p>
+            These demos are built to make AI, computer vision, and
+            human-computer interaction easier to understand through visual,
+            interactive, and hands-on experiences.
+          </p>
+        </div>
+
+        <div class="info-box">
+          <p><strong>Format:</strong> Workshop activity, or classroom demonstration</p>
+          <p><strong>Audience:</strong> Students, educators, and researchers</p>
+          <p><strong>Focus:</strong> AI interaction, gesture control, visual computing, and creative technology</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-container">
+      <div class="footer-school">
+        Kentucky State<br />
+        University
+      </div>
+
+      <div class="footer-text">
+        Frankfort, Kentucky | www.kysu.edu
+      </div>
+
+      <div class="footer-text">
+        © 2026 Kentucky State University. All rights reserved.
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
