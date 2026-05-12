@@ -3,356 +3,551 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Weekly Schedule (Mon–Fri)</title>
+  <title>Wu's Weekly Schedule - Spring 2026</title>
   <style>
     :root{
-      --card: #ffffff;      /* pure white */
-      --line: #000000;      /* pure black lines */
-      --text: #111111;      /* near-black text */
-      --muted: #444444;     /* muted gray text */
-      --headbg: #f2f2f2;    /* light gray header background */
-      --rowbg:  #fafafa;    /* light gray for time column */
+      --kysu-green:#004b23;
+      --kysu-green-2:#0f6b3d;
+      --kysu-gold:#f2c94c;
+      --bg:#f6f8f5;
+      --card:#ffffff;
+      --text:#152015;
+      --muted:#53615a;
+      --line:#d9e2d7;
+      --soft-green:#eef8f1;
+      --soft-gold:#fff8df;
+      --shadow:0 10px 30px rgba(0,0,0,.07);
+      --radius:18px;
     }
 
-    *{ box-sizing: border-box; }
+    *{box-sizing:border-box;}
 
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: #ffffff;     /* pure white page */
-      color: var(--text);
-      padding: 18px;
+      font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:linear-gradient(180deg,#ffffff 0%,var(--bg) 100%);
+      color:var(--text);
+      padding:22px;
     }
 
     .wrap{
-      max-width: 980px;
-      margin: 0 auto;
+      max-width:1080px;
+      margin:0 auto;
     }
 
     .topbar{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
+      gap:18px;
+      margin-bottom:18px;
     }
 
     .title{
       margin:0;
-      font-size: 20px;
-      letter-spacing: .2px;
+      font-size:clamp(24px,3vw,34px);
+      line-height:1.15;
+      color:var(--kysu-green);
+      letter-spacing:-.02em;
+    }
+
+    .term-badge{
+      display:inline-flex;
+      align-items:center;
+      margin-left:8px;
+      padding:5px 10px;
+      border-radius:999px;
+      background:var(--soft-gold);
+      color:#5a4300;
+      border:1px solid #f1df94;
+      font-size:14px;
+      font-weight:800;
+      vertical-align:middle;
+      white-space:nowrap;
     }
 
     .subtitle{
-      margin: 2px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      white-space: pre-wrap;
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+      max-width:780px;
     }
+
+    a{
+      color:var(--kysu-green);
+      font-weight:700;
+      text-decoration:none;
+    }
+
+    a:hover{text-decoration:underline;}
 
     .btn{
-      border: 1px solid var(--line);
-      background: #fff;
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 650;
+      border:1px solid var(--kysu-green);
+      background:var(--kysu-green);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:750;
+      white-space:nowrap;
+      box-shadow:0 6px 16px rgba(0,75,35,.18);
     }
 
-    .card{
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 16px;
+    .btn:hover{background:var(--kysu-green-2);}
+
+    .section-card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      margin-bottom:18px;
       overflow:hidden;
-      position: relative; /* for mobile overlays */
     }
 
-    /* Optional: make <hr> match your black-line style */
-    hr{
-      border: 0;
-      border-top: 1px solid var(--line);
-      margin: 8px 0;
+    .office-card{
+      padding:20px;
+      border-left:7px solid var(--kysu-green);
+    }
+
+    .section-title{
+      margin:0 0 14px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--kysu-green);
+      font-size:20px;
+      line-height:1.2;
+      letter-spacing:.01em;
+    }
+
+    .section-title::before{
+      content:"";
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      background:var(--kysu-gold);
+      box-shadow:0 0 0 4px var(--soft-gold);
+    }
+
+    .office-layout{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:16px;
+      align-items:stretch;
+    }
+
+    .hours-grid{
+      display:grid;
+      grid-template-columns:repeat(5,minmax(120px,1fr));
+      gap:10px;
+    }
+
+    .hour-item{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:12px;
+      min-height:82px;
+    }
+
+    .day{
+      display:block;
+      color:var(--kysu-green);
+      font-size:13px;
+      font-weight:850;
+      margin-bottom:6px;
+    }
+
+    .time{
+      display:block;
+      color:var(--text);
+      font-size:14px;
+      font-weight:700;
+      line-height:1.35;
+    }
+
+    .contact-box{
+      margin-top:14px;
+      padding:14px;
+      border-radius:14px;
+      background:var(--soft-green);
+      border:1px solid #cde4d3;
+      color:var(--text);
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px 18px;
+      font-size:14px;
+      line-height:1.45;
+    }
+
+    .contact-box strong{
+      color:var(--kysu-green);
+    }
+
+    .meeting-row{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:10px 12px;
+    }
+
+    .meeting-label{
+      color:var(--kysu-green);
+      font-weight:800;
+    }
+
+    .meeting-link{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:116px;
+      padding:9px 16px;
+      border-radius:999px;
+      border:1px solid rgba(0,75,35,.22);
+      background:linear-gradient(135deg,var(--kysu-green),var(--kysu-green-2));
+      color:#fff;
+      font-weight:850;
+      letter-spacing:.01em;
+      text-decoration:none;
+      box-shadow:0 10px 22px rgba(0,75,35,.24);
+      overflow:hidden;
+      transform:translateZ(0);
+      animation:bookingPulse 1.8s ease-in-out infinite, bookingFloat 3.2s ease-in-out infinite;
+    }
+
+    .meeting-link::before{
+      content:"";
+      position:absolute;
+      top:-65%;
+      bottom:-65%;
+      left:-90%;
+      width:58%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.72),transparent);
+      transform:rotate(20deg);
+      animation:bookingShine 2.4s ease-in-out infinite;
+    }
+
+    .meeting-link::after{
+      content:"";
+      position:absolute;
+      inset:-3px;
+      border-radius:999px;
+      border:2px solid rgba(242,201,76,.35);
+      opacity:0;
+      transform:scale(.92);
+      animation:bookingRing 1.8s ease-out infinite;
+      pointer-events:none;
+    }
+
+    .meeting-row .meeting-link:nth-of-type(1){
+      animation-delay:0s, 0s;
+    }
+
+    .meeting-row .meeting-link:nth-of-type(2){
+      animation-delay:.35s, .35s;
+    }
+
+    .meeting-link:hover{
+      background:linear-gradient(135deg,#f2c94c,#fff3a3);
+      color:#263500;
+      text-decoration:none;
+      transform:translateY(-3px) scale(1.06);
+      box-shadow:0 14px 30px rgba(242,201,76,.38);
+      animation:none;
+    }
+
+    .meeting-link:hover::before{
+      animation:bookingShine .9s ease-in-out 1;
+    }
+
+    .meeting-link:hover::after{
+      opacity:.75;
+      transform:scale(1.04);
+      animation:none;
+    }
+
+    .meeting-link span{
+      position:relative;
+      z-index:1;
+    }
+
+    @keyframes bookingPulse{
+      0%,100%{transform:scale(1);box-shadow:0 10px 22px rgba(0,75,35,.24);}
+      50%{transform:scale(1.06);box-shadow:0 14px 30px rgba(0,75,35,.34);}
+    }
+
+    @keyframes bookingFloat{
+      0%,100%{translate:0 0;}
+      50%{translate:0 -2px;}
+    }
+
+    @keyframes bookingShine{
+      0%,40%{left:-90%;}
+      72%,100%{left:135%;}
+    }
+
+    @keyframes bookingRing{
+      0%{opacity:0;transform:scale(.92);}
+      30%{opacity:.5;}
+      100%{opacity:0;transform:scale(1.14);}
+    }
+
+    .schedule-card{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .schedule-header{
+      padding:16px 18px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(90deg,var(--soft-green),#fff);
+    }
+
+    .schedule-header h2{
+      margin:0;
+      color:var(--kysu-green);
+      font-size:20px;
+    }
+
+    .schedule-header p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .table-scroll{
+      width:100%;
+      overflow-x:visible;
     }
 
     table{
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
     }
 
     thead th{
-      background: var(--headbg);
-      border-bottom: 1px solid var(--line);
-      padding: 12px 10px;
-      text-align: left;
-      font-size: 13px;
-      color: var(--text);
-      font-weight: 700;
+      background:var(--kysu-green);
+      color:#fff;
+      padding:13px 12px;
+      text-align:left;
+      font-size:14px;
+      border-right:1px solid rgba(255,255,255,.25);
     }
 
     thead th:first-child{
-      width: 16%;
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 13px;
+      width:16%;
     }
 
-    /* Monday–Friday column titles: slightly larger + bold */
-    thead th:not(:first-child){
-      font-size: 15px;
-      font-weight: 800;
-      letter-spacing: .2px;
+    thead th:last-child{border-right:none;}
+
+    tbody th,
+    tbody td{
+      padding:13px 12px;
+      vertical-align:top;
+      font-size:13px;
+      line-height:1.35rem;
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      background:#fff;
     }
+
+    tbody tr:last-child th,
+    tbody tr:last-child td{border-bottom:none;}
+
+    tbody td:last-child{border-right:none;}
 
     tbody th{
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      padding: 12px 10px;
-      text-align: left;
-      font-size: 13px;
-      color: var(--muted);
-      vertical-align: top;
-      background: var(--rowbg);
-      font-weight: 750;
+      color:var(--kysu-green);
+      background:var(--soft-green);
+      font-weight:850;
     }
 
-    tbody td{
-      border-bottom: 1px solid var(--line);
-      border-right: 1px solid var(--line);
-      padding: 12px 10px;
-      vertical-align: top;
-      font-size: 13px;
-      line-height: 1.25rem;
-      white-space: pre-wrap;
+    .time-sub{
+      display:block;
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+      font-weight:650;
     }
 
-    tbody tr td:last-child,
-    thead tr th:last-child{
-      border-right: none;
+    .course{
+      display:inline-block;
+      padding:2px 7px;
+      border-radius:7px;
+      font-weight:850;
+      color:#111;
+      margin-bottom:4px;
     }
 
-    /* ===== Mobile adaptive behavior (keeps desktop exactly the same) ===== */
+    .c-orange{background:#fed7aa;}
+    .c-purple{background:#ddd6fe;}
+    .c-green{background:#a7f3d0;}
+    .c-yellow{background:#fef08a;}
+    .c-pink{background:#fbcfe8;}
 
-    /* Wrap table so it can scroll horizontally on small screens */
-    .table-scroll{
-      width: 100%;
-      overflow-x: visible; /* desktop default */
+    .office-pill{
+      display:inline-block;
+      margin-top:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      background:var(--soft-gold);
+      color:#5a4300;
+      border:1px solid #f1df94;
+      font-weight:800;
+      font-size:12px;
     }
 
-    .mobile-hint{
-      display: none;
-      margin: 10px 0 0;
-      font-size: 12px;
-      color: var(--muted);
+    hr{
+      border:0;
+      border-top:1px solid var(--line);
+      margin:10px 0;
     }
 
-    /* Mobile swipe coach + edge fade (hidden by default; shown only on mobile) */
+    .mobile-hint,
     .swipe-coach,
-    .scroll-fade{
-      display: none;
+    .scroll-fade{display:none;}
+
+    @media (max-width:900px){
+      .hours-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     }
 
-    @media (max-width: 720px){
-      body{ padding: 12px; }
-
-      .title{ font-size: 18px; }
-      .subtitle{ font-size: 12px; }
-
-      .btn{
-        width: 100%;
-        border-radius: 12px;
-      }
-
-      /* enable swipe scroll */
-      .table-scroll{
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      /* keep columns readable; user swipes left/right */
-      table{
-        min-width: 900px;
-      }
-
-      .mobile-hint{
-        display: block;
-      }
-
-      /* tighten cell spacing slightly for mobile */
-      thead th{ padding: 10px 8px; font-size: 12px; }
-      thead th:not(:first-child){ font-size: 13px; }
-      tbody th, tbody td{ padding: 10px 8px; font-size: 12px; }
-
-      /* sticky Time column while swiping */
+    @media (max-width:720px){
+      body{padding:12px;}
+      .topbar{display:block;}
+      .btn{width:100%;margin-top:14px;}
+      .term-badge{margin:8px 0 0;display:inline-flex;}
+      .office-card{padding:16px;}
+      .hours-grid{grid-template-columns:1fr;}
+      .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+      table{min-width:900px;}
       thead th:first-child,
       tbody th{
-        position: sticky;
-        left: 0;
-        z-index: 2;
-        box-shadow: 1px 0 0 var(--line);
+        position:sticky;
+        left:0;
+        z-index:2;
       }
-
-      thead th:first-child{
-        background: var(--headbg);
-        z-index: 3; /* above body sticky cells */
-      }
-
-      tbody th{
-        background: var(--rowbg);
-      }
-
-      /* Right edge fade to hint there is more content */
+      thead th:first-child{z-index:3;}
       .scroll-fade{
-        display: block;
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 28px;
-        pointer-events: none;
-        z-index: 4;
-        background: linear-gradient(270deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 100%);
-        animation: fadePulse 1.8s ease-in-out infinite;
+        display:block;
+        position:absolute;
+        top:0;
+        right:0;
+        bottom:0;
+        width:30px;
+        pointer-events:none;
+        z-index:4;
+        background:linear-gradient(270deg,rgba(255,255,255,.95),rgba(255,255,255,0));
       }
-
-      /* Swipe hint pill */
       .swipe-coach{
-        display: block;
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 10px;
-        z-index: 5;
-        pointer-events: none;
-        padding: 0 10px;
+        display:block;
+        position:absolute;
+        left:0;
+        right:0;
+        bottom:10px;
+        z-index:5;
+        pointer-events:none;
+        text-align:center;
       }
-
       .swipe-pill{
-        margin: 0 auto;
-        width: max-content;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: red; /* red text */
-        padding: 8px 12px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: .2px;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 8px 22px rgba(0,0,0,0.16);
-        animation: pillSlide 1.6s ease-in-out infinite;
+        display:inline-flex;
+        gap:8px;
+        align-items:center;
+        padding:8px 12px;
+        border-radius:999px;
+        background:#fff;
+        border:1px solid var(--kysu-green);
+        color:var(--kysu-green);
+        font-size:12px;
+        font-weight:850;
+        box-shadow:0 8px 22px rgba(0,0,0,.14);
+        animation:swipe 1.7s ease-in-out infinite;
       }
-
-      .swipe-pill .hand{
-        font-size: 14px;
-      }
-
-      .swipe-pill .arrows{
-        font-weight: 900;
-        letter-spacing: 1px;
-      }
-
-      /* When hidden (JS adds .is-hidden) */
       .swipe-coach.is-hidden,
       .scroll-fade.is-hidden{
-        opacity: 0;
-        transform: translateY(6px);
-        transition: opacity .35s ease, transform .35s ease;
+        opacity:0;
+        transition:opacity .3s ease;
       }
-
-      @keyframes pillSlide{
-        0%   { transform: translateX(0); }
-        25%  { transform: translateX(16px); }
-        50%  { transform: translateX(-16px); }
-        75%  { transform: translateX(16px); }
-        100% { transform: translateX(0); }
+      @keyframes swipe{
+        0%,100%{transform:translateX(0);}
+        35%{transform:translateX(16px);}
+        70%{transform:translateX(-16px);}
       }
-
-      @keyframes fadePulse{
-        0%, 100% { opacity: .85; }
-        50%      { opacity: .35; }
-      }
-
-      /* Respect reduced motion */
-      @media (prefers-reduced-motion: reduce){
-        .swipe-pill, .scroll-fade{ animation: none !important; }
+      @media (prefers-reduced-motion:reduce){
+        .swipe-pill,
+        .meeting-link,
+        .meeting-link::before,
+        .meeting-link::after{animation:none!important;}
       }
     }
 
-    /* Print: fit nicely on one page */
     @media print{
-      body{
-        background: #fff !important;
-        padding: 0 !important;
-      }
-      .wrap{
-        max-width: none !important;
-        margin: 0 !important;
-      }
-      .btn{
-        display: none !important;
-      }
-      .mobile-hint{
-        display: none !important;
-      }
-      .swipe-coach, .scroll-fade{
-        display: none !important;
-      }
-      .topbar{
-        margin-bottom: 8px !important;
-      }
-      .title{
-        font-size: 16px !important;
-      }
-      .subtitle{
-        font-size: 11px !important;
-      }
-      .card{
-        border: 1px solid #000 !important;
-        border-radius: 10px !important;
-      }
-      thead th, tbody th, tbody td{
-        padding: 8px 8px !important;
-        font-size: 11.5px !important;
-        line-height: 1.15rem !important;
-        border-color: #000 !important;
-      }
-      thead th:not(:first-child){
-        font-size: 12.5px !important;
-        font-weight: 800 !important;
-      }
-      @page{
-        size: letter;
-        margin: 8mm;
-      }
+      body{background:#fff!important;padding:0!important;}
+      .wrap{max-width:none;margin:0;}
+      .btn,.swipe-coach,.scroll-fade{display:none!important;}
+      .section-card{box-shadow:none!important;border-color:#000!important;}
+      .office-card{padding:12px!important;}
+      .topbar{margin-bottom:10px!important;}
+      .title{font-size:20px!important;}
+      .subtitle{font-size:11px!important;}
+      .office-layout{grid-template-columns:1fr!important;gap:10px!important;}
+      .hours-grid{grid-template-columns:repeat(5,1fr)!important;gap:6px!important;}
+      .hour-item,.contact-box{padding:8px!important;border-color:#000!important;}
+      thead th,tbody th,tbody td{padding:8px!important;font-size:10.5px!important;line-height:1.15rem!important;border-color:#000!important;}
+      thead th{background:#eee!important;color:#000!important;}
+      @page{size:letter landscape;margin:8mm;}
     }
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <div class="topbar">
+  <main class="wrap">
+    <header class="topbar">
       <div>
-        <h1 class="title">Wu's Weekly Schedule - <p style="display:inline-block;padding:10px 18px;border-radius:14px;background:linear-gradient(120deg,#ff0080,#00c6ff,#00ff85,#ffe600,#ff4d4d);background-size:300% 300%;animation:bg 6s ease infinite;"><span style="background:linear-gradient(160deg,red,green,#ff0080,#00c6ff,#00ff85);-webkit-background-clip:text;background-clip:text;color:transparent;animation:hue 2s linear infinite;filter:hue-rotate(0deg)">Spring 2026</span><style>@keyframes hue{to{filter:hue-rotate(360deg)}}@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}</style></p></h1>
-		
-        <div class="subtitle">Monday – Friday (For other times, please contact <span style="background:linear-gradient(90deg,#ff0080,#00c6ff,#00ff85);-webkit-background-clip:text;background-clip:text;color:transparent;animation:hue 3s linear infinite;filter:hue-rotate(0deg)">Xinxing.Wu@kysu.edu</span><style>@keyframes hue{to{filter:hue-rotate(360deg)}}</style> to schedule an appointment. Thanks!😊)</div>
+        <h1 class="title">Wu's Weekly Schedule <span class="term-badge">Spring 2026</span></h1>
+        <p class="subtitle">
+          Monday – Friday. For other times, please contact <a href="mailto:xinxing.wu@kysu.edu">xinxing.wu@kysu.edu</a> to schedule an appointment. Thanks! 😊
+        </p>
       </div>
-	  <button class="btn" type="button" onclick="window.print() " >🖨️ Print / Save as PDF</button>
-    </div>
+      <button class="btn" type="button" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </header>
 
-    <div class="card">
-      <!-- Mobile swipe coach + edge fade -->
+    <section class="section-card office-card" aria-labelledby="office-hours-title">
+      <h2 class="section-title" id="office-hours-title">Office Hours</h2>
+      <div class="office-layout">
+        <div>
+          <div class="hours-grid" aria-label="Office hours by day">
+            <div class="hour-item"><span class="day">Monday</span><span class="time">11:00 AM – 2:00 PM</span></div>
+            <div class="hour-item"><span class="day">Tuesday</span><span class="time">11:00 AM – 2:00 PM</span></div>
+            <div class="hour-item"><span class="day">Wednesday</span><span class="time">12:00 PM – 2:00 PM</span></div>
+            <div class="hour-item"><span class="day">Thursday</span><span class="time">11:00 AM – 2:00 PM</span></div>
+            <div class="hour-item"><span class="day">Friday</span><span class="time">By appointment</span></div>
+          </div>
+
+          <div class="contact-box" aria-label="Contact information">
+            <div><strong>Email:</strong> <a href="mailto:xinxing.wu@kysu.edu">xinxing.wu@kysu.edu</a></div>
+            <div><strong>Phone:</strong> 617-259-6772 <span style="color:var(--muted);">(personal phone, if needed)</span></div>
+            <div class="meeting-row">
+              <span class="meeting-label">🗓️ Book a meeting:</span>
+              <a class="meeting-link" href="https://bookings.cloud.microsoft/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu/meetingtype/a8LdqV1-xkOGEg9EzSnuuA2?anonymous&ismsaljsauthenabled" target="_blank" rel="noopener noreferrer"><span>In person</span></a> OR
+              <a class="meeting-link" href="https://bookings.cloud.microsoft/bookwithme/user/861cada54431402da503300c29849d26%40kysu.edu/meetingtype/frZYn2AuQUG6s0dIgqz3VQ2?anonymous&ismsaljsauthenabled" target="_blank" rel="noopener noreferrer"><span>Online</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card schedule-card" aria-labelledby="weekly-schedule-title">
+      <div class="schedule-header">
+        <h2 id="weekly-schedule-title">Weekly Schedule</h2>
+        <p>Course meetings and office-hour availability are listed below.</p>
+      </div>
+
       <div class="scroll-fade" aria-hidden="true"></div>
       <div class="swipe-coach" aria-hidden="true">
-        <div class="swipe-pill">
-          <span class="hand">☝️</span>
-          <span>SWIPE</span>
-          <span class="arrows">⇠ ⇢</span>
-        </div>
+        <div class="swipe-pill"><span>☝️</span><span>Swipe to view full schedule</span><span>⇠ ⇢</span></div>
       </div>
 
       <div class="table-scroll">
@@ -369,66 +564,92 @@
           </thead>
           <tbody>
             <tr>
-              <th style="background-color: #B7FFBF;">
-                AM<br>
-                <span style="font-weight:600; font-size:12px; color:#555;">Before 12:00 PM</span>
-              </th>
-              <td><b><mark style="background:#FED7AA; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-506</mark></b> 9:30 am - 10:45 am Hathaway Hall 320 <hr> <span style="font-style:normal;font-weight:700;background:linear-gradient(90deg,#fde047,#a7f3d0);color:#111;padding:6px 12px;border-radius:999px;display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,0.12);">Office time </span>11:00 AM to 2:00 PM Hathaway Hall 307</td>
-              <td><b><mark style="background:#DDD6FE; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-475</mark></b> 8:00 am - 9:15 am Hathaway Hall 320<hr> <b><mark style="background:#a7f3d0; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-340</mark></b>
- 9:30 am - 10:45 am Hathaway Hall 320<hr> <span style="font-style:normal;font-weight:700;background:linear-gradient(90deg,#fde047,#a7f3d0);color:#111;padding:6px 12px;border-radius:999px;display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,0.12);">Office time </span>11:00 AM to 2:00 PM Hathaway Hall 307</td>
-              <td><b><mark style="background:#FED7AA; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-506</mark></b> 9:30 am - 10:45 am Hathaway Hall 320 <hr><b><mark style="background:yellow; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-109  & COS-502</mark></b> 11:00 am - 11:50 am Hathaway Hall 313<hr> <span style="font-style:normal;font-weight:700;background:linear-gradient(90deg,#fde047,#a7f3d0);color:#111;padding:6px 12px;border-radius:999px;display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,0.12);">Office time </span>12:00 PM to 2:00 PM Hathaway Hall 307</td>
-              <td><b><mark style="background:#DDD6FE; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-475</mark></b> 8:00 am - 9:15 am Hathaway Hall 320<hr> <b><mark style="background:#a7f3d0; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-340</mark></b>
- 9:30 am - 10:45 am Hathaway Hall 320 <hr> <span style="font-style:normal;font-weight:700;background:linear-gradient(90deg,#fde047,#a7f3d0);color:#111;padding:6px 12px;border-radius:999px;display:inline-block;box-shadow:0 2px 8px rgba(0,0,0,0.12);">Office time </span>11:00 AM to 2:00 PM Hathaway Hall 307</td>
-              <td><b>By Appointment</b></td>
+              <th>AM <span class="time-sub">Before 12:00 PM</span></th>
+              <td>
+                <span class="course c-orange">COS-506</span><br>
+                9:30 AM – 10:45 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="office-pill">Office Hours</span><br>
+                11:00 AM – 2:00 PM<br>Hathaway Hall 307
+              </td>
+              <td>
+                <span class="course c-purple">COS-475</span><br>
+                8:00 AM – 9:15 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="course c-green">COS-340</span><br>
+                9:30 AM – 10:45 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="office-pill">Office Hours</span><br>
+                11:00 AM – 2:00 PM<br>Hathaway Hall 307
+              </td>
+              <td>
+                <span class="course c-orange">COS-506</span><br>
+                9:30 AM – 10:45 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="course c-yellow">COS-109 &amp; COS-502</span><br>
+                11:00 AM – 11:50 AM<br>Hathaway Hall 313
+                <hr>
+                <span class="office-pill">Office Hours</span><br>
+                12:00 PM – 2:00 PM<br>Hathaway Hall 307
+              </td>
+              <td>
+                <span class="course c-purple">COS-475</span><br>
+                8:00 AM – 9:15 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="course c-green">COS-340</span><br>
+                9:30 AM – 10:45 AM<br>Hathaway Hall 320
+                <hr>
+                <span class="office-pill">Office Hours</span><br>
+                11:00 AM – 2:00 PM<br>Hathaway Hall 307
+              </td>
+              <td><strong>By appointment</strong></td>
             </tr>
             <tr>
-              <th style="background-color: #B7FFBF;">
-                PM<br>
-                <span style="font-weight:600; font-size:12px; color:#555;">After 12:00 PM</span>
-              </th>
-              <td><b><mark style="background:yellow; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-109 & COS-502</mark></b> 2:30 pm - 3:45 pm Hathaway Hall 313</td>
-              <td><b><mark style="background:#FBCFE8; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-200</mark></b> Online (Welcome to discuss 12:00 PM - 2:00 PM)</td>
-              <td><b><mark style="background:yellow; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-109 & COS-502</mark></b> 2:30 pm - 3:45 pm Hathaway Hall 313</td>
-              <td><b><mark style="background:#FBCFE8; color:#000; padding:0 6px; border-radius:4px; font-style: normal;">COS-200</mark></b> Online (Welcome to discuss 12:00 PM - 2:00 PM)</td>
-              <td><b>By Appointment</b></td>
+              <th>PM <span class="time-sub">After 12:00 PM</span></th>
+              <td>
+                <span class="course c-yellow">COS-109 &amp; COS-502</span><br>
+                2:30 PM – 3:45 PM<br>Hathaway Hall 313
+              </td>
+              <td>
+                <span class="course c-pink">COS-200</span><br>
+                Online<br>
+                <span style="color:var(--muted);">Available to discuss: 12:00 PM – 2:00 PM</span>
+              </td>
+              <td>
+                <span class="course c-yellow">COS-109 &amp; COS-502</span><br>
+                2:30 PM – 3:45 PM<br>Hathaway Hall 313
+              </td>
+              <td>
+                <span class="course c-pink">COS-200</span><br>
+                Online<br>
+                <span style="color:var(--muted);">Available to discuss: 12:00 PM – 2:00 PM</span>
+              </td>
+              <td><strong>By appointment</strong></td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
-    <br>
-    <br>	
-	  <div id="t" style="position:relative;display:inline-block;padding:14px 18px;border-radius:16px;border:1px solid #d8cdb8;background:repeating-linear-gradient(0deg,#f7f1e3,#f7f1e3 24px,#f3ead8 25px);box-shadow:0 14px 30px rgba(0,0,0,.14);color:#111;font:800 12px/1.2 ui-monospace,'Courier New',monospace;letter-spacing:.06em;text-shadow:0 1px 0 rgba(255,255,255,.65);overflow:hidden;filter:contrast(1.05);transform:translateZ(0);animation:paperFloat 6s ease-in-out infinite;"><span style="position:relative;z-index:3;display:inline-block;filter:blur(.18px);animation:inkWobble 2.8s ease-in-out infinite;">⏳ 00:00:00 — You’ve spent a tiny slice of your one-and-only lifetime here; I truly appreciate it.</span><span style="pointer-events:none;position:absolute;inset:0;z-index:1;background:radial-gradient(circle at 18% 30%,rgba(0,0,0,.12),transparent 56%),radial-gradient(circle at 80% 70%,rgba(0,0,0,.10),transparent 58%);mix-blend-mode:multiply;opacity:.28;"></span><span style="pointer-events:none;position:absolute;inset:-40% -20%;z-index:2;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.65) 45%,transparent 55%);transform:translateX(-70%) rotate(4deg);animation:shine 4.6s ease-in-out infinite;opacity:.55;"></span><span style="pointer-events:none;position:absolute;left:-30%;right:-30%;top:-2px;height:2px;z-index:2;background:linear-gradient(90deg,transparent,rgba(0,0,0,.22),transparent);animation:scan 3.1s linear infinite;opacity:.45;"></span><span style="pointer-events:none;position:absolute;inset:0;z-index:0;background:repeating-radial-gradient(circle at 12% 20%,rgba(0,0,0,.035) 0 1px,transparent 1px 6px),repeating-radial-gradient(circle at 80% 70%,rgba(0,0,0,.03) 0 1px,transparent 1px 7px);opacity:.55;mix-blend-mode:multiply;"></span><span style="pointer-events:none;position:absolute;inset:0;z-index:2;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),inset 0 -18px 30px rgba(0,0,0,.06);border-radius:16px;"></span></div><script>var s=Date.now(),el=document.getElementById('t');setInterval(function(){var d=Date.now()-s,h=Math.floor(d/36e5),m=Math.floor(d/6e4)%60,sec=Math.floor(d/1e3)%60;el.firstChild.textContent='⏳ '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')+' — You’ve spent a tiny slice of your one-and-only lifetime here; I truly appreciate it.';},1000);</script><style>@keyframes paperFloat{0%,100%{transform:translateY(0) rotate(-.45deg)}50%{transform:translateY(-30px) rotate(.45deg)}}@keyframes inkWobble{0%,100%{filter:blur(.18px);transform:translateX(0)}50%{filter:blur(.45px);transform:translateX(.6px)}}@keyframes shine{0%,22%{transform:translateX(-70%) rotate(4deg)}55%{transform:translateX(70%) rotate(4deg)}100%{transform:translateX(70%) rotate(4deg)}}@keyframes scan{0%{transform:translateY(0);opacity:.12}35%{opacity:.5}100%{transform:translateY(92px);opacity:.06}}</style>
-
-  </div>
+    </section>
+  </main>
 
   <script>
-    (function () {
-      const mq = window.matchMedia("(max-width: 720px)");
-      if (!mq.matches) return;
-
-      const scroller = document.querySelector(".table-scroll");
-      const coach = document.querySelector(".swipe-coach");
-      const fade = document.querySelector(".scroll-fade");
-      if (!scroller || !coach) return;
-
+    (function(){
+      const mq = window.matchMedia('(max-width: 720px)');
+      if(!mq.matches) return;
+      const scroller = document.querySelector('.table-scroll');
+      const coach = document.querySelector('.swipe-coach');
+      const fade = document.querySelector('.scroll-fade');
+      if(!scroller || !coach) return;
       let hidden = false;
-      function hide() {
-        if (hidden) return;
+      function hide(){
+        if(hidden) return;
         hidden = true;
-        coach.classList.add("is-hidden");
-        if (fade) fade.classList.add("is-hidden");
+        coach.classList.add('is-hidden');
+        if(fade) fade.classList.add('is-hidden');
       }
-
-      scroller.addEventListener(
-        "scroll",
-        function () {
-          if (scroller.scrollLeft > 10) hide();
-        },
-        { passive: true }
-      );
-
-      // Auto-hide even if they don't swipe
+      scroller.addEventListener('scroll', function(){
+        if(scroller.scrollLeft > 10) hide();
+      }, {passive:true});
       setTimeout(hide, 9000);
     })();
   </script>
