@@ -1139,6 +1139,130 @@ body{
 /* Appendix — full abstracts: single-column resource card, no QR block. */
 .appendix-page .appendix-resource{grid-template-columns:minmax(0,1fr) !important;max-width:680px;width:100%;}
 @media print{.appendix-page .appendix-resource{grid-template-columns:minmax(0,1fr) !important;}}
+
+
+/* ================================================================
+   Page-number & mobile presentation refinement (October 2026).
+   One consistent two-digit folio across cover, inside, and closing.
+   Content, navigation, pagination, imagery and page-turn behavior
+   remain unchanged.
+   ================================================================ */
+.page-counter,.toc-page,.directory-page,.folio {font-variant-numeric:tabular-nums;}
+@media screen {
+  #book > .sheet[data-visible-folio]::before,
+  #book > .sheet.cover[data-visible-folio]::before,
+  #book > .sheet.end-page[data-visible-folio]::before {
+    content:attr(data-visible-folio) !important;
+    position:absolute !important;
+    right:13px !important;
+    bottom:11px !important;
+    z-index:15 !important;
+    display:grid !important;
+    place-items:center !important;
+    width:38px !important;
+    height:28px !important;
+    min-width:38px !important;
+    padding:0 !important;
+    box-sizing:border-box !important;
+    border:1px solid rgba(112,84,29,.18) !important;
+    border-radius:7px !important;
+    background:#f5e5bc !important;
+    color:#123f2f !important;
+    box-shadow:0 2px 6px rgba(17,45,31,.13) !important;
+    font:700 15px/1 Georgia,'Times New Roman',serif !important;
+    font-variant-numeric:tabular-nums !important;
+    letter-spacing:.01em !important;
+    pointer-events:none !important;
+  }
+  #book > .sheet .sheet-footer .folio {display:none !important;}
+  #book > .sheet .sheet-footer {padding-right:51px;}
+}
+@media screen and (max-width:760px) {
+  /* A consistent paper margin keeps the book's outline visible in screenshots. */
+  .reading {
+    padding-left:clamp(10px,2.8vw,16px) !important;
+    padding-right:clamp(10px,2.8vw,16px) !important;
+    padding-bottom:calc(12px + env(safe-area-inset-bottom,0px)) !important;
+  }
+  .stage::before {inset:-7px -7px -11px !important;}
+  .reader-top {min-width:0;gap:8px;padding:0 2px;}
+  .reader-top .progress-track {flex:1 1 auto;min-width:20px;}
+  #sectionLabel,#pageLabel {line-height:1.2;}
+  .reader-bottom {width:100%;min-width:0;gap:clamp(5px,2vw,10px);}
+  .page-counter {flex:0 0 auto;min-width:67px !important;white-space:nowrap;font-size:12px;letter-spacing:.025em;}
+  .nav-btn {flex:0 1 auto;min-width:0 !important;min-height:33px;white-space:nowrap;border-radius:9px;}
+  .sound-control {flex:0 0 auto;}
+  #book > .sheet[data-visible-folio]::before,
+  #book > .sheet.cover[data-visible-folio]::before,
+  #book > .sheet.end-page[data-visible-folio]::before {
+    right:10px !important;
+    bottom:9px !important;
+    width:34px !important;
+    min-width:34px !important;
+    height:25px !important;
+    font-size:14px !important;
+    border-radius:6px !important;
+  }
+  #book > .sheet .sheet-footer {padding-right:43px;}
+  .sheet-header {min-width:0;}
+  .sheet-header span:first-child {min-width:0;max-width:67%;overflow-wrap:normal;}
+  .sheet-header span:last-child {flex:0 0 auto;white-space:nowrap;}
+}
+@media screen and (max-width:350px) {
+  .reading {padding-left:9px !important;padding-right:9px !important;}
+  .sheet-header {font-size:7px !important;letter-spacing:0 !important;}
+  .sheet-footer {font-size:8px;letter-spacing:.025em;}
+  .reader-top {font-size:9px;}
+  .nav-btn {padding-left:6px !important;padding-right:6px !important;font-size:11px !important;}
+  .page-counter {min-width:58px !important;font-size:11px;}
+}
+/* On tall mobile displays, use the available page height for larger logos,
+   while preserving the short-screen gallery and its existing responsive rules. */
+@media screen and (max-width:760px) and (min-height:800px) {
+  .sheet[data-section="Sponsors"] .sponsor-grid {row-gap:clamp(8px,1.2vh,12px) !important;}
+  .sheet[data-section="Sponsors"] .sponsor-grid .sponsor-logo-tile {
+    min-height:clamp(105px,12.9vh,120px);
+    max-height:none;
+  }
+  .sheet[data-section="Sponsors"] .sponsor-logo-tile img {height:clamp(82px,9.6vh,95px);}
+}
+@media print {
+  /* Printed copies use the same number and location, including the covers. */
+  #book > .sheet[data-visible-folio]::before,
+  #book > .sheet.cover[data-visible-folio]::before,
+  #book > .sheet.end-page[data-visible-folio]::before {
+    content:attr(data-visible-folio) !important;
+    position:absolute !important;
+    display:grid !important;
+    place-items:center !important;
+    z-index:16 !important;
+    width:.38in !important;
+    height:.29in !important;
+    right:.40in !important;
+    bottom:.15in !important;
+    background:#f5e5bc !important;
+    color:#123f2f !important;
+    border:1px solid #d8cba7 !important;
+    border-radius:5px !important;
+    box-shadow:none !important;
+    font:700 14px/1 Georgia,'Times New Roman',serif !important;
+    font-variant-numeric:tabular-nums !important;
+    print-color-adjust:exact !important;
+    -webkit-print-color-adjust:exact !important;
+  }
+  #book > .sheet .sheet-footer .folio {visibility:hidden !important;}
+}
+
+/* Final corner consistency: all pages use an unfurled, clean right-hand
+   bottom edge. Folio positions and page-flip behavior are untouched. */
+@media screen {
+  #book > .sheet::after,
+  .flip-front.sheet::after,
+  .flip-back.sheet::after {
+    display:none !important;
+    content:none !important;
+  }
+}
 </style></head><body>
 <header class="utility"><div class="brand"><span class="brand-badge">KCFC</span><span class="brand-title"><b>2026 Conference Booklet</b><small>Kentucky State University</small></span></div><div class="toolbar"><input aria-label="Search booklet pages" class="searchbox" id="search" placeholder="Find speaker or topic ↵" title="Type a name or topic and press Enter" type="search"/><button class="tool-btn" id="contentsBtn" type="button">Contents</button><button class="tool-btn" id="printBtn" type="button">Print / PDF</button></div></header>
 <main class="reading"><div class="reader-top"><span id="sectionLabel">Cover</span><span class="progress-track" id="labelSpacer"><span class="progress-fill" id="progressFill" style="display:block"></span></span><span id="pageLabel">Conference Cover</span></div><div class="stage"><div class="book" id="book"><section aria-label="Page 1: Conference Cover" class="sheet cover" data-index="0" data-section="Cover" data-title="Conference Cover" id="page-1">
@@ -1376,7 +1500,7 @@ body{
        jump.dataset.jump=String(destination);
        jump.href='#page-'+(destination+1);
        const number=jump.querySelector('.toc-page, .directory-page');
-       if(number)number.textContent=String(destination+1);
+       if(number)number.textContent=String(destination+1).padStart(2,'0');
      }
    });
    // Source location is more stable than the old numbered page on resize.
@@ -1393,7 +1517,7 @@ body{
  function update(){
    pages.forEach((sh,i)=>{sh.classList.toggle('is-active',i===index);sh.setAttribute('aria-hidden',i===index?'false':'true');});
    if(!pages[index])return;
-   counter.textContent=(index+1)+' / '+pages.length;
+   counter.textContent=String(index+1).padStart(2,'0')+' / '+String(pages.length).padStart(2,'0');
    progress.style.width=((index+1)/pages.length*100)+'%';
    section.textContent=pages[index].dataset.section;
    label.textContent=pages[index].dataset.title;
