@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Gallery</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body { margin: 0; min-height: 100vh; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; }
+    button, input { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+    button { cursor: pointer; }
+    [hidden] { display: none !important; }
+    main { max-width: 1440px; margin: 0 auto; padding: clamp(16px, 3vw, 34px) clamp(12px, 3vw, 36px) 45px; }
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+    .filters { display: flex; gap: 6px; }
+    .filter, .search, .download, .action, .close, .nav { border: 1px solid #bdbdbd; border-radius: 5px; background: #fff; color: #000; text-decoration: none; }
+    .filter { min-height: 42px; padding: 9px 15px; font-size: 14px; }
+    .filter[aria-pressed="true"] { border-color: #000; font-weight: 700; }
+    .filter:hover, .download:hover, .action:hover, .close:hover, .nav:hover { background: #f2f2f2; }
+    .count { color: #444; white-space: nowrap; font-size: 13px; }
+    .search { margin-left: auto; width: min(100%, 230px); min-height: 42px; padding: 9px 12px; font-size: 14px; }
+    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 215px), 1fr)); gap: clamp(10px, 1.5vw, 20px); }
+    .card { min-width: 0; border: 1px solid #dedede; border-radius: 6px; overflow: hidden; background: #fff; }
+    .preview { display: block; position: relative; width: 100%; aspect-ratio: 4/3; padding: 0; border: 0; background: #fafafa; overflow: hidden; }
+    .preview img, .preview video { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .placeholder { position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 600; color: #666; background: #f7f7f7; }
+    .play-mark { position: absolute; inset: 0; display: grid; place-items: center; font-size: 34px; color: #fff; text-shadow: 0 1px 8px #000; pointer-events: none; }
+    .video-preview .play-mark { color: #000; text-shadow: 0 0 5px #fff, 0 0 8px #fff; }
+    .card-footer { display: flex; align-items: center; gap: 7px; padding: 9px; }
+    .filename { min-width: 0; flex: 1; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+    .download { flex: none; display: inline-grid; place-items: center; min-height: 32px; padding: 7px 9px; font-size: 12px; }
+    .message { padding: 40px 12px; text-align: center; font-size: 14px; color: #444; }
+    .lightbox { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 14px; background: #fff; }
+    .viewer { width: min(100%, 1120px); max-height: calc(100dvh - 28px); display: flex; flex-direction: column; min-height: 0; }
+    .viewer-top, .viewer-bottom { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+    .viewer-top { justify-content: space-between; }
+    .viewer-filename { margin: 0; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .viewer-position { margin: 4px 0 0; color: #555; font-size: 12px; }
+    .close { flex: none; width: 42px; height: 42px; font-size: 26px; }
+    .stage { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; min-height: 140px; height: min(70dvh, 700px); overflow: hidden; background: #fafafa; border: 1px solid #eee; touch-action: pan-y; }
+    .stage canvas, .stage video { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
+    .stage video { width: 100%; height: 100%; background: #000; }
+    .nav { position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); width: 39px; height: 49px; font-size: 27px; background: rgba(255,255,255,.95); }
+    .prev { left: 10px; } .next { right: 10px; }
+    .viewer-error { max-width: min(90%, 460px); padding: 18px; color: #333; font-size: 15px; text-align: center; line-height: 1.55; }
+    .viewer-bottom { justify-content: center; flex-wrap: wrap; }
+    .action { display: inline-flex; justify-content: center; align-items: center; min-height: 42px; padding: 9px 18px; font-size: 14px; }
+    body.viewer-open { overflow: hidden; }
+    @media (max-width: 650px) {
+      .toolbar { gap: 10px; }
+      .search { order: 3; width: 100%; margin-left: 0; }
+      .count { margin-left: auto; }
+      .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+      .card-footer { padding: 7px; } .download { padding: 7px; }
+      .lightbox { padding: 8px; } .viewer { max-height: calc(100dvh - 16px); }
+      .stage { height: min(70dvh, 680px); }
+      .nav { width: 34px; height: 43px; } .prev { left: 5px; } .next { right: 5px; }
+    }
+    @media (max-width: 330px) { .gallery { grid-template-columns: 1fr; } .filter { padding: 9px 10px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="toolbar" aria-label="Gallery controls">
+      <div class="filters" role="group" aria-label="Media type">
+        <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+        <button class="filter" type="button" data-filter="image" aria-pressed="false">Photos</button>
+        <button class="filter" type="button" data-filter="video" aria-pressed="false">Videos</button>
+      </div>
+      <span class="count" id="count" aria-live="polite"></span>
+      <input class="search" id="search" type="search" placeholder="Search files" aria-label="Search filenames">
+    </div>
+    <div class="gallery" id="gallery" aria-label="Photos and videos"></div>
+    <div class="message" id="message" role="status" hidden>No matching files.</div>
+  </main>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer" hidden>
+    <div class="viewer">
+      <div class="viewer-top">
+        <div style="min-width:0">
+          <p class="viewer-filename" id="viewerFilename"></p>
+          <p class="viewer-position" id="position"></p>
+        </div>
+        <button class="close" type="button" id="close" aria-label="Close">×</button>
+      </div>
+      <div class="stage" id="stage">
+        <button class="nav prev" type="button" id="prev" aria-label="Previous">‹</button>
+        <canvas id="photo" role="img" aria-label="Enlarged photo" hidden></canvas>
+        <video id="player" controls playsinline preload="metadata" aria-label="Video" hidden></video>
+        <div class="viewer-error" id="viewerError" aria-live="polite" hidden></div>
+        <button class="nav next" type="button" id="next" aria-label="Next">›</button>
+      </div>
+      <div class="viewer-bottom">
+        <button class="action" type="button" id="playPause" hidden>Play</button>
+        <a class="action" id="download" href="#" download>Download original</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+    // Edit these values when you add more files. Names must match exactly.
+    // No server, folder picker, or file manifest is required.
+    const IMAGE_COUNT = 139;
+    const VIDEO_COUNT = 8;
+    const items = [
+      ...Array.from({ length: IMAGE_COUNT }, (_, i) => ({
+        type: "image", filename: `image (${i + 1}).jpg`, src: `images/${encodeURIComponent(`image (${i + 1}).jpg`)}`
+      })),
+      ...Array.from({ length: VIDEO_COUNT }, (_, i) => ({
+        type: "video", filename: `video (${i + 1}).mp4`, src: `videos/${encodeURIComponent(`video (${i + 1}).mp4`)}`
+      }))
+    ];
+
+    const $ = id => document.getElementById(id);
+    const gallery = $("gallery"), message = $("message"), search = $("search"), count = $("count");
+    const lightbox = $("lightbox"), canvas = $("photo"), video = $("player"), playPause = $("playPause");
+    let filter = "all", shown = [], current = -1, activeImage = null, imageToken = 0, previousFocus = null;
+
+    function makeCard(item, index) {
+      const card = document.createElement("article"); card.className = "card";
+      const preview = document.createElement("button"); preview.type = "button"; preview.className = "preview";
+      preview.setAttribute("aria-label", `${item.type === "video" ? "Play" : "View"} ${item.filename}`);
+      preview.addEventListener("click", () => openViewer(index));
+      const placeholder = document.createElement("span"); placeholder.className = "placeholder";
+      placeholder.textContent = item.type === "image" ? "JPG" : "MP4";
+      preview.appendChild(placeholder);
+
+      if (item.type === "image") {
+        const img = document.createElement("img"); img.alt = item.filename; img.loading = "lazy"; img.decoding = "async";
+        img.addEventListener("load", () => { placeholder.hidden = true; });
+        img.addEventListener("error", () => { img.hidden = true; placeholder.title = "Preview unavailable; download the original file"; });
+        img.src = item.src;
+        preview.appendChild(img);
+      } else {
+        preview.classList.add("video-preview");
+        const thumbnail = document.createElement("video");
+        thumbnail.muted = true; thumbnail.playsInline = true; thumbnail.preload = "metadata";
+        thumbnail.setAttribute("aria-hidden", "true");
+        thumbnail.addEventListener("loadeddata", () => { placeholder.hidden = true; });
+        thumbnail.addEventListener("error", () => { thumbnail.hidden = true; });
+        thumbnail.src = item.src;
+        preview.appendChild(thumbnail);
+        const mark = document.createElement("span"); mark.className = "play-mark";
+        mark.textContent = "▶"; mark.setAttribute("aria-hidden", "true"); preview.appendChild(mark);
+      }
+      const footer = document.createElement("div"); footer.className = "card-footer";
+      const name = document.createElement("p"); name.className = "filename"; name.textContent = item.filename; name.title = item.filename;
+      const download = document.createElement("a"); download.className = "download";
+      download.href = item.src; download.download = item.filename; download.textContent = "Download";
+      download.setAttribute("aria-label", `Download ${item.filename}`);
+      footer.append(name, download); card.append(preview, footer);
+      return card;
+    }
+
+    function render() {
+      const query = search.value.trim().toLowerCase();
+      shown = items.filter(item => (filter === "all" || item.type === filter) && item.filename.toLowerCase().includes(query));
+      const fragment = document.createDocumentFragment();
+      shown.forEach((item, index) => fragment.appendChild(makeCard(item, index)));
+      gallery.replaceChildren(fragment);
+      count.textContent = `${shown.length} ${shown.length === 1 ? "item" : "items"}`;
+      message.hidden = shown.length > 0;
+    }
+
+    function drawImage(withWatermark = false) {
+      if (!activeImage) return;
+      const ratio = Math.min(1, 5000 / Math.max(activeImage.naturalWidth, activeImage.naturalHeight));
+      canvas.width = Math.max(1, Math.round(activeImage.naturalWidth * ratio));
+      canvas.height = Math.max(1, Math.round(activeImage.naturalHeight * ratio));
+      const ctx = canvas.getContext("2d"); ctx.drawImage(activeImage, 0, 0, canvas.width, canvas.height);
+      if (withWatermark) {
+        const fontSize = Math.floor(canvas.width / 2);
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.fillStyle = "rgba(255,255,255,0.22)";
+        ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+        const padding = Math.floor(fontSize * 0.3);
+        ctx.fillText("Wu", canvas.width - padding, canvas.height - padding);
+      }
+    }
+    function updatePlayPause() { playPause.textContent = video.paused || video.ended ? "Play" : "Pause"; }
+
+    function showCurrent() {
+      const item = shown[current]; if (!item) return;
+      const token = ++imageToken;
+      activeImage = null; canvas.hidden = true;
+      video.pause(); video.hidden = true; video.removeAttribute("src"); video.load();
+      $("viewerError").hidden = true;
+      $("viewerFilename").textContent = item.filename;
+      $("position").textContent = `${current + 1} / ${shown.length}`;
+      $("download").href = item.src; $("download").download = item.filename;
+      playPause.hidden = item.type !== "video";
+      if (item.type === "video") {
+        video.src = item.src; video.hidden = false; video.load(); updatePlayPause();
+      } else {
+        const image = new Image();
+        image.onload = () => { if (token !== imageToken) return; activeImage = image; drawImage(); canvas.hidden = false; };
+        image.onerror = () => {
+          if (token !== imageToken) return;
+          $("viewerError").textContent = "This JPG image could not be displayed, or the file is missing. You can still download the original.";
+          $("viewerError").hidden = false;
+        };
+        image.src = item.src;
+      }
+    }
+    function openViewer(index) {
+      previousFocus = document.activeElement; current = index;
+      lightbox.hidden = false; document.body.classList.add("viewer-open");
+      showCurrent(); $("close").focus();
+    }
+    function closeViewer() {
+      if (lightbox.hidden) return;
+      ++imageToken;
+      video.pause(); video.removeAttribute("src"); video.load();
+      lightbox.hidden = true; document.body.classList.remove("viewer-open");
+      if (previousFocus?.isConnected) previousFocus.focus();
+    }
+    function navigate(step) {
+      if (lightbox.hidden || !shown.length) return;
+      current = (current + step + shown.length) % shown.length;
+      showCurrent();
+    }
+    document.querySelectorAll(".filter").forEach(button => button.addEventListener("click", () => {
+      filter = button.dataset.filter;
+      document.querySelectorAll(".filter").forEach(b => b.setAttribute("aria-pressed", String(b === button)));
+      if (!lightbox.hidden) closeViewer();
+      render();
+    }));
+    search.addEventListener("input", () => { if (!lightbox.hidden) closeViewer(); render(); });
+    $("close").addEventListener("click", closeViewer);
+    $("prev").addEventListener("click", () => navigate(-1));
+    $("next").addEventListener("click", () => navigate(1));
+    playPause.addEventListener("click", async () => {
+      if (video.paused || video.ended) {
+        try { await video.play(); } catch { /* Missing or unsupported format. */ }
+      } else video.pause();
+      updatePlayPause();
+    });
+    for (const event of ["play", "pause", "ended"]) video.addEventListener(event, updatePlayPause);
+    video.addEventListener("error", () => {
+      if (!video.hidden) {
+        $("viewerError").textContent = "This MP4 video could not be played, or the file is missing. You can still download the original. Check that the video uses a browser-compatible codec such as H.264.";
+        $("viewerError").hidden = false;
+      }
+    });
+    // Retain the original gallery's right-click watermark in the viewer.
+    // The explicit Download buttons always download the untouched original.
+    canvas.addEventListener("contextmenu", () => drawImage(true));
+    document.addEventListener("keydown", event => {
+      if (lightbox.hidden) return;
+      if (event.key === "Escape") { event.preventDefault(); closeViewer(); }
+      if (event.key === "ArrowRight") { event.preventDefault(); navigate(1); }
+      if (event.key === "ArrowLeft") { event.preventDefault(); navigate(-1); }
+      if (event.key === "Tab") {
+        const controls = [...lightbox.querySelectorAll("button:not([hidden]), a:not([hidden])")];
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      }
+    });
+    let touch = null;
+    $("stage").addEventListener("touchstart", event => {
+      if (!video.hidden || event.touches.length !== 1) return;
+      touch = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }, { passive: true });
+    $("stage").addEventListener("touchend", event => {
+      if (!touch || !event.changedTouches.length) return;
+      const dx = event.changedTouches[0].clientX - touch.x;
+      const dy = event.changedTouches[0].clientY - touch.y;
+      touch = null;
+      if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.3) navigate(dx < 0 ? 1 : -1);
+    }, { passive: true });
+    render();
+  </script>
+</body>
+</html>
