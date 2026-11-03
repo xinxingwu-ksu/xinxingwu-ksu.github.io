@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Enter the Key</title>
+  <style>
+    * { box-sizing: border-box; }
+    html { color-scheme: light; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 24px 18px;
+      background: #fff;
+      color: #000;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    main { width: min(100%, 380px); text-align: center; }
+    .qr { display: block; width: min(60vw, 214px); height: auto; margin: 0 auto 26px; image-rendering: crisp-edges; }
+    h1 { margin: 0 0 24px; font-size: clamp(24px, 5vw, 29px); font-weight: 600; }
+    input, button { width: 100%; min-height: 54px; border: 1px solid #000; border-radius: 6px; font: inherit; font-size: 17px; }
+    input { padding: 12px 14px; background: #fff; color: #000; }
+    input::placeholder { color: #666; }
+    button { margin-top: 12px; background: #fff; color: #000; font-weight: 600; cursor: pointer; }
+    button:hover { background: #f4f4f4; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+    .error { min-height: 20px; margin: 12px 0 0; font-size: 14px; color: #000; }
+    @media (max-width: 420px) { .qr { width: min(63vw, 205px); } }
+  </style>
+</head>
+<body>
+  <main>
+    <img class="qr" src="data:image/png;base64,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" alt="QR code" width="214" height="214">
+    <h1>Enter the Key</h1>
+    <form id="keyForm" novalidate>
+      <input id="key" type="password" placeholder="Jesus is the Key" aria-label="Access key" autocomplete="off" required>
+      <button type="submit">Enter</button>
+      <p class="error" id="error" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <script>
+    // This is a visual key-entry page, not secure server-side authentication.
+    const CORRECT_KEY = "Jesus";
+    const form = document.getElementById("keyForm");
+    const input = document.getElementById("key");
+    const error = document.getElementById("error");
+    input.addEventListener("input", () => error.textContent = "");
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (input.value === CORRECT_KEY) {
+        location.href = "gallery.html";
+      } else {
+        error.textContent = input.value ? "Incorrect key. Please try again." : "Please enter the key.";
+        input.value = "";
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>
